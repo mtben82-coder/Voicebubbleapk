@@ -12,87 +12,86 @@ class OnboardingTwo extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Spacer(),
-                // Content
-                Column(
-                  children: [
-                    // Icon
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(96),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF3B82F6).withOpacity(0.5),
-                            blurRadius: 30,
-                            offset: const Offset(0, 10),
+          child: Column(
+            children: [
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(32, 48, 32, 24),
+                  child: Column(
+                    children: [
+                      // Icon
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(96),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.auto_fix_high,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    // Title
-                    const Text(
-                      'Choose Your Style',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    // Description
-                    const Text(
-                      'Record your voice, then pick how you want it written. Email? Message? Post? We got you.',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Color(0xFFBAE6FD),
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    // Example Cards
-                    Column(
-                      children: [
-                        _buildExampleCard(
-                          '📧 Professional Email',
-                          'I apologize for the delay. I will arrive shortly.',
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withOpacity(0.5),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        _buildExampleCard(
-                          '💬 Casual Message',
-                          'Hey! Running late, be there soon',
+                        child: const Icon(
+                          Icons.auto_fix_high,
+                          size: 48,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: 12),
-                        _buildExampleCard(
-                          '📝 To-Do List',
-                          '• Finish report\n• Arrive at meeting',
+                      ),
+                      const SizedBox(height: 48),
+                      // Title
+                      const Text(
+                        'Choose Your Style',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                      ],
-                    ),
-                  ],
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      // Description
+                      const Text(
+                        'Record your voice, then pick how you want it written. Email? Message? Post? We got you.',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFFBAE6FD),
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+                      // Example Cards
+                      _buildExampleCard(
+                        '📧 Professional Email',
+                        'I apologize for the delay. I will arrive shortly.',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildExampleCard(
+                        '💬 Casual Message',
+                        'Hey! Running late, be there soon',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildExampleCard(
+                        '📝 To-Do List',
+                        '• Finish report\n• Arrive at meeting',
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-                const Spacer(),
-                // Button
-                SizedBox(
+              ),
+              // Fixed button at bottom
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: onNext,
@@ -114,8 +113,8 @@ class OnboardingTwo extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
