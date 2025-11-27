@@ -226,13 +226,18 @@ class OverlayService : Service() {
             // Set click listener - Show Flutter overlay popup
             container.setOnClickListener {
                 try {
-                    Log.d(TAG, "Bubble clicked, showing Flutter overlay popup")
+                    Log.d(TAG, "Bubble clicked, triggering Flutter overlay popup")
                     
-                    // Broadcast to show Flutter overlay
-                    val broadcastIntent = Intent("SHOW_FLUTTER_OVERLAY")
-                    sendBroadcast(broadcastIntent)
+                    // Start MainActivity with special action to show overlay
+                    val intent = Intent(this@OverlayService, MainActivity::class.java).apply {
+                        action = "SHOW_OVERLAY_POPUP"
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                                Intent.FLAG_ACTIVITY_NO_ANIMATION
+                    }
+                    startActivity(intent)
                     
-                    Log.d(TAG, "Broadcast sent to show overlay")
+                    Log.d(TAG, "MainActivity started to show overlay popup")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error showing Flutter overlay", e)
                 }
@@ -273,7 +278,8 @@ class OverlayService : Service() {
                     
                     if (deltaX > 10 || deltaY > 10) {
                         isMoved = true
-                        params.x = initialX + (initialTouchX - event.rawX).toInt()
+                        // FIX: Both coordinates now move in correct direction
+                        params.x = initialX + (event.rawX - initialTouchX).toInt()
                         params.y = initialY + (event.rawY - initialTouchY).toInt()
                         try {
                             windowManager?.updateViewLayout(overlayView, params)

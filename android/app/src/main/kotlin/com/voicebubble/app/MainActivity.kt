@@ -65,6 +65,25 @@ class MainActivity : FlutterActivity() {
         }
 
         Log.d(TAG, "MainActivity created — overlayReceiver registered.")
+        
+        // Handle intent to show overlay
+        handleIntent(intent)
+    }
+    
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+    
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == "SHOW_OVERLAY_POPUP") {
+            Log.d(TAG, "📲 SHOW_OVERLAY_POPUP action received")
+            showFlutterOverlay()
+            
+            // Move MainActivity to background so user stays in current app
+            moveTaskToBack(true)
+            Log.d(TAG, "✅ Overlay triggered, MainActivity moved to background")
+        }
     }
 
     override fun onDestroy() {
