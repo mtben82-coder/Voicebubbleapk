@@ -9,8 +9,11 @@ class PermissionsScreen extends StatelessWidget {
   const PermissionsScreen({super.key, required this.onComplete});
   
   Future<void> _requestPermissions(BuildContext context) async {
+    debugPrint('🔐 Starting permission request flow...');
+    
     // Request microphone permission FIRST
     final micStatus = await Permission.microphone.request();
+    debugPrint('🎤 Microphone permission: ${micStatus.isGranted}');
     
     if (!micStatus.isGranted) {
       // Show error dialog for microphone permission
@@ -43,48 +46,22 @@ class PermissionsScreen extends StatelessWidget {
     
     // Request overlay permission on Android
     if (Platform.isAndroid) {
+      debugPrint('📱 Checking overlay permission...');
       final hasOverlayPermission = await NativeOverlayService.checkPermission();
+      debugPrint('Overlay permission status: $hasOverlayPermission');
       
       if (!hasOverlayPermission) {
-        // Show instruction dialog BEFORE opening settings
-        if (context.mounted) {
-          await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Enable Overlay Permission'),
-              content: const Text(
-                'Next, we need to enable the floating bubble:\n\n'
-                '1. Find "VoiceBubble" in the list\n'
-                '2. Turn ON "Allow display over other apps"\n'
-                '3. Press back to return here\n\n'
-                'Tap OK to open settings now.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        }
+        debugPrint('🚀 Opening overlay permission settings...');
         
-        // Open overlay permission settings
+        // Open overlay permission settings immediately
         await NativeOverlayService.requestPermission();
         
-        // Wait a moment for user to grant permission
-        await Future.delayed(const Duration(seconds: 1));
-      }
-      
-      // Check if permission was granted and start the overlay service
-      final permissionGranted = await NativeOverlayService.checkPermission();
-      if (permissionGranted) {
-        debugPrint('✅ Overlay permission granted, starting service...');
-        await NativeOverlayService.showOverlay();
+        debugPrint('⏳ Settings should be open now...');
       }
     }
     
-    // Complete onboarding
+    // Complete onboarding - HomeScreen will handle service start when app resumes
+    debugPrint('✅ Permissions flow complete, moving to home screen');
     onComplete();
   }
   
