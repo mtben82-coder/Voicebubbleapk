@@ -32,9 +32,11 @@ class OverlayService {
     try {
       final hasPermission = await checkOverlayPermission();
       if (!hasPermission) {
-        debugPrint('Overlay permission not granted');
+        debugPrint('❌ Overlay permission not granted');
         return;
       }
+      
+      debugPrint('🚀 Starting overlay...');
       
       await FlutterOverlayWindow.showOverlay(
         enableDrag: true,
@@ -42,15 +44,16 @@ class OverlayService {
         overlayContent: 'Tap to record',
         flag: OverlayFlag.defaultFlag,
         visibility: NotificationVisibility.visibilityPublic,
-        positionGravity: PositionGravity.right,
-        width: WindowSize.matchParent,
-        height: WindowSize.matchParent,
+        positionGravity: PositionGravity.none,
+        width: WindowSize.fullWidth,
+        height: WindowSize.fullHeight,
       );
       
       _isOverlayActive = true;
       debugPrint('✅ Overlay shown successfully');
     } catch (e) {
       debugPrint('❌ Error showing overlay: $e');
+      debugPrint('❌ Stack trace: ${StackTrace.current}');
     }
   }
   
