@@ -1,15 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io' show Platform;
 import '../../providers/app_state_provider.dart';
 import '../../constants/presets.dart';
 import '../../models/preset.dart';
+import '../../services/overlay_service.dart';
 import '../main/recording_screen.dart';
 import '../main/preset_selection_screen.dart';
 import '../main/vault_screen.dart';
 import '../settings/settings_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+  
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _overlayEnabled = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _checkOverlayStatus();
+    _initializeOverlay();
+  }
+  
+  Future<void> _checkOverlayStatus() async {
+    if (Platform.isAndroid) {
+      final isActive = await OverlayService.isActive();
+      setState(() {
+        _overlayEnabled = isActive;
+      });
+    }
+  }
+  
+  Future<void> _initializeOverlay() async {
+    if (Platform.isAndroid) {
+      // Auto-start overlay if permission is granted
+      final hasPermission = await OverlayService.checkOverlayPermission();
+      if (hasPermission) {
+        await OverlayService.showOverlay();
+        setState(() {
+          _overlayEnabled = true;
+        });
+      }
+    }
+  }
+  
+  Future<void> _toggleOverlay() async {
+    if (!Platform.isAndroid) return;
+    
+    if (_overlayEnabled) {
+      await OverlayService.closeOverlay();
+      setState(() {
+        _overlayEnabled = false;
+      });
+    } else {
+      final hasPermission = await OverlayService.checkOverlayPermission();
+      if (!hasPermission) {
+        final granted = await OverlayService.requestOverlayPermission();
+        if (!granted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Overlay permission is required'),
+                backgroundColor: Color(0xFFEF4444),
+              ),
+            );
+          }
+          return;
+        }
+      }
+      
+      await OverlayService.showOverlay();
+      setState(() {
+        _overlayEnabled = true;
+      });
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -41,12 +111,37 @@ class HomeScreen extends StatelessWidget {
                           color: textColor,
                         ),
                       ),
-                      Text(
-                        'Tap to speak',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: secondaryTextColor,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Tap to speak',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: secondaryTextColor,
+                            ),
+                          ),
+                          if (Platform.isAndroid && _overlayEnabled) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Overlay Active',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -137,6 +232,72 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+            
+            // Android Overlay Toggle Banner
+            if (Platform.isAndroid)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: _overlayEnabled
+                          ? [const Color(0xFF10B981), const Color(0xFF14B8A6)]
+                          : [const Color(0xFF9333EA), const Color(0xFFEC4899)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _overlayEnabled ? Icons.check_circle : Icons.info_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _overlayEnabled
+                              ? 'Overlay is active! It will appear when you open your keyboard'
+                              : 'Enable floating overlay to use VoiceBubble anywhere',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _toggleOverlay,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: _overlayEnabled
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF9333EA),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          _overlayEnabled ? 'Disable' : 'Enable',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             
             // Main Record Button
             Expanded(
@@ -344,4 +505,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
