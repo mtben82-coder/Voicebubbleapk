@@ -45,8 +45,8 @@ class OverlayService {
         flag: OverlayFlag.defaultFlag,
         visibility: NotificationVisibility.visibilityPublic,
         positionGravity: PositionGravity.none,
-        width: WindowSize.fullWidth,
-        height: WindowSize.fullHeight,
+        width: WindowSize.matchParent,
+        height: WindowSize.matchParent,
       );
       
       _isOverlayActive = true;
