@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/theme_provider.dart';
 import 'providers/app_state_provider.dart';
 import 'services/storage_service.dart';
+import 'services/flutter_overlay_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
@@ -17,6 +18,9 @@ void main() async {
   
   // Initialize storage
   await StorageService.initialize();
+  
+  // Initialize Flutter overlay service
+  FlutterOverlayService.initialize();
   
   // Load environment variables (if .env file exists)
   try {

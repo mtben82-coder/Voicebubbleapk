@@ -163,9 +163,10 @@ class OverlayService : Service() {
                 PixelFormat.TRANSLUCENT
             )
             
-            params.gravity = Gravity.TOP or Gravity.END
-            params.x = 16
-            params.y = 200
+            // Position on LEFT side of screen, vertically centered
+            params.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            params.x = 0
+            params.y = 0
             
             // Add view to window manager
             windowManager?.addView(overlayView, params)
@@ -184,11 +185,11 @@ class OverlayService : Service() {
     private fun createBubbleView(): View {
         Log.d(TAG, "Creating bubble view...")
         
-        // Create container
+        // Create container - TINY bubble (56dp)
         val container = FrameLayout(this).apply {
             layoutParams = FrameLayout.LayoutParams(
-                dpToPx(80),
-                dpToPx(80)
+                dpToPx(56),
+                dpToPx(56)
             )
         }
         
@@ -209,7 +210,7 @@ class OverlayService : Service() {
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT
                 ).apply {
-                    val padding = dpToPx(20)
+                    val padding = dpToPx(16)
                     setMargins(padding, padding, padding, padding)
                 }
                 setImageResource(R.drawable.ic_microphone)
@@ -217,18 +218,18 @@ class OverlayService : Service() {
             }
             container.addView(iconView)
             
-            // Set click listener
+            // Set click listener - Show Flutter overlay window
             container.setOnClickListener {
                 try {
-                    Log.d(TAG, "Bubble clicked, opening MainActivity")
-                    // Open main app when bubble is clicked
+                    Log.d(TAG, "Bubble clicked, showing Flutter overlay")
+                    // Show Flutter overlay window over current app
                     val intent = Intent(this@OverlayService, MainActivity::class.java).apply {
+                        action = "SHOW_OVERLAY"
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        putExtra("open_recording", true)
                     }
                     startActivity(intent)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error opening MainActivity", e)
+                    Log.e(TAG, "Error showing overlay", e)
                 }
             }
             
