@@ -73,16 +73,19 @@ class _RecordingScreenState extends State<RecordingScreen>
         );
       }
 
-      // Start live speech-to-text for preview
+      // Start live speech-to-text for real-time streaming
       await _speech.listen(
         onResult: (result) {
           setState(() {
             _liveTranscription = result.recognizedWords;
           });
         },
-        listenMode: stt.ListenMode.confirmation,
+        listenMode: stt.ListenMode.dictation, // Continuous dictation mode
         pauseFor: const Duration(seconds: 30), // Don't auto-stop
-        partialResults: true, // Show live updates
+        partialResults: true, // CRITICAL: Show words as you speak!
+        onSoundLevelChange: (level) {
+          // Optional: Could use this for visual feedback
+        },
         cancelOnError: false,
         listenFor: const Duration(minutes: 5), // Max 5 minutes
       );
@@ -306,25 +309,44 @@ class _RecordingScreenState extends State<RecordingScreen>
                       ),
                     const SizedBox(height: 32),
                     
-                    // Live Transcription (streaming)
-                    if (_liveTranscription.isNotEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '"$_liveTranscription"',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: secondaryTextColor,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                    // Live Transcription (streaming) - Always show
+                    Container(
+                      width: double.infinity,
+                      constraints: const BoxConstraints(minHeight: 100),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: _isRecording && _liveTranscription.isEmpty
+                            ? Border.all(
+                                color: const Color(0xFFEF4444).withOpacity(0.3),
+                                width: 2,
+                              )
+                            : null,
                       ),
+                      child: _liveTranscription.isEmpty
+                          ? Text(
+                              _isRecording 
+                                  ? 'Start speaking...'
+                                  : 'Waiting...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: secondaryTextColor.withOpacity(0.5),
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            )
+                          : Text(
+                              '"$_liveTranscription"',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: textColor,
+                                fontWeight: FontWeight.w500,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                    ),
                   ],
                 ),
               ),
