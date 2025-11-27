@@ -4,7 +4,7 @@ import 'dart:io' show Platform;
 import '../../providers/app_state_provider.dart';
 import '../../constants/presets.dart';
 import '../../models/preset.dart';
-import '../../services/native_overlay_service.dart';
+import '../../services/accessibility_service.dart';
 import '../main/recording_screen.dart';
 import '../main/preset_selection_screen.dart';
 import '../main/vault_screen.dart';
@@ -29,71 +29,61 @@ class _HomeScreenState extends State<HomeScreen> {
   
   Future<void> _checkOverlayStatus() async {
     if (Platform.isAndroid) {
-      final isActive = await NativeOverlayService.isActive();
+      final isEnabled = await AccessibilityService.isEnabled();
       setState(() {
-        _overlayEnabled = isActive;
+        _overlayEnabled = isEnabled;
       });
     }
   }
   
   Future<void> _initializeOverlay() async {
     if (Platform.isAndroid) {
-      // Auto-start overlay if permission is granted
-      final hasPermission = await NativeOverlayService.checkPermission();
-      if (hasPermission) {
-        final success = await NativeOverlayService.showOverlay();
-        setState(() {
-          _overlayEnabled = success;
-        });
-      }
+      // Check if accessibility service is enabled
+      final isEnabled = await AccessibilityService.isEnabled();
+      setState(() {
+        _overlayEnabled = isEnabled;
+      });
     }
   }
   
   Future<void> _toggleOverlay() async {
     if (!Platform.isAndroid) return;
     
-    if (_overlayEnabled) {
-      final success = await NativeOverlayService.hideOverlay();
-      setState(() {
-        _overlayEnabled = !success;
-      });
-    } else {
-      final hasPermission = await NativeOverlayService.checkPermission();
-      if (!hasPermission) {
-        await NativeOverlayService.requestPermission();
-        
-        // Wait a bit for user to grant permission
-        await Future.delayed(const Duration(seconds: 1));
-        
-        final granted = await NativeOverlayService.checkPermission();
-        if (!granted) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Overlay permission is required'),
-                backgroundColor: Color(0xFFEF4444),
-              ),
-            );
-          }
-          return;
-        }
-      }
-      
-      final success = await NativeOverlayService.showOverlay();
-      setState(() {
-        _overlayEnabled = success;
-      });
-      
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Overlay bubble is now visible! 🎉'),
-            backgroundColor: Color(0xFF10B981),
-            duration: Duration(seconds: 2),
+    // Open accessibility settings for the user to enable/disable
+    await AccessibilityService.openSettings();
+    
+    // Show instruction dialog
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Enable VoiceBubble'),
+          content: const Text(
+            'To use the floating bubble:\n\n'
+            '1. Find "VoiceBubble" in the list\n'
+            '2. Turn it ON\n'
+            '3. Tap "Allow" when prompted\n\n'
+            'The bubble will appear when you\'re typing!',
           ),
-        );
-      }
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Got it!'),
+            ),
+          ],
+        ),
+      );
     }
+    
+    // Check status after a delay
+    Future.delayed(const Duration(seconds: 2), () async {
+      final isEnabled = await AccessibilityService.isEnabled();
+      if (mounted) {
+        setState(() {
+          _overlayEnabled = isEnabled;
+        });
+      }
+    });
   }
   
   @override
@@ -275,8 +265,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           _overlayEnabled
-                              ? 'Overlay is active! It will appear when you open your keyboard'
-                              : 'Enable floating overlay to use VoiceBubble anywhere',
+                              ? 'Accessibility service active! Bubble appears when typing'
+                              : 'Enable VoiceBubble in Accessibility Settings',
                           style: const TextStyle(
                             fontSize: 13,
                             color: Colors.white,
@@ -302,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           elevation: 0,
                         ),
                         child: Text(
-                          _overlayEnabled ? 'Disable' : 'Enable',
+                          _overlayEnabled ? 'Enabled ✓' : 'Setup',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

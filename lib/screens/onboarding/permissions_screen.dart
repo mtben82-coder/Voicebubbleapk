@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
-import '../../services/native_overlay_service.dart';
+import '../../services/accessibility_service.dart';
 
 class PermissionsScreen extends StatelessWidget {
   final VoidCallback onComplete;
@@ -12,21 +12,11 @@ class PermissionsScreen extends StatelessWidget {
     // Request microphone permission
     final micStatus = await Permission.microphone.request();
     
-    // Request overlay permission on Android
+    // Open accessibility settings on Android
     if (Platform.isAndroid) {
-      final hasOverlayPermission = await NativeOverlayService.checkPermission();
-      if (!hasOverlayPermission) {
-        await NativeOverlayService.requestPermission();
-        // Wait for user to grant permission
-        await Future.delayed(const Duration(seconds: 1));
-        final granted = await NativeOverlayService.checkPermission();
-        if (granted) {
-          // Start the overlay service
-          await NativeOverlayService.showOverlay();
-        }
-      } else {
-        // Permission already granted, show overlay
-        await NativeOverlayService.showOverlay();
+      final isEnabled = await AccessibilityService.isEnabled();
+      if (!isEnabled) {
+        await AccessibilityService.openSettings();
       }
     }
     
