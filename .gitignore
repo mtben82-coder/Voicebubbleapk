@@ -99,7 +99,7 @@ google-services.json
 GoogleService-Info.plist
 
 # Code Generation
-*.g.dart
+# *.g.dart - Committing generated files for CI/CD
 *.freezed.dart
 
 # Coverage
