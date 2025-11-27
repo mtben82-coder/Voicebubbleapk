@@ -232,7 +232,7 @@ class _RecordingScreenState extends State<RecordingScreen>
                       alignment: Alignment.center,
                       children: [
                         // Pulse animation
-                        if (_isListening)
+                        if (_isRecording)
                           AnimatedBuilder(
                             animation: _pulseController,
                             builder: (context, child) {
