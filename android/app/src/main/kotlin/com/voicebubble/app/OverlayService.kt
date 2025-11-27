@@ -159,8 +159,8 @@ class OverlayService : Service() {
             }
             
             val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                dpToPx(56), // Fixed width: 56dp
+                dpToPx(56), // Fixed height: 56dp
                 layoutType,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
