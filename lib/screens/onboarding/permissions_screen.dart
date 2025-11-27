@@ -46,18 +46,12 @@ class PermissionsScreen extends StatelessWidget {
     
     // Request overlay permission on Android
     if (Platform.isAndroid) {
-      debugPrint('📱 Checking overlay permission...');
-      final hasOverlayPermission = await NativeOverlayService.checkPermission();
-      debugPrint('Overlay permission status: $hasOverlayPermission');
-      
-      if (!hasOverlayPermission) {
-        debugPrint('🚀 Opening overlay permission settings...');
-        
-        // Open overlay permission settings immediately
-        await NativeOverlayService.requestPermission();
-        
-        debugPrint('⏳ Settings should be open now...');
-      }
+      // Always open the system \"Display over other apps\" settings screen.
+      // Some devices keep this permission across reinstalls, so we don't
+      // try to be clever here – we just send the user to the right place.
+      debugPrint('🚀 Opening overlay permission settings (always)...');
+      await NativeOverlayService.requestPermission();
+      debugPrint('⏳ Settings should be open now...');
     }
     
     // Complete onboarding - HomeScreen will handle service start when app resumes
