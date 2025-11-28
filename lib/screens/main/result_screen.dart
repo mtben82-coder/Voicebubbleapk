@@ -42,14 +42,17 @@ class _ResultScreenState extends State<ResultScreen> {
     
     try {
       final aiService = AIService();
-      final result = await aiService.rewriteText(transcription, preset);
       
-      setState(() {
-        _rewrittenText = result;
-        _isLoading = false;
-      });
+      // Use streaming to show text word-by-word
+      await for (final chunk in aiService.rewriteTextStreaming(transcription, preset)) {
+        setState(() {
+          _rewrittenText += chunk;
+          _isLoading = false; // Show text as soon as first chunk arrives
+        });
+      }
       
-      appState.setRewrittenText(result);
+      // Save final result to app state
+      appState.setRewrittenText(_rewrittenText);
     } catch (e) {
       setState(() {
         _error = e.toString();
