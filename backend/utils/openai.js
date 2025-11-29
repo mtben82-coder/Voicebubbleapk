@@ -1,37 +1,42 @@
-import OpenAI from "openai";
-import FormData from "form-data";
 import axios from "axios";
+import FormData from "form-data";
 
-let client = null;
+const OPENAI_API_URL = "https://api.openai.com/v1";
 
 /**
- * Initialise OpenAI client safely
+ * Safely returns your API key
  */
-function getClient() {
-  if (!client) {
-    const key = process.env.OPENAI_API_KEY;
-    if (!key) {
-      console.warn("WARNING: OPENAI_API_KEY missing — features dependent on OpenAI will fail.");
-      return null;
-    }
-
-    client = new OpenAI({ apiKey: key });
+function getApiKey() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) {
+    console.warn("WARNING: OPENAI_API_KEY missing — OpenAI features will fail.");
   }
-
-  return client;
+  return key;
 }
 
 /**
- * HEALTH CHECK (modern, correct)
+ * Shared axios client (no SDK)
+ */
+function getClient() {
+  return axios.create({
+    baseURL: OPENAI_API_URL,
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      "Content-Type": "application/json",
+    },
+    timeout: 60000,
+  });
+}
+
+/**
+ * HEALTH CHECK — axios-only, no SDK
  */
 export async function checkOpenAIHealth() {
   try {
-    const c = getClient();
-    if (!c) return false;
+    const client = getClient();
+    const res = await client.get("/models");
 
-    // Try a minimal, safe request
-    const models = await c.models.list();
-    return !!models && Array.isArray(models.data);
+    return Array.isArray(res.data.data);
   } catch (err) {
     console.error("OpenAI health check failed:", err.message);
     return false;
@@ -39,30 +44,30 @@ export async function checkOpenAIHealth() {
 }
 
 /**
- * WHISPER TRANSCRIPTION (updated for 2025 API)
+ * WHISPER TRANSCRIPTION — axios-only
  */
 export async function transcribeAudio(audioBuffer, filename = "audio.wav") {
   try {
-    const c = getClient();
-    if (!c) throw new Error("OpenAI client missing");
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("Missing OpenAI API key");
 
     const form = new FormData();
     form.append("file", audioBuffer, filename);
-    form.append("model", "gpt-4o-mini-transcribe"); // Modern whisper model
+    form.append("model", "gpt-4o-mini-transcribe");
 
     const response = await axios.post(
-      "https://api.openai.com/v1/audio/transcriptions",
+      `${OPENAI_API_URL}/audio/transcriptions`,
       form,
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           ...form.getHeaders(),
         },
         timeout: 60000,
       }
     );
 
-    return response.data.text || response.data.text;
+    return response.data.text;
   } catch (err) {
     console.error("Transcription error:", err.response?.data || err.message);
     throw new Error(
@@ -74,58 +79,85 @@ export async function transcribeAudio(audioBuffer, filename = "audio.wav") {
 }
 
 /**
- * REWRITE (streaming)
+ * REWRITE (STREAMING) — SSE-style axios stream
  */
 export async function rewriteTextStreaming(messages, params, onChunk) {
   try {
-    const c = getClient();
-    if (!c) throw new Error("OpenAI client missing");
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("Missing OpenAI API key");
 
-    const response = await c.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      temperature: params.temperature || 0.7,
-      max_tokens: params.max_tokens || 500,
-      stream: true,
-    });
+    const response = await axios.post(
+      `${OPENAI_API_URL}/chat/completions`,
+      {
+        model: "gpt-4o-mini",
+        messages,
+        temperature: params.temperature || 0.7,
+        max_tokens: params.max_tokens || 500,
+        stream: true,
+      },
+      {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        responseType: "stream",
+      }
+    );
 
     let full = "";
 
-    for await (const chunk of response) {
-      const delta = chunk.choices[0]?.delta?.content;
-      if (delta) {
-        full += delta;
-        onChunk && onChunk(delta);
-      }
-    }
+    return new Promise((resolve, reject) => {
+      response.data.on("data", (raw) => {
+        const lines = raw
+          .toString()
+          .split("\n")
+          .filter((l) => l.trim() !== "");
 
-    return full;
+        for (const line of lines) {
+          if (line === "data: [DONE]") {
+            return resolve(full);
+          }
+
+          const json = line.replace("data: ", "");
+
+          try {
+            const parsed = JSON.parse(json);
+            const delta = parsed.choices?.[0]?.delta?.content;
+
+            if (delta) {
+              full += delta;
+              onChunk && onChunk(delta);
+            }
+          } catch (e) {
+            // silent skip incomplete chunks
+          }
+        }
+      });
+
+      response.data.on("end", () => resolve(full));
+      response.data.on("error", (err) =>
+        reject(new Error("Streaming error: " + err.message))
+      );
+    });
   } catch (err) {
-    console.error("Rewrite stream error:", err.message);
-    throw new Error(
-      `Rewrite failed: ${
-        err.response?.data?.error?.message || err.message
-      }`
-    );
+    console.error("Rewrite streaming error:", err.message);
+    throw new Error(`Rewrite failed: ${err.message}`);
   }
 }
 
 /**
- * REWRITE (non-streaming)
+ * REWRITE (NORMAL)
  */
 export async function rewriteText(messages, params) {
   try {
-    const c = getClient();
-    if (!c) throw new Error("OpenAI client missing");
+    const client = getClient();
 
-    const response = await c.chat.completions.create({
+    const response = await client.post("/chat/completions", {
       model: "gpt-4o-mini",
       messages,
       temperature: params.temperature || 0.7,
       max_tokens: params.max_tokens || 500,
+      stream: false,
     });
 
-    return response.choices[0].message.content.trim();
+    return response.data.choices[0].message.content.trim();
   } catch (err) {
     console.error("Rewrite error:", err.message);
     throw new Error(
