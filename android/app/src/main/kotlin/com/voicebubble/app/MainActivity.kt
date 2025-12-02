@@ -10,7 +10,6 @@ import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin
 
 class MainActivity : FlutterActivity() {
 
@@ -103,10 +102,13 @@ class MainActivity : FlutterActivity() {
         Log.d(TAG, "⚡ Showing Flutter overlay window...")
 
         try {
-            // Show the Flutter overlay window using flutter_overlay_window package
-            FlutterOverlayWindowPlugin.showOverlay(this)
-            
-            Log.d(TAG, "✅ Flutter overlay window shown!")
+            // Use method channel to tell Flutter to show the overlay
+            if (methodChannel != null) {
+                methodChannel!!.invokeMethod("showOverlayWindow", null)
+                Log.d(TAG, "✅ Method call sent to Flutter to show overlay")
+            } else {
+                Log.e(TAG, "❌ MethodChannel is null")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error showing Flutter overlay window", e)
             e.printStackTrace()
