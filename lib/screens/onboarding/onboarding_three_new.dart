@@ -78,10 +78,10 @@ class _OnboardingThreeNewState extends State<OnboardingThreeNew> with TickerProv
                       ),
                     );
                   },
-                  child: Padding(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(32, 60, 32, 24),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 20),
                         // Title

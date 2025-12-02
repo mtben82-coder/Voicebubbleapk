@@ -86,6 +86,7 @@ class _OnboardingOneState extends State<OnboardingOne> with TickerProviderStateM
                     );
                   },
                   child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(32, 60, 32, 24),
                     child: Column(
                       children: [

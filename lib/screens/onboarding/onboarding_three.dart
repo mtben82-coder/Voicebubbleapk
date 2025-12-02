@@ -70,10 +70,10 @@ class _OnboardingFourState extends State<OnboardingFour> with SingleTickerProvid
                       ),
                     );
                   },
-                  child: Padding(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(32, 40, 32, 24),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Lock Icon
                         Container(
