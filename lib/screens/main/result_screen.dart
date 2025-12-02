@@ -228,7 +228,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               gradient: LinearGradient(
                                 colors: [
                                   primaryColor.withOpacity(0.1),
-                                  const Color(0xFFEC4899).withOpacity(0.1),
+                                  const Color(0xFF2563EB).withOpacity(0.1),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -269,7 +269,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               gradient: LinearGradient(
                                 colors: [
                                   primaryColor.withOpacity(0.1),
-                                  const Color(0xFFEC4899).withOpacity(0.1),
+                                  const Color(0xFF2563EB).withOpacity(0.1),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
