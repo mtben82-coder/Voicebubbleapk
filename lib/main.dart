@@ -10,7 +10,9 @@ import 'theme/app_theme.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
 import 'screens/onboarding/onboarding_three.dart';
+import 'screens/auth/sign_in_screen.dart';
 import 'screens/onboarding/permissions_screen.dart';
+import 'screens/paywall/paywall_screen.dart';
 import 'screens/main/home_screen.dart';
 
 void main() async {
@@ -134,15 +136,34 @@ class OnboardingFlow extends StatefulWidget {
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
   int _currentStep = 0;
+  bool _isSignedIn = false;
   
   void _nextStep() {
-    if (_currentStep < 3) {
+    if (_currentStep < 5) {
       setState(() {
         _currentStep++;
       });
     } else {
       widget.onComplete();
     }
+  }
+  
+  void _skipSignIn() {
+    setState(() {
+      _isSignedIn = false;
+      _currentStep = 4; // Skip to permissions
+    });
+  }
+  
+  void _handleSignIn() {
+    setState(() {
+      _isSignedIn = true;
+      _currentStep = 4; // Go to permissions
+    });
+  }
+  
+  void _closePaywall() {
+    widget.onComplete();
   }
   
   @override
@@ -155,7 +176,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       case 2:
         return OnboardingThree(onNext: _nextStep);
       case 3:
+        return SignInScreen(
+          onSignIn: _handleSignIn,
+          onSkip: _skipSignIn,
+        );
+      case 4:
         return PermissionsScreen(onComplete: _nextStep);
+      case 5:
+        return PaywallScreen(
+          onSubscribe: () {
+            // TODO: Implement subscription
+            widget.onComplete();
+          },
+          onRestore: () {
+            // TODO: Implement restore
+          },
+          onClose: _closePaywall,
+        );
       default:
         return const HomeScreen();
     }

@@ -1,99 +1,203 @@
 import 'package:flutter/material.dart';
-import '../../widgets/gradient_background.dart';
+import 'dart:math' as math;
 
-class OnboardingOne extends StatelessWidget {
+class OnboardingOne extends StatefulWidget {
   final VoidCallback onNext;
   
   const OnboardingOne({super.key, required this.onNext});
-  
+
+  @override
+  State<OnboardingOne> createState() => _OnboardingOneState();
+}
+
+class _OnboardingOneState extends State<OnboardingOne> with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late AnimationController _pulseController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Main animation controller
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    
+    // Pulse animation for icons
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    
+    _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PurplePinkGradient(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1E88E5), // Logo blue
+              Color(0xFF1565C0),
+              Color(0xFF0D47A1),
+            ],
+          ),
+        ),
+        child: SafeArea(
           child: Column(
             children: [
-              // Scrollable content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(32, 48, 32, 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 80),
-                      // Icon
-                      Container(
-                        width: 128,
-                        height: 128,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFA855F7), Color(0xFFEC4899)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                child: AnimatedBuilder(
+                  animation: _fadeAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Transform.translate(
+                        offset: Offset(0, _slideAnimation.value),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(32, 60, 32, 24),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        // Logo/Icon
+                        AnimatedBuilder(
+                          animation: _pulseAnimation,
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: _pulseAnimation.value,
+                              child: Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(30),
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 40,
+                                      offset: const Offset(0, 20),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.mic_rounded,
+                                  size: 60,
+                                  color: Color(0xFF1E88E5),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 60),
+                        // Title
+                        const Text(
+                          'Speak.\nAI Writes.\nDone.',
+                          style: TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.2,
+                            letterSpacing: -1,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFA855F7).withOpacity(0.5),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
+                          textAlign: TextAlign.center,
                         ),
-                        child: const Icon(
-                          Icons.mic,
-                          size: 64,
-                          color: Colors.white,
+                        const SizedBox(height: 24),
+                        // Subtitle
+                        Text(
+                          'Stop typing. Just talk.\nPerfectly written messages in seconds.',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.9),
+                            height: 1.6,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 48),
-                      // Title
-                      const Text(
-                        'Speak. Write. Done.',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        const SizedBox(height: 60),
+                        // Quick Process Steps
+                        _buildProcessStep(
+                          icon: Icons.mic_rounded,
+                          title: 'Speak',
+                          subtitle: '< 30 seconds',
+                          delay: 0,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      // Description
-                      const Text(
-                        'Stop typing. Just talk, and get perfectly written messages instantly.',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Color(0xFFE9D5FF),
-                          height: 1.5,
+                        const SizedBox(height: 20),
+                        _buildArrow(),
+                        const SizedBox(height: 20),
+                        _buildProcessStep(
+                          icon: Icons.auto_awesome,
+                          title: 'AI Rewrites',
+                          subtitle: 'Instant',
+                          delay: 200,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 80),
-                    ],
+                        const SizedBox(height: 20),
+                        _buildArrow(),
+                        const SizedBox(height: 20),
+                        _buildProcessStep(
+                          icon: Icons.done_all_rounded,
+                          title: 'Perfect Text',
+                          subtitle: 'Copy & use',
+                          delay: 400,
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              // Fixed button at bottom
+              // Button
               Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: onNext,
+                    onPressed: widget.onNext,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF581C87),
+                      foregroundColor: const Color(0xFF1E88E5),
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
+                      shadowColor: Colors.black.withOpacity(0.3),
                     ),
                     child: const Text(
                       'Get Started',
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
@@ -105,5 +209,102 @@ class OnboardingOne extends StatelessWidget {
       ),
     );
   }
-}
 
+  Widget _buildProcessStep({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required int delay,
+  }) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 800 + delay),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: const Color(0xFF1E88E5),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArrow() {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, 5 * math.sin(_pulseController.value * 2 * math.pi)),
+          child: Icon(
+            Icons.arrow_downward_rounded,
+            color: Colors.white.withOpacity(0.6),
+            size: 28,
+          ),
+        );
+      },
+    );
+  }
+}

@@ -1,245 +1,287 @@
 import 'package:flutter/material.dart';
-import '../../widgets/gradient_background.dart';
+import 'dart:io' show Platform;
 
-class SignInScreen extends StatelessWidget {
-  final VoidCallback onSignInComplete;
+class SignInScreen extends StatefulWidget {
+  final VoidCallback onSignIn;
+  final VoidCallback onSkip;
   
-  const SignInScreen({super.key, required this.onSignInComplete});
-  
-  Future<void> _handleGoogleSignIn(BuildContext context) async {
-    // TODO: Implement Google Sign-In
-    // For now, just simulate sign-in
-    await Future.delayed(const Duration(seconds: 1));
-    onSignInComplete();
+  const SignInScreen({
+    super.key,
+    required this.onSignIn,
+    required this.onSkip,
+  });
+
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    
+    _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    
+    _controller.forward();
   }
-  
-  Future<void> _handleAppleSignIn(BuildContext context) async {
-    // TODO: Implement Apple Sign-In
-    // For now, just simulate sign-in
-    await Future.delayed(const Duration(seconds: 1));
-    onSignInComplete();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
-  
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    
+    // TODO: Implement Google Sign In
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+      widget.onSignIn();
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+    
+    // TODO: Implement Apple Sign In
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+      widget.onSignIn();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PurplePinkGradient(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Spacer(),
-                // Logo and Title
-                Column(
-                  children: [
-                    // App Icon
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFA855F7), Color(0xFFEC4899)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFA855F7).withOpacity(0.5),
-                            blurRadius: 30,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1E88E5),
+              Color(0xFF1565C0),
+              Color(0xFF0D47A1),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _fadeAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Transform.translate(
+                        offset: Offset(0, _slideAnimation.value),
+                        child: child,
                       ),
-                      child: const Icon(
-                        Icons.mic,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Welcome to',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Color(0xFFE9D5FF),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'VoiceBubble',
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Transform your voice into perfectly written text',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFFE9D5FF),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                // Sign-in Buttons
-                Column(
-                  children: [
-                    // Google Sign-In Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => _handleGoogleSignIn(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF1F2937),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.network(
-                              'https://www.google.com/favicon.ico',
-                              width: 24,
-                              height: 24,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.g_mobiledata,
-                                  size: 24,
-                                  color: Color(0xFF1F2937),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Continue with Google',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Apple Sign-In Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => _handleAppleSignIn(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.apple,
-                              size: 24,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Continue with Apple',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Skip/Continue as Guest
-                    TextButton(
-                      onPressed: onSignInComplete,
-                      child: const Text(
-                        'Continue as Guest',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Terms and Privacy
-                    Text(
-                      'By continuing, you agree to our',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    );
+                  },
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(32, 80, 32, 24),
+                    child: Column(
                       children: [
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to terms
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        // App Logo
+                        Container(
+                          width: 110,
+                          height: 110,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(28),
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 40,
+                                offset: const Offset(0, 20),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            'Terms',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.9),
-                              decoration: TextDecoration.underline,
-                            ),
+                          child: const Icon(
+                            Icons.mic_rounded,
+                            size: 55,
+                            color: Color(0xFF1E88E5),
                           ),
                         ),
-                        Text(
-                          ' and ',
+                        const SizedBox(height: 50),
+                        // Title
+                        const Text(
+                          'Welcome to\nVoiceBubble',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 44,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.2,
+                            letterSpacing: -1,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to privacy
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        const SizedBox(height: 16),
+                        Text(
+                          'Sign in to sync your presets and\nunlock premium features',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.9),
+                            height: 1.5,
                           ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 60),
+                        
+                        // Sign in buttons
+                        if (_isLoading)
+                          const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        else ...[
+                          // Google Sign In
+                          _buildSignInButton(
+                            onTap: _handleGoogleSignIn,
+                            icon: Icons.g_mobiledata_rounded,
+                            label: 'Continue with Google',
+                            backgroundColor: Colors.white,
+                            textColor: const Color(0xFF0D47A1),
+                            delay: 0,
+                          ),
+                          const SizedBox(height: 16),
+                          
+                          // Apple Sign In (iOS only)
+                          if (Platform.isIOS) ...[
+                            _buildSignInButton(
+                              onTap: _handleAppleSignIn,
+                              icon: Icons.apple_rounded,
+                              label: 'Continue with Apple',
+                              backgroundColor: Colors.black,
+                              textColor: Colors.white,
+                              delay: 150,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ],
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Terms
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Text(
-                            'Privacy Policy',
+                            'By signing in, you agree to our Terms of Service and Privacy Policy',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(0.9),
-                              decoration: TextDecoration.underline,
+                              color: Colors.white.withOpacity(0.6),
+                              height: 1.4,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                ),
+              ),
+              
+              // Skip button
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: TextButton(
+                  onPressed: widget.onSkip,
+                  child: Text(
+                    'Skip for now',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignInButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required String label,
+    required Color backgroundColor,
+    required Color textColor,
+    required int delay,
+  }) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 800 + delay),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: backgroundColor.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 28,
+                  color: textColor,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ],
             ),
@@ -249,4 +291,3 @@ class SignInScreen extends StatelessWidget {
     );
   }
 }
-

@@ -62,8 +62,19 @@ class PermissionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      body: SafeArea(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D47A1), // Logo blue theme
+              Color(0xFF1565C0),
+              Color(0xFF1E88E5),
+            ],
+          ),
+        ),
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Column(
@@ -75,47 +86,45 @@ class PermissionsScreen extends StatelessWidget {
                 children: [
                   // Icon
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(80),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFF59E0B), Color(0xFFF97316)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      shape: BoxShape.circle,
+                      color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFF59E0B).withOpacity(0.5),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 40,
+                          offset: const Offset(0, 20),
                         ),
                       ],
                     ),
                     child: const Icon(
-                      Icons.lock_outline,
-                      size: 40,
-                      color: Colors.white,
+                      Icons.verified_user_rounded,
+                      size: 50,
+                      color: Color(0xFF1E88E5),
                     ),
                   ),
                   const SizedBox(height: 48),
                   // Title
                   const Text(
-                    'Grant Permissions',
+                    'Quick Setup',
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 42,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
+                      height: 1.2,
+                      letterSpacing: -1,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   // Description
-                  const Text(
-                    'VoiceBubble needs two permissions to work:',
+                  Text(
+                    'We need 2 permissions to work perfectly',
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF94A3B8),
+                      fontSize: 18,
+                      color: Colors.white.withOpacity(0.9),
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -125,17 +134,17 @@ class PermissionsScreen extends StatelessWidget {
                   Column(
                     children: [
                       _buildPermissionCard(
-                        Icons.mic,
-                        'Microphone Access',
+                        Icons.mic_rounded,
+                        'Microphone',
                         'To record your voice',
-                        const Color(0xFFA855F7),
+                        const Color(0xFF42A5F5),
                       ),
                       const SizedBox(height: 16),
                       _buildPermissionCard(
-                        Icons.play_circle_outline,
+                        Icons.bubble_chart_rounded,
                         'Display Over Apps',
                         'To show the floating bubble',
-                        const Color(0xFFA855F7),
+                        const Color(0xFF42A5F5),
                       ),
                     ],
                   ),
@@ -150,8 +159,8 @@ class PermissionsScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () => _requestPermissions(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF9333EA),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF0D47A1),
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -162,7 +171,8 @@ class PermissionsScreen extends StatelessWidget {
                         'Grant Permissions',
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -170,11 +180,12 @@ class PermissionsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: onComplete,
-                    child: const Text(
+                    child: Text(
                       'Skip for now',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF94A3B8),
+                        color: Colors.white.withOpacity(0.8),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -182,6 +193,7 @@ class PermissionsScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -195,17 +207,29 @@ class PermissionsScreen extends StatelessWidget {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 2,
+        ),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 24,
-            color: color,
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              size: 28,
+              color: const Color(0xFF1E88E5),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -215,17 +239,17 @@ class PermissionsScreen extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF94A3B8),
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
