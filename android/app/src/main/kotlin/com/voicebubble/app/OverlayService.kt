@@ -223,18 +223,20 @@ class OverlayService : Service() {
             }
             container.addView(iconView)
             
-            // Set click listener - Show Flutter overlay popup
+            // Set click listener - Open main app
             container.setOnClickListener {
                 try {
-                    Log.d(TAG, "🎯 Bubble clicked! Showing Flutter overlay...")
+                    Log.d(TAG, "Bubble clicked, opening app")
                     
-                    // Send broadcast to show Flutter overlay
-                    val intent = Intent("SHOW_FLUTTER_OVERLAY")
-                    sendBroadcast(intent)
+                    val intent = Intent(this@OverlayService, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        putExtra("open_recording", true)
+                    }
+                    startActivity(intent)
                     
-                    Log.d(TAG, "✅ Broadcast sent to show Flutter overlay")
+                    Log.d(TAG, "MainActivity opened")
                 } catch (e: Exception) {
-                    Log.e(TAG, "❌ Error triggering overlay", e)
+                    Log.e(TAG, "Error opening app", e)
                 }
             }
             
