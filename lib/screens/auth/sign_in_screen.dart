@@ -3,12 +3,10 @@ import 'dart:io' show Platform;
 
 class SignInScreen extends StatefulWidget {
   final VoidCallback onSignIn;
-  final VoidCallback onSkip;
   
   const SignInScreen({
     super.key,
     required this.onSignIn,
-    required this.onSkip,
   });
 
   @override
@@ -77,12 +75,12 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1E88E5),
-              Color(0xFF1565C0),
-              Color(0xFF0D47A1),
+              Color(0xFF000000), // Pure black
+              Color(0xFF0A0A0A),
+              Color(0xFF1A1A1A),
             ],
           ),
         ),
@@ -105,25 +103,32 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                     padding: const EdgeInsets.fromLTRB(32, 80, 32, 24),
                     child: Column(
                       children: [
-                        // App Logo
+                        // App Logo - Blue circular mic
                         Container(
-                          width: 110,
-                          height: 110,
+                          width: 120,
+                          height: 120,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(28),
-                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF3B82F6), // Blue
+                                Color(0xFF2563EB),
+                              ],
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 40,
-                                offset: const Offset(0, 20),
+                                color: const Color(0xFF3B82F6).withOpacity(0.5),
+                                blurRadius: 50,
+                                offset: const Offset(0, 25),
                               ),
                             ],
                           ),
                           child: const Icon(
-                            Icons.mic_rounded,
-                            size: 55,
-                            color: Color(0xFF1E88E5),
+                            Icons.mic,
+                            size: 60,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 50),
@@ -141,10 +146,10 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Sign in to sync your presets and\nunlock premium features',
+                          'Sign in to get started',
                           style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 18,
+                            color: Colors.white.withOpacity(0.8),
                             height: 1.5,
                           ),
                           textAlign: TextAlign.center,
@@ -162,8 +167,8 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                             onTap: _handleGoogleSignIn,
                             icon: Icons.g_mobiledata_rounded,
                             label: 'Continue with Google',
-                            backgroundColor: Colors.white,
-                            textColor: const Color(0xFF0D47A1),
+                            backgroundColor: const Color(0xFF3B82F6), // Blue button
+                            textColor: Colors.white,
                             delay: 0,
                           ),
                           const SizedBox(height: 16),
@@ -198,22 +203,6 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Skip button
-              Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: TextButton(
-                  onPressed: widget.onSkip,
-                  child: Text(
-                    'Skip for now',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

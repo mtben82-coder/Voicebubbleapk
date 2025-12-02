@@ -139,7 +139,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _isSignedIn = false;
   
   void _nextStep() {
-    if (_currentStep < 6) {
+    if (_currentStep < 5) {
       setState(() {
         _currentStep++;
       });
@@ -148,17 +148,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     }
   }
   
-  void _skipSignIn() {
-    setState(() {
-      _isSignedIn = false;
-      _currentStep = 5; // Skip to permissions
-    });
-  }
-  
   void _handleSignIn() {
     setState(() {
       _isSignedIn = true;
-      _currentStep = 5; // Go to permissions
+      _currentStep = 4; // Go to permissions (step 4 now)
     });
   }
   
@@ -176,10 +169,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       case 2:
         return OnboardingThreeNew(onNext: _nextStep); // Features + pricing
       case 3:
-        return SignInScreen(
-          onSignIn: _handleSignIn,
-          onSkip: _skipSignIn,
-        );
+        return SignInScreen(onSignIn: _handleSignIn); // MANDATORY - No skip
       case 4:
         return PermissionsScreen(onComplete: _nextStep);
       case 5:

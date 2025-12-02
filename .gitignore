@@ -46,8 +46,14 @@ app.*.map.json
 **/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
-**/android/key.properties
+
+# Keystore - IMPORTANT: We keep the release keystore in repo for CI/CD
 *.jks
+!android/app/keystore/voicebubble-release.jks
+
+# Key properties - needed for build
+**/android/key.properties
+!android/key.properties
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
