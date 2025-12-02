@@ -421,21 +421,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 80),
                     
-                    // Card 1: Speak to rewrite (ABOVE the mic)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _AnimatedFeatureCard(
-                        icon: Icons.edit_note_rounded,
-                        text: 'Speak to rewrite or ask anything',
-                        gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 28),
-                    
-                    // Record Button (smaller)
+                    // Record Button
                     GestureDetector(
                       onTap: () {
                         context.read<AppStateProvider>().reset();
@@ -488,9 +476,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         color: secondaryTextColor,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 40),
                     
-                    // Card 2: Language support (BELOW the mic)
+                    // Card 1: Speak to rewrite (BELOW the mic)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _AnimatedFeatureCard(
+                        icon: Icons.edit_note_rounded,
+                        text: 'Speak to rewrite or ask anything',
+                        gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Card 2: Language support (BELOW card 1)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: _AnimatedFeatureCard(
@@ -499,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         gradientColors: const [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
