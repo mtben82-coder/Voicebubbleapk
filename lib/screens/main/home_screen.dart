@@ -468,9 +468,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         color: textColor,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
-                      'Speak naturally, then choose your style',
+                      'Voice to AI-powered text',
                       style: TextStyle(
                         fontSize: 14,
                         color: secondaryTextColor,
@@ -478,75 +478,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
-              ),
-            ),
-            
-            // Quick Presets
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Quick Presets',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PresetSelectionScreen(),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            Text(
-                              'View All',
-                              style: TextStyle(
-                                color: isDark ? const Color(0xFFA855F7) : const Color(0xFF9333EA),
-                              ),
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              size: 16,
-                              color: isDark ? const Color(0xFFA855F7) : const Color(0xFF9333EA),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Preset Grid
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.5,
-                    ),
-                    itemCount: AppPresets.quickPresets.length,
-                    itemBuilder: (context, index) {
-                      final preset = AppPresets.quickPresets[index];
-                      return _buildPresetCard(
-                        context,
-                        preset,
-                        surfaceColor,
-                        textColor,
-                      );
-                    },
-                  ),
-                ],
               ),
             ),
           ],

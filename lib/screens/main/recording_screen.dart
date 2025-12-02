@@ -212,11 +212,10 @@ class _RecordingScreenState extends State<RecordingScreen>
   
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF5F5F7);
-    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
-    final surfaceColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final backgroundColor = const Color(0xFF000000); // Always black
+    final textColor = Colors.white; // Always white text
+    final secondaryTextColor = const Color(0xFF94A3B8); // Light gray
+    final surfaceColor = const Color(0xFF1A1A1A); // Dark gray for cards
     
     final selectedPreset = context.watch<AppStateProvider>().selectedPreset;
     
@@ -274,20 +273,20 @@ class _RecordingScreenState extends State<RecordingScreen>
                               );
                             },
                           ),
-                        // Microphone button
+                        // Microphone button - Blue
                         Container(
                           width: 160,
                           height: 160,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(160),
+                            shape: BoxShape.circle,
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFDC2626), Color(0xFFEC4899)],
+                              colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFDC2626).withOpacity(0.5),
+                                color: const Color(0xFF3B82F6).withOpacity(0.5),
                                 blurRadius: 40,
                                 offset: const Offset(0, 15),
                               ),
