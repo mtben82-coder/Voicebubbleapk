@@ -84,13 +84,18 @@ class _SplashScreenState extends State<SplashScreen> {
           MaterialPageRoute(
             builder: (context) => OnboardingFlow(
               onComplete: () async {
+                debugPrint('✅ ONBOARDING COMPLETE - Navigating to HomeScreen');
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('hasCompletedOnboarding', true);
+                debugPrint('✅ Saved hasCompletedOnboarding = true');
                 if (mounted) {
+                  debugPrint('✅ Navigating to HomeScreen now...');
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const HomeScreen()),
                   );
+                } else {
+                  debugPrint('❌ ERROR: Context not mounted, cannot navigate');
                 }
               },
             ),
@@ -168,6 +173,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _closePaywall() {
+    debugPrint('🎯 PAYWALL CLOSED - Starting free trial, navigating to HomeScreen');
     widget.onComplete();
   }
 

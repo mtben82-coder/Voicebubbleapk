@@ -171,7 +171,10 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: widget.onClose,
+                            onPressed: () {
+                              debugPrint('🚀 FREE TRIAL BUTTON PRESSED - Skipping paywall');
+                              widget.onClose();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: const Color(0xFF0D47A1),
