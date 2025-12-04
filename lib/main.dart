@@ -1,72 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'providers/theme_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'providers/app_state_provider.dart';
-import 'services/storage_service.dart';
-import 'services/flutter_overlay_service.dart';
-import 'theme/app_theme.dart';
+import 'providers/theme_provider.dart';
+import 'screens/main/home_screen.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
 import 'screens/onboarding/onboarding_three_new.dart';
-import 'screens/auth/sign_in_screen.dart';
 import 'screens/onboarding/permissions_screen.dart';
+import 'screens/auth/sign_in_screen.dart';
 import 'screens/paywall/paywall_screen.dart';
-import 'screens/main/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize storage
-  await StorageService.initialize();
-  
-  // Initialize Flutter overlay service
-  FlutterOverlayService.initialize();
-  
-  // Load environment variables (if .env file exists)
+  // Initialize Firebase
   try {
-    await dotenv.load(fileName: ".env");
+    await Firebase.initializeApp();
+    debugPrint('✅ Firebase initialized successfully');
   } catch (e) {
-    debugPrint('No .env file found, using environment variables');
+    debugPrint('⚠️ Firebase initialization error: $e');
+    debugPrint('⚠️ App will continue but auth features may not work');
   }
   
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  
-  // Set system UI overlay style
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ),
-  );
-  
-  runApp(const VoiceBubbleApp());
+  runApp(const MyApp());
 }
 
-class VoiceBubbleApp extends StatelessWidget {
-  const VoiceBubbleApp({super.key});
-  
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AppStateProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => AppStateProvider()..initialize()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
           return MaterialApp(
             title: 'VoiceBubble',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
-            home: const AppInitializer(),
+            theme: ThemeData(
+              brightness: Brightness.dark, // Always dark mode
+              primaryColor: const Color(0xFF3B82F6), // Blue
+              scaffoldBackgroundColor: const Color(0xFF000000),
+              useMaterial3: true,
+            ),
+            home: const SplashScreen(),
           );
         },
       ),
@@ -74,70 +57,107 @@ class VoiceBubbleApp extends StatelessWidget {
   }
 }
 
-class AppInitializer extends StatefulWidget {
-  const AppInitializer({super.key});
-  
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  State<AppInitializer> createState() => _AppInitializerState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _AppInitializerState extends State<AppInitializer> {
-  bool _isLoading = true;
-  bool _showOnboarding = true;
-  
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
     _checkOnboardingStatus();
   }
-  
+
   Future<void> _checkOnboardingStatus() async {
-    final isComplete = await StorageService.isOnboardingComplete();
+    await Future.delayed(const Duration(seconds: 1));
     
-    setState(() {
-      _showOnboarding = !isComplete;
-      _isLoading = false;
-    });
+    final prefs = await SharedPreferences.getInstance();
+    final hasCompletedOnboarding = prefs.getBool('hasCompletedOnboarding') ?? false;
+    
+    if (mounted) {
+      if (hasCompletedOnboarding) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OnboardingFlow(
+              onComplete: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('hasCompletedOnboarding', true);
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }
+    }
   }
-  
-  Future<void> _completeOnboarding() async {
-    await StorageService.setOnboardingComplete();
-    setState(() {
-      _showOnboarding = false;
-    });
-  }
-  
+
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+    return Scaffold(
+      backgroundColor: const Color(0xFF000000),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const Icon(
+                Icons.mic,
+                size: 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'VoiceBubble',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
-      );
-    }
-    
-    if (_showOnboarding) {
-      return OnboardingFlow(onComplete: _completeOnboarding);
-    }
-    
-    return const HomeScreen();
+      ),
+    );
   }
 }
 
 class OnboardingFlow extends StatefulWidget {
   final VoidCallback onComplete;
-  
+
   const OnboardingFlow({super.key, required this.onComplete});
-  
+
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
   int _currentStep = 0;
-  bool _isSignedIn = false;
-  
+
   void _nextStep() {
     if (_currentStep < 5) {
       setState(() {
@@ -147,18 +167,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       widget.onComplete();
     }
   }
-  
+
   void _handleSignIn() {
-    setState(() {
-      _isSignedIn = true;
-      _currentStep = 4; // Go to permissions (step 4 now)
-    });
+    _nextStep(); // Go to permissions after sign-in
   }
-  
+
   void _closePaywall() {
     widget.onComplete();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     switch (_currentStep) {
@@ -167,9 +184,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       case 1:
         return OnboardingTwo(onNext: _nextStep);
       case 2:
-        return OnboardingThreeNew(onNext: _nextStep); // Features + pricing
+        return OnboardingThreeNew(onNext: _nextStep);
       case 3:
-        return SignInScreen(onSignIn: _handleSignIn); // MANDATORY - No skip
+        return SignInScreen(onSignIn: _handleSignIn);
       case 4:
         return PermissionsScreen(onComplete: _nextStep);
       case 5:

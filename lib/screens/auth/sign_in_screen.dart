@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   final VoidCallback onSignIn;
@@ -28,6 +29,8 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
   bool _isLoading = false;
   bool _isSignUp = false; // Toggle between sign in and sign up
   bool _obscurePassword = true;
+  
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -64,16 +67,20 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     setState(() => _isLoading = true);
     
     try {
-      // TODO: Implement Firebase email/password auth
       if (_isSignUp) {
         // Sign up with email, password, and name
-        debugPrint('Signing up: ${_emailController.text}, ${_nameController.text}');
+        await _authService.signUpWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          fullName: _nameController.text.trim(),
+        );
       } else {
         // Sign in with email and password
-        debugPrint('Signing in: ${_emailController.text}');
+        await _authService.signInWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
       }
-      
-      await Future.delayed(const Duration(seconds: 1));
       
       if (mounted) {
         widget.onSignIn();
@@ -82,8 +89,9 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(e.toString()),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -98,18 +106,21 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     setState(() => _isLoading = true);
     
     try {
-      // TODO: Implement Google Sign In
-      await Future.delayed(const Duration(seconds: 1));
+      final userCredential = await _authService.signInWithGoogle();
       
-      if (mounted) {
+      if (userCredential != null && mounted) {
         widget.onSignIn();
+      } else if (mounted) {
+        // User cancelled
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(e.toString()),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

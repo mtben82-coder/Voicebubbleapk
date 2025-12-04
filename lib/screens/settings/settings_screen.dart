@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/app_state_provider.dart';
+import '../../services/auth_service.dart';
 import '../onboarding/onboarding_one.dart';
 import 'terms_screen.dart';
 import 'privacy_screen.dart';
@@ -783,6 +784,9 @@ class SettingsScreen extends StatelessWidget {
   
   Future<void> _performSignOut(BuildContext context) async {
     try {
+      // Sign out from Firebase
+      await AuthService().signOut();
+      
       // Clear app state
       if (context.mounted) {
         context.read<AppStateProvider>().reset();
@@ -906,11 +910,8 @@ class SettingsScreen extends StatelessWidget {
         );
       }
       
-      // TODO: Call backend API to delete account
-      // await deleteAccountAPI();
-      
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      // Delete account from Firebase
+      await AuthService().deleteAccount();
       
       // Clear ALL app data
       if (context.mounted) {
