@@ -167,10 +167,11 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
                     padding: const EdgeInsets.fromLTRB(32, 0, 32, 16),
                     child: Column(
                       children: [
+                        // Continue with Free Trial (Skip Paywall)
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: widget.onSubscribe,
+                            onPressed: widget.onClose,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: const Color(0xFF0D47A1),
@@ -181,10 +182,37 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
                               elevation: 0,
                             ),
                             child: const Text(
-                              'Start Free Trial',
+                              'Continue with 1-Day Free Trial',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Subscribe Now (actual payment)
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: widget.onSubscribe,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              side: const BorderSide(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Text(
+                              'Subscribe Now',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -204,11 +232,12 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '1-day free trial, then ${_selectedPlan == 'yearly' ? '\$49.99/year' : '\$5.99/month'}',
+                          'Free for 1 day, then ${_selectedPlan == 'yearly' ? '\$49.99/year' : '\$5.99/month'}. Cancel anytime.',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withOpacity(0.6),
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
