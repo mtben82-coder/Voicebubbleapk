@@ -242,7 +242,9 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
   bool _isPressed = false;
   late AnimationController _shimmerController;
   late AnimationController _iconPopController;
+  late AnimationController _glowController;
   late Animation<double> _iconScaleAnimation;
+  late Animation<double> _glowAnimation;
 
   @override
   void initState() {
@@ -273,6 +275,16 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
       ),
     ]).animate(_iconPopController);
     
+    // Glow pulsing animation
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _glowAnimation = Tween<double>(begin: 0.3, end: 0.6).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+    
     // Trigger icon pop after a short delay
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
@@ -285,11 +297,46 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
   void dispose() {
     _shimmerController.dispose();
     _iconPopController.dispose();
+    _glowController.dispose();
     super.dispose();
+  }
+  
+  // Get preset-specific colors
+  List<Color> _getPresetColors(String presetId) {
+    switch (presetId) {
+      case 'magic':
+        return [const Color(0xFF9333EA), const Color(0xFFEC4899)]; // Purple to Pink
+      case 'email_professional':
+        return [const Color(0xFF3B82F6), const Color(0xFF06B6D4)]; // Blue to Cyan
+      case 'email_casual':
+        return [const Color(0xFF10B981), const Color(0xFF14B8A6)]; // Green to Teal
+      case 'quick_reply':
+        return [const Color(0xFFFBBF24), const Color(0xFFF59E0B)]; // Yellow to Amber
+      case 'dating_opener':
+        return [const Color(0xFFEF4444), const Color(0xFFF87171)]; // Red to Light Red
+      case 'dating_reply':
+        return [const Color(0xFFEC4899), const Color(0xFFF472B6)]; // Pink to Light Pink
+      case 'social_viral_caption':
+        return [const Color(0xFFF97316), const Color(0xFFEF4444)]; // Orange to Red
+      case 'social_viral_video':
+        return [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)]; // Purple to Light Purple
+      case 'rewrite_enhance':
+        return [const Color(0xFF06B6D4), const Color(0xFF0EA5E9)]; // Cyan to Sky
+      case 'shorten':
+        return [const Color(0xFF10B981), const Color(0xFF059669)]; // Emerald
+      case 'expand':
+        return [const Color(0xFFF59E0B), const Color(0xFFD97706)]; // Amber
+      case 'formal_business':
+        return [const Color(0xFF1E40AF), const Color(0xFF3B82F6)]; // Dark Blue to Blue
+      default:
+        return [const Color(0xFF9333EA), const Color(0xFFEC4899)];
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final presetColors = _getPresetColors(widget.preset.id);
+    
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -302,7 +349,7 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOutCubic,
         child: AnimatedBuilder(
-          animation: _shimmerController,
+          animation: Listenable.merge([_shimmerController, _glowController]),
           builder: (context, child) {
             return Stack(
               children: [
@@ -313,14 +360,15 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
                     color: const Color(0xFF0F0F0F).withOpacity(0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.18),
+                      color: presetColors[0].withOpacity(0.25),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: widget.primaryColor.withOpacity(0.1),
-                        blurRadius: 12,
+                        color: presetColors[0].withOpacity(_glowAnimation.value * 0.3),
+                        blurRadius: 16,
                         offset: const Offset(0, 4),
+                        spreadRadius: 1,
                       ),
                       BoxShadow(
                         color: Colors.black.withOpacity(0.3),
@@ -331,7 +379,7 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
                   ),
                   child: Row(
                     children: [
-                      // Icon with gradient background and pop animation
+                      // Icon with animated gradient background and pop animation
                       AnimatedBuilder(
                         animation: _iconScaleAnimation,
                         builder: (context, child) {
@@ -343,18 +391,25 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    widget.primaryColor.withOpacity(0.2),
-                                    const Color(0xFFEC4899).withOpacity(0.2),
+                                    presetColors[0].withOpacity(0.85),
+                                    presetColors[1].withOpacity(0.85),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: presetColors[0].withOpacity(_glowAnimation.value),
+                                    blurRadius: 12,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
                               ),
                               child: Icon(
                                 widget.preset.icon,
                                 size: 24,
-                                color: widget.primaryColor,
+                                color: Colors.white,
                               ),
                             ),
                           );
@@ -406,7 +461,7 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
                         return LinearGradient(
                           colors: [
                             Colors.transparent,
-                            Colors.white.withOpacity(0.03),
+                            presetColors[0].withOpacity(0.08),
                             Colors.transparent,
                           ],
                           stops: const [0.3, 0.5, 0.7],
@@ -422,7 +477,7 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
                           borderRadius: BorderRadius.circular(16),
                           gradient: LinearGradient(
                             colors: [
-                              Colors.white.withOpacity(0.1),
+                              presetColors[1].withOpacity(0.05),
                               Colors.transparent,
                             ],
                             begin: Alignment.topLeft,
