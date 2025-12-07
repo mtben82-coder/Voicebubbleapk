@@ -1,132 +1,61 @@
-import express from 'express';
-import multer from 'multer';
-import { transcribeAudio } from '../utils/openai.js';
-import { getCachedTranscription, cacheTranscription } from '../utils/cache.js';
+// backend/routes/transcribe.js
+
+import express from "express";
+import multer from "multer";
+import { transcribe } from "../controllers/transcribeController.js";
 
 const router = express.Router();
 
-// Configure multer for file upload (memory storage)
+// Multer setup – memory storage, 25MB limit, audio only
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB limit (OpenAI's Whisper limit)
+    fileSize: 25 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    // Accept audio files
     const allowedMimes = [
-      'audio/wav',
-      'audio/wave',
-      'audio/x-wav',
-      'audio/mpeg',
-      'audio/mp3',
-      'audio/mp4',
-      'audio/m4a',
-      'audio/x-m4a',
-      'audio/webm',
-      'audio/ogg',
-      'audio/flac'
+      "audio/wav",
+      "audio/wave",
+      "audio/x-wav",
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/mp4",
+      "audio/m4a",
+      "audio/x-m4a",
+      "audio/webm",
+      "audio/ogg",
+      "audio/flac",
     ];
-    
-    if (allowedMimes.includes(file.mimetype) || file.originalname.match(/\.(wav|mp3|m4a|webm|ogg|flac)$/i)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Please upload an audio file.'));
-    }
-  }
+    const okMime = allowedMimes.includes(file.mimetype);
+    const okExt = /\.(wav|mp3|m4a|webm|ogg|flac)$/i.test(file.originalname);
+    if (okMime || okExt) return cb(null, true);
+    return cb(new Error("Invalid file type. Please upload a valid audio file."));
+  },
 });
 
-/**
- * POST /api/transcribe
- * Transcribe audio file using Whisper API with caching
- * 
- * Request: multipart/form-data with 'audio' file field
- * Response: { text: "transcribed text" }
- */
-router.post('/', upload.single('audio'), async (req, res) => {
-  const startTime = Date.now();
-  
-  try {
-    // Validate file upload
-    if (!req.file) {
+router.post("/", upload.single("audio"), transcribe);
+
+// Multer error handler
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
-        error: 'No audio file provided',
-        message: 'Please upload an audio file in the "audio" field'
-      });
-    }
-
-    const audioBuffer = req.file.buffer;
-    const filename = req.file.originalname || 'audio.wav';
-
-    console.log(`Transcription request: ${filename} (${(audioBuffer.length / 1024).toFixed(2)} KB)`);
-
-    // Check cache first
-    const cachedResult = await getCachedTranscription(audioBuffer);
-    
-    if (cachedResult) {
-      const duration = Date.now() - startTime;
-      console.log(`Transcription served from cache in ${duration}ms`);
-      
-      return res.json({
-        text: cachedResult,
-        cached: true,
-        duration_ms: duration
-      });
-    }
-
-    // Transcribe using Whisper API
-    const transcription = await transcribeAudio(audioBuffer, filename);
-
-    // Cache the result
-    await cacheTranscription(audioBuffer, transcription);
-
-    const duration = Date.now() - startTime;
-    console.log(`Transcription completed in ${duration}ms`);
-
-    res.json({
-      text: transcription,
-      cached: false,
-      duration_ms: duration
-    });
-
-  } catch (error) {
-    console.error('Transcription error:', error);
-    
-    const duration = Date.now() - startTime;
-    
-    res.status(500).json({
-      error: 'Transcription failed',
-      message: error.message,
-      duration_ms: duration
-    });
-  }
-});
-
-/**
- * Error handler for multer
- */
-router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        error: 'File too large',
-        message: 'Audio file must be smaller than 25MB'
+        error: "File too large",
+        message: "Audio file must be < 25MB.",
       });
     }
     return res.status(400).json({
-      error: 'Upload error',
-      message: error.message
+      error: "Upload error",
+      message: err.message,
     });
   }
-  
-  if (error) {
+  if (err) {
     return res.status(400).json({
-      error: 'Invalid request',
-      message: error.message
+      error: "Invalid request",
+      message: err.message,
     });
   }
-  
-  next();
+  return next();
 });
 
 export default router;
-
