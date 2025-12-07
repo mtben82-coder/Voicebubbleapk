@@ -294,7 +294,7 @@ Boring reps build scary results.'
     examples: [
       {
         input: "Rant: I keep procrastinating making content even though I know it would change my life",
-        output: "If you keep "planning content" instead of posting it, this is for you.\n\nYou don't have a content problem. You have a perfection problem.\n\n- You script it in your head.\n- You overthink the angle.\n- You convince yourself it's not good enough.\n\nMeanwhile people with half your ideas are posting daily and winning.\n\nYour first 50 posts aren't supposed to be perfect. They're supposed to make you dangerous.\n\nPost one imperfect thing today."
+        output: "If you keep \"planning content\" instead of posting it, this is for you.\n\nYou don't have a content problem. You have a perfection problem.\n\n- You script it in your head.\n- You overthink the angle.\n- You convince yourself it's not good enough.\n\nMeanwhile people with half your ideas are posting daily and winning.\n\nYour first 50 posts aren't supposed to be perfect. They're supposed to make you dangerous.\n\nPost one imperfect thing today."
       }
     ]
   },
