@@ -5,7 +5,11 @@ import 'package:flutter/foundation.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // ✅ FIX: Add serverClientId for Android Google Sign-In
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    serverClientId: '343007612090-8t1vprl8l7tm5i8ekg0vag305sjho8m5.apps.googleusercontent.com',
+  );
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Get current user
@@ -316,4 +320,3 @@ class AuthService {
     }
   }
 }
-
