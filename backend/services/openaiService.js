@@ -13,9 +13,9 @@ function getApiKey() {
 }
 
 function getDefaultModel() {
-  // You wanted full GPT-4, not mini.
+  // Using GPT-4o mini for cost efficiency
   // You can override with OPENAI_MODEL if needed.
-  return process.env.OPENAI_MODEL || "gpt-4o";
+  return process.env.OPENAI_MODEL || "gpt-4o-mini";
 }
 
 /**
