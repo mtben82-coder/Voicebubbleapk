@@ -552,6 +552,13 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
   }
 
   Widget _buildPlanSelector() {
+    // Get actual prices from Google Play Store
+    final monthlyProduct = _subscriptionService.monthlyProduct;
+    final yearlyProduct = _subscriptionService.yearlyProduct;
+    
+    final monthlyPrice = monthlyProduct?.price ?? '\$5.99';
+    final yearlyPrice = yearlyProduct?.price ?? '\$49.99';
+    
     return Column(
       children: [
         Text(
@@ -568,8 +575,8 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
             Expanded(
               child: _buildPlanCard(
                 title: 'Monthly',
-                price: '\$5.99',
-                period: 'per month',
+                price: monthlyPrice,
+                period: '', // Remove hardcoded period, it's in the price
                 value: 'monthly',
                 savings: null,
               ),
@@ -578,8 +585,8 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
             Expanded(
               child: _buildPlanCard(
                 title: 'Yearly',
-                price: '\$49.99',
-                period: 'per year',
+                price: yearlyPrice,
+                period: '', // Remove hardcoded period, it's in the price
                 value: 'yearly',
                 savings: 'Save 30%',
               ),
@@ -648,16 +655,18 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
                 color: isSelected ? const Color(0xFF0D47A1) : Colors.white,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              period,
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected
-                    ? const Color(0xFF0D47A1).withOpacity(0.7)
-                    : Colors.white.withOpacity(0.7),
+            if (period.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                period,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isSelected
+                      ? const Color(0xFF0D47A1).withOpacity(0.7)
+                      : Colors.white.withOpacity(0.7),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -677,8 +686,8 @@ class _PaywallScreenState extends State<PaywallScreen> with TickerProviderStateM
       return 'Free for 1 day, then subscribe. Cancel anytime.';
     }
     
-    final interval = _selectedPlan == 'yearly' ? 'year' : 'month';
-    return 'Free for 1 day, then ${product.price}/$interval. Cancel anytime.';
+    // product.price already includes the period from Google Play
+    return 'Free for 1 day, then ${product.price}. Cancel anytime.';
   }
 }
 
