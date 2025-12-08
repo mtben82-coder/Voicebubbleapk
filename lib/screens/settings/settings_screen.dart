@@ -5,6 +5,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/auth_service.dart';
 import '../onboarding/onboarding_one.dart';
+import '../paywall/paywall_screen.dart';
 import 'terms_screen.dart';
 import 'privacy_screen.dart';
 import 'help_screen.dart';
@@ -71,95 +72,89 @@ class SettingsScreen extends StatelessWidget {
                       color: surfaceColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Column(
-                      children: [
-                        _buildAccountItem(
-                          context,
-                          textColor,
-                          secondaryTextColor,
-                          primaryColor,
-                        ),
-                        Divider(height: 1, color: dividerColor),
-                        _buildUpgradeItem(context, primaryColor),
-                      ],
+                    child: _buildAccountItem(
+                      context,
+                      textColor,
+                      secondaryTextColor,
+                      primaryColor,
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Preferences Section
-                  _buildSectionHeader('PREFERENCES', secondaryTextColor),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  // Upgrade to Pro Card
                   Container(
                     decoration: BoxDecoration(
-                      color: surfaceColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildLanguageItem(
-                          context,
-                          textColor,
-                          secondaryTextColor,
-                        ),
-                        Divider(height: 1, color: dividerColor),
-                        _buildThemeToggle(
-                          context,
-                          textColor,
-                          primaryColor,
-                        ),
-                        Divider(height: 1, color: dividerColor),
-                        _buildNotificationsItem(
-                          context,
-                          textColor,
-                          secondaryTextColor,
+                      gradient: LinearGradient(
+                        colors: [primaryColor, const Color(0xFFEC4899)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Overlay Settings Section
-                  _buildSectionHeader('OVERLAY', secondaryTextColor),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: surfaceColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildOverlayToggle(
-                          context,
-                          textColor,
-                          primaryColor,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showPaywall(context),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.workspace_premium,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Upgrade to Pro',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Unlimited recordings',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        Divider(height: 1, color: dividerColor),
-                        _buildOverlayPositionItem(
-                          context,
-                          textColor,
-                          secondaryTextColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Voice & Audio Section
-                  _buildSectionHeader('VOICE & AUDIO', secondaryTextColor),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: surfaceColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildVoiceLanguageItem(
-                          context,
-                          textColor,
-                          secondaryTextColor,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -418,7 +413,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '20 recordings/day',
+                  '5 recordings/day',
                   style: TextStyle(
                     fontSize: 14,
                     color: secondaryTextColor,
@@ -436,227 +431,28 @@ class SettingsScreen extends StatelessWidget {
     );
   }
   
-  Widget _buildUpgradeItem(BuildContext context, Color primaryColor) {
-    return InkWell(
-      onTap: () {},
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Upgrade to Pro',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: primaryColor,
+  void _showPaywall(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => PaywallScreen(
+          onSubscribe: () {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✓ Welcome to Pro!'),
+                backgroundColor: Color(0xFF10B981),
               ),
-            ),
-            Icon(
-              Icons.bolt,
-              color: primaryColor,
-              size: 20,
-            ),
-          ],
+            );
+          },
+          onRestore: () {
+            Navigator.of(context).pop();
+          },
+          onClose: () {
+            Navigator.of(context).pop();
+          },
         ),
       ),
-    );
-  }
-  
-  Widget _buildLanguageItem(
-    BuildContext context,
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
-    return _buildSettingsItem(
-      icon: Icons.language,
-      title: 'Language',
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'English',
-            style: TextStyle(
-              fontSize: 14,
-              color: secondaryTextColor,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            Icons.chevron_right,
-            size: 20,
-            color: secondaryTextColor,
-          ),
-        ],
-      ),
-      textColor: textColor,
-      secondaryTextColor: secondaryTextColor,
-      onTap: () {},
-    );
-  }
-  
-  Widget _buildThemeToggle(
-    BuildContext context,
-    Color textColor,
-    Color primaryColor,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.dark_mode_outlined,
-                size: 20,
-                color: textColor,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Dark Mode',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-          Consumer<ThemeProvider>(
-            builder: (context, themeProvider, _) {
-              return Switch(
-                value: themeProvider.isDarkMode,
-                onChanged: (value) {
-                  themeProvider.toggleTheme();
-                },
-                activeColor: primaryColor,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildNotificationsItem(
-    BuildContext context,
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
-    return _buildSettingsItem(
-      icon: Icons.notifications_outlined,
-      title: 'Notifications',
-      textColor: textColor,
-      secondaryTextColor: secondaryTextColor,
-      onTap: () {},
-    );
-  }
-  
-  Widget _buildOverlayToggle(
-    BuildContext context,
-    Color textColor,
-    Color primaryColor,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.play_circle_outline,
-                size: 20,
-                color: textColor,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Show Overlay',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-          Switch(
-            value: true,
-            onChanged: (value) {},
-            activeColor: primaryColor,
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildOverlayPositionItem(
-    BuildContext context,
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Overlay Position',
-            style: TextStyle(
-              fontSize: 16,
-              color: textColor,
-            ),
-          ),
-          Row(
-            children: [
-              Text(
-                'Right',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: secondaryTextColor,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: secondaryTextColor,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildVoiceLanguageItem(
-    BuildContext context,
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
-    return _buildSettingsItem(
-      icon: Icons.mic_none,
-      title: 'Voice Language',
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'English (US)',
-            style: TextStyle(
-              fontSize: 14,
-              color: secondaryTextColor,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            Icons.chevron_right,
-            size: 20,
-            color: secondaryTextColor,
-          ),
-        ],
-      ),
-      textColor: textColor,
-      secondaryTextColor: secondaryTextColor,
-      onTap: () {},
     );
   }
   
