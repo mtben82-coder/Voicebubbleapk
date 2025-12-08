@@ -119,16 +119,24 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      debugPrint('🔵 Starting Google Sign-In flow...');
+      
       // Trigger the Google Sign In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       if (googleUser == null) {
-        // User cancelled the sign-in
+        debugPrint('⚪ User cancelled Google Sign-In');
         return null;
       }
 
+      debugPrint('🟢 Google user obtained: ${googleUser.email}');
+
       // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      debugPrint('🟢 Google auth tokens obtained');
+      debugPrint('  - Access token: ${googleAuth.accessToken?.substring(0, 20)}...');
+      debugPrint('  - ID token: ${googleAuth.idToken?.substring(0, 20)}...');
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -136,8 +144,12 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
+      debugPrint('🟢 Firebase credential created, attempting sign-in...');
+
       // Sign in to Firebase with the Google credential
       final userCredential = await _auth.signInWithCredential(credential);
+
+      debugPrint('🟢 Firebase sign-in successful: ${userCredential.user?.email}');
 
       // Create/update user document
       await _createUserDocument(
@@ -146,13 +158,21 @@ class AuthService {
         fullName: userCredential.user!.displayName ?? 'User',
       );
 
+      debugPrint('🟢 User document created/updated');
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Google sign in error: ${e.code} - ${e.message}');
-      throw _handleAuthException(e);
-    } catch (e) {
-      debugPrint('Google sign in error: $e');
-      throw Exception('Failed to sign in with Google. Please try again.');
+      debugPrint('🔴 Firebase Auth Exception:');
+      debugPrint('  - Code: ${e.code}');
+      debugPrint('  - Message: ${e.message}');
+      debugPrint('  - Plugin: ${e.plugin}');
+      throw Exception('Firebase Error (${e.code}): ${e.message}');
+    } catch (e, stackTrace) {
+      debugPrint('🔴 Unexpected error in Google Sign-In:');
+      debugPrint('  - Error: $e');
+      debugPrint('  - Type: ${e.runtimeType}');
+      debugPrint('  - Stack trace: $stackTrace');
+      throw Exception('Sign-in failed: $e');
     }
   }
 
