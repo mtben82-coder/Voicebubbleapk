@@ -82,6 +82,7 @@ class RefinementButtons extends StatelessWidget {
     required Color textColor,
   }) {
     final isLoading = activeRefinement == refinementType;
+    final primaryColor = const Color(0xFF3B82F6);
 
     return InkWell(
       onTap: isLoading
@@ -128,8 +129,12 @@ class RefinementButtons extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: surfaceColor,
+          color: isLoading ? primaryColor.withOpacity(0.2) : surfaceColor,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isLoading ? primaryColor : Colors.transparent,
+            width: 2,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -140,18 +145,18 @@ class RefinementButtons extends StatelessWidget {
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: textColor,
+                  color: primaryColor,
                 ),
               )
             else
-              Icon(icon, size: 16, color: textColor),
+              Icon(icon, size: 16, color: isLoading ? primaryColor : textColor),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: textColor,
+                fontWeight: FontWeight.w600,
+                color: isLoading ? primaryColor : textColor,
               ),
             ),
           ],

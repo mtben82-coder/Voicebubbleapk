@@ -335,7 +335,8 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
 
   @override
   Widget build(BuildContext context) {
-    final presetColors = _getPresetColors(widget.preset.id);
+    final mainColor = widget.preset.color ?? widget.primaryColor;
+    final presetColors = [mainColor, mainColor.withOpacity(0.7)];
     
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
