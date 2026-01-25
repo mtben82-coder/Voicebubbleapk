@@ -215,6 +215,8 @@ class _ResultScreenState extends State<ResultScreen> {
       }
     });
     debugPrint('🏷️ Outcomes: $_selectedOutcomes');
+    // Auto-save to library when outcome changes
+    _saveRecording();
   }
 
   Future<void> _saveRecording() async {
@@ -479,11 +481,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                   child: OutcomeChip(
                                     outcomeType: outcome,
                                     isSelected: _selectedOutcomes.contains(outcome),
-                                    onTap: () {
-                                      _toggleOutcome(outcome);
-                                      // Auto-save when outcome is toggled
-                                      _saveRecording();
-                                    },
+                                    onTap: () => _toggleOutcome(outcome),
                                   ),
                                 );
                               }).toList(),

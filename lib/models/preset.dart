@@ -6,6 +6,7 @@ class Preset {
   final String name;
   final String description;
   final String category;
+  final Color? color; // Optional color for diverse icons
 
   const Preset({
     required this.id,
@@ -13,6 +14,7 @@ class Preset {
     required this.name,
     required this.description,
     required this.category,
+    this.color,
   });
 }
 

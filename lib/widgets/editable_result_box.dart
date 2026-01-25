@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class EditableResultBox extends StatefulWidget {
   final String initialText;
@@ -59,6 +60,7 @@ class _EditableResultBoxState extends State<EditableResultBox> {
   Widget build(BuildContext context) {
     final primaryColor = const Color(0xFF3B82F6);
     final textColor = Colors.white;
+    final surfaceColor = const Color(0xFF1A1A1A);
 
     return Container(
       width: double.infinity,
@@ -82,23 +84,56 @@ class _EditableResultBoxState extends State<EditableResultBox> {
           ? Center(
               child: CircularProgressIndicator(color: primaryColor),
             )
-          : TextField(
-              controller: _controller,
-              onChanged: _onTextChanged,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              style: TextStyle(
-                fontSize: 18,
-                color: textColor,
-                height: 1.6,
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
+          : Stack(
+              children: [
+                TextField(
+                  controller: _controller,
+                  onChanged: _onTextChanged,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: textColor,
+                    height: 1.6,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.only(bottom: 40, right: 0),
+                    isDense: true,
+                  ),
+                ),
+                // Copy icon at bottom right INSIDE the text box
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: _controller.text));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Copied to clipboard'),
+                          backgroundColor: Color(0xFF10B981),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: surfaceColor.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.copy,
+                        size: 18,
+                        color: textColor.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
     );
   }
