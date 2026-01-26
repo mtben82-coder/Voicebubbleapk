@@ -37,8 +37,9 @@ class AppStateProvider extends ChangeNotifier {
   List<RecordingItem> get recordingItems => _recordingItems.where((item) => !item.hiddenInLibrary).toList();
   
   List<RecordingItem> get outcomesItems => _recordingItems.where((item) => !item.hiddenInOutcomes).toList();
-  List<Project> get projects => _projects;
-  ContinueContext? get continueContext => _continueContext;
+List<Project> get projects => _projects;
+List<Tag> get tags => _tags;
+ContinueContext? get continueContext => _continueContext;
   bool get isPremium => _isPremium;
   DateTime? get subscriptionExpiry => _subscriptionExpiry;
   String? get subscriptionType => _subscriptionType;
