@@ -43,6 +43,9 @@ class RecordingItem {
   
   @HiveField(12)
   bool hiddenInOutcomes; // Hidden from outcomes view
+  
+  @HiveField(13)
+  bool isCompleted; // For tasks - whether they're completed
 
   RecordingItem({
     required this.id,
@@ -58,6 +61,7 @@ class RecordingItem {
     List<String>? continuedInIds,
     this.hiddenInLibrary = false,
     this.hiddenInOutcomes = false,
+    this.isCompleted = false,
   }) : continuedInIds = continuedInIds ?? [];
 
   // Helper getter to convert string outcomes to enum list

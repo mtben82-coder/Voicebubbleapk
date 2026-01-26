@@ -81,85 +81,92 @@ class RefinementButtons extends StatelessWidget {
     required Color surfaceColor,
     required Color textColor,
   }) {
-    final isLoading = activeRefinement == refinementType;
+    final isActive = activeRefinement == refinementType;
     final primaryColor = const Color(0xFF3B82F6);
 
-    return InkWell(
-      onTap: isLoading
-          ? null
-          : () async {
-              try {
-                final service = RefinementService();
-                String refined;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isActive
+            ? null
+            : () async {
+                try {
+                  final service = RefinementService();
+                  String refined;
 
-                switch (refinementType) {
-                  case RefinementType.shorten:
-                    refined = await service.shorten(currentText);
-                    break;
-                  case RefinementType.expand:
-                    refined = await service.expand(currentText);
-                    break;
-                  case RefinementType.casual:
-                    refined = await service.makeCasual(currentText);
-                    break;
-                  case RefinementType.professional:
-                    refined = await service.makeProfessional(currentText);
-                    break;
-                  case RefinementType.fixGrammar:
-                    refined = await service.fixGrammar(currentText);
-                    break;
-                  case RefinementType.translate:
-                    refined = await service.translate(currentText, 'en');
-                    break;
-                }
+                  switch (refinementType) {
+                    case RefinementType.shorten:
+                      refined = await service.shorten(currentText);
+                      break;
+                    case RefinementType.expand:
+                      refined = await service.expand(currentText);
+                      break;
+                    case RefinementType.casual:
+                      refined = await service.makeCasual(currentText);
+                      break;
+                    case RefinementType.professional:
+                      refined = await service.makeProfessional(currentText);
+                      break;
+                    case RefinementType.fixGrammar:
+                      refined = await service.fixGrammar(currentText);
+                      break;
+                    case RefinementType.translate:
+                      refined = await service.translate(currentText, 'en');
+                      break;
+                  }
 
-                onRefinementComplete(refined);
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to refine: ${e.toString()}'),
-                      backgroundColor: const Color(0xFFEF4444),
-                    ),
-                  );
+                  onRefinementComplete(refined);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to refine: ${e.toString()}'),
+                        backgroundColor: const Color(0xFFEF4444),
+                      ),
+                    );
+                  }
                 }
-              }
-            },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isLoading ? primaryColor.withOpacity(0.2) : surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isLoading ? primaryColor : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: primaryColor,
-                ),
-              )
-            else
-              Icon(icon, size: 16, color: isLoading ? primaryColor : textColor),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isLoading ? primaryColor : textColor,
-              ),
+              },
+        borderRadius: BorderRadius.circular(12),
+        splashColor: primaryColor.withOpacity(0.2),
+        highlightColor: primaryColor.withOpacity(0.1),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: isActive ? primaryColor.withOpacity(0.2) : surfaceColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isActive ? primaryColor : Colors.transparent,
+              width: 2,
             ),
-          ],
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isActive)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primaryColor,
+                    ),
+                  )
+                else
+                  Icon(icon, size: 16, color: textColor),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? primaryColor : textColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

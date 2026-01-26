@@ -30,6 +30,7 @@ class RecordingItemAdapter extends TypeAdapter<RecordingItem> {
       continuedInIds: (fields[10] as List?)?.cast<String>(),
       hiddenInLibrary: fields[11] as bool? ?? false,
       hiddenInOutcomes: fields[12] as bool? ?? false,
+      isCompleted: fields[13] as bool? ?? false,
     );
   }
 
@@ -62,7 +63,9 @@ class RecordingItemAdapter extends TypeAdapter<RecordingItem> {
       ..writeByte(11)
       ..write(obj.hiddenInLibrary)
       ..writeByte(12)
-      ..write(obj.hiddenInOutcomes);
+      ..write(obj.hiddenInOutcomes)
+      ..writeByte(13)
+      ..write(obj.isCompleted);
   }
 
   @override

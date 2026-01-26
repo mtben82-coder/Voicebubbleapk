@@ -20,6 +20,7 @@ class OutcomeDetailScreen extends StatefulWidget {
 
 class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
   String _searchQuery = '';
+  final Map<String, bool> _completedTasks = {}; // Track completion state locally
   
   List<RecordingItem> get filteredItems {
     if (_searchQuery.isEmpty) {
@@ -250,6 +251,9 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
     Color secondaryTextColor,
     List<Color> gradientColors,
   ) {
+    final isTask = widget.outcomeType == OutcomeType.task;
+    final isCompleted = _completedTasks[item.id] ?? item.isCompleted;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -258,21 +262,63 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
           color: surfaceColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: gradientColors[0].withOpacity(0.3),
+            color: gradientColors[0].withOpacity(isCompleted ? 0.1 : 0.3),
             width: 1,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Preset name
-            Text(
-              item.presetUsed,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: gradientColors[0],
-              ),
+            // Task checkbox + Preset name row
+            Row(
+              children: [
+                if (isTask) ...[
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _completedTasks[item.id] = !isCompleted;
+                      });
+                      // TODO: Save completion state to database
+                    },
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: isCompleted
+                            ? LinearGradient(
+                                colors: gradientColors,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        border: Border.all(
+                          color: isCompleted ? Colors.transparent : gradientColors[0],
+                          width: 2,
+                        ),
+                      ),
+                      child: isCompleted
+                          ? const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Text(
+                    item.presetUsed,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: gradientColors[0],
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
 
@@ -281,7 +327,9 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
               item.finalText,
               style: TextStyle(
                 fontSize: 14,
-                color: textColor,
+                color: isCompleted ? secondaryTextColor : textColor,
+                decoration: isCompleted ? TextDecoration.lineThrough : null,
+                decorationColor: isCompleted ? secondaryTextColor : null,
               ),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
