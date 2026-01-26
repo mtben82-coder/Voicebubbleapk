@@ -1,7 +1,11 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:uuid/uuid.dart';
 import '../models/preset.dart';
+import '../models/extracted_outcome.dart';
+import '../models/unstuck_response.dart';
+import '../models/outcome_type.dart';
 
 class AIService {
   // Backend URL - Change this based on your setup
@@ -97,6 +101,54 @@ class AIService {
     } catch (e) {
       print('Rewrite with context error: $e');
       throw Exception('Failed to rewrite text with context: $e');
+    }
+  }
+  
+  /// Extract atomic outcomes from text (for Outcomes preset)
+  Future<List<ExtractedOutcome>> extractOutcomes(String text, String languageCode) async {
+    try {
+      final response = await _dio.post(
+        '$_backendUrl/api/extract/outcomes',
+        data: {
+          'text': text,
+          'language': languageCode,
+        },
+      );
+      
+      // Backend returns: { outcomes: [{ type: 'task', text: '...' }, ...] }
+      final outcomesList = response.data['outcomes'] as List;
+      return outcomesList.map((o) => 
+        ExtractedOutcome(
+          id: const Uuid().v4(),
+          type: OutcomeTypeExtension.fromString(o['type'] as String),
+          text: o['text'] as String,
+        )
+      ).toList();
+    } catch (e) {
+      print('Extract outcomes error: $e');
+      throw Exception('Failed to extract outcomes: $e');
+    }
+  }
+  
+  /// Extract insight and action from text (for Unstuck preset)
+  Future<UnstuckResponse> extractUnstuck(String text, String languageCode) async {
+    try {
+      final response = await _dio.post(
+        '$_backendUrl/api/extract/unstuck',
+        data: {
+          'text': text,
+          'language': languageCode,
+        },
+      );
+      
+      // Backend returns: { insight: '...', action: '...' }
+      return UnstuckResponse(
+        insight: response.data['insight'] as String,
+        action: response.data['action'] as String,
+      );
+    } catch (e) {
+      print('Extract unstuck error: $e');
+      throw Exception('Failed to extract unstuck: $e');
     }
   }
 }

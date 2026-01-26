@@ -1,0 +1,401 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../providers/app_state_provider.dart';
+import '../../services/ai_service.dart';
+import '../../services/continue_service.dart';
+import '../../models/recording_item.dart';
+import '../../models/extracted_outcome.dart';
+import '../../widgets/outcome_card.dart';
+import '../../widgets/add_to_project_dialog.dart';
+import 'preset_selection_screen.dart';
+import 'recording_screen.dart';
+
+class OutcomesResultScreen extends StatefulWidget {
+  final String? continueFromItemId;
+  
+  const OutcomesResultScreen({
+    super.key,
+    this.continueFromItemId,
+  });
+
+  @override
+  State<OutcomesResultScreen> createState() => _OutcomesResultScreenState();
+}
+
+class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
+  bool _isLoading = true;
+  String? _error;
+  List<ExtractedOutcome> _outcomes = [];
+  bool _showFullContext = false;
+  String? _savedItemId;
+
+  @override
+  void initState() {
+    super.initState();
+    _extractOutcomes();
+  }
+
+  Future<void> _extractOutcomes() async {
+    final appState = context.read<AppStateProvider>();
+    final transcription = appState.transcription;
+    final language = appState.selectedLanguage;
+    final continueContext = appState.continueContext;
+
+    if (transcription.isEmpty) {
+      setState(() {
+        _error = 'No transcription available';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final aiService = AIService();
+      final extractedOutcomes = await aiService.extractOutcomes(
+        transcription,
+        language.code,
+      );
+
+      setState(() {
+        _outcomes = extractedOutcomes;
+        _isLoading = false;
+      });
+
+      // Save each outcome as a separate recording item
+      await _saveOutcomes();
+      
+      // Clear continue context after saving
+      if (continueContext != null) {
+        appState.clearContinueContext();
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveOutcomes() async {
+    final appState = context.read<AppStateProvider>();
+    final transcription = appState.transcription;
+    final preset = appState.selectedPreset;
+    final continueContext = appState.continueContext;
+
+    if (preset == null) return;
+
+    try {
+      for (final outcome in _outcomes) {
+        final itemId = const Uuid().v4();
+        
+        final item = RecordingItem(
+          id: itemId,
+          rawTranscript: transcription,
+          finalText: outcome.text,
+          presetUsed: preset.name,
+          presetId: preset.id,
+          outcomes: [outcome.type.toStorageString()],
+          createdAt: DateTime.now(),
+          editHistory: [outcome.text],
+          continuedFromId: continueContext?.singleItemId,
+        );
+
+        await appState.addRecording(item);
+        
+        // Add to project if continuing from a project
+        if (continueContext?.projectId != null) {
+          await appState.addItemToProject(continueContext!.projectId!, itemId);
+        }
+      }
+      
+      debugPrint('✅ Saved ${_outcomes.length} outcomes');
+    } catch (e) {
+      debugPrint('❌ Error saving outcomes: $e');
+    }
+  }
+
+  Future<void> _continueFromOutcome(ExtractedOutcome outcome) async {
+    final continueService = ContinueService();
+    
+    // Find the saved item for this outcome
+    final appState = context.read<AppStateProvider>();
+    final items = appState.recordingItems;
+    
+    // Find item by matching text (since we just saved it)
+    final matchingItem = items.firstWhere(
+      (item) => item.finalText == outcome.text,
+      orElse: () => items.first,
+    );
+    
+    final context = await continueService.buildContextFromItem(matchingItem.id);
+    appState.setContinueContext(context);
+    
+    if (mounted) {
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => const RecordingScreen(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _addOutcomeToProject(ExtractedOutcome outcome) async {
+    final appState = context.read<AppStateProvider>();
+    final items = appState.recordingItems;
+    
+    // Find the item for this outcome
+    final matchingItem = items.firstWhere(
+      (item) => item.finalText == outcome.text,
+      orElse: () => items.first,
+    );
+    
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => AddToProjectDialog(
+          recordingItemId: matchingItem.id,
+        ),
+      );
+    }
+  }
+
+  void _onOutcomeTextChanged(int index, String newText) {
+    setState(() {
+      _outcomes[index] = ExtractedOutcome(
+        id: _outcomes[index].id,
+        type: _outcomes[index].type,
+        text: newText,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = const Color(0xFF000000);
+    final surfaceColor = const Color(0xFF1A1A1A);
+    final textColor = Colors.white;
+    final secondaryTextColor = const Color(0xFF94A3B8);
+    final primaryColor = const Color(0xFF22D3EE); // Outcomes color
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PresetSelectionScreen(
+                              fromRecording: true,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.close, color: textColor, size: 20),
+                    ),
+                  ),
+                  Text(
+                    'Outcomes',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      },
+                      icon: const Icon(Icons.check, color: Colors.black, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child: _isLoading
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(color: primaryColor),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Extracting outcomes...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: secondaryTextColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _error != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 64,
+                                  color: const Color(0xFFEF4444),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error extracting outcomes',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _error!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: secondaryTextColor,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Outcomes count
+                              Text(
+                                '${_outcomes.length} ${_outcomes.length == 1 ? 'outcome' : 'outcomes'} extracted',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: secondaryTextColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 16),
+                              
+                              // Outcome cards
+                              ..._outcomes.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final outcome = entry.value;
+                                return ExtractedOutcomeCard(
+                                  outcome: outcome,
+                                  onContinue: () => _continueFromOutcome(outcome),
+                                  onAddToProject: () => _addOutcomeToProject(outcome),
+                                  onTextChanged: (newText) => _onOutcomeTextChanged(index, newText),
+                                );
+                              }).toList(),
+                              
+                              const SizedBox(height: 16),
+                              
+                              // Optional: View Full Context section
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _showFullContext = !_showFullContext;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: surfaceColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.1),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'View Full Context',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: textColor,
+                                        ),
+                                      ),
+                                      Icon(
+                                        _showFullContext
+                                            ? Icons.expand_less
+                                            : Icons.expand_more,
+                                        color: secondaryTextColor,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              
+                              if (_showFullContext) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: surfaceColor.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    context.read<AppStateProvider>().transcription,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: secondaryTextColor,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              
+                              const SizedBox(height: 32),
+                            ],
+                          ),
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

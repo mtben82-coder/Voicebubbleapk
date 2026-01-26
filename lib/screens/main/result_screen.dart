@@ -14,6 +14,8 @@ import '../../widgets/refinement_buttons.dart';
 import '../../widgets/add_to_project_dialog.dart';
 import 'preset_selection_screen.dart';
 import 'recording_screen.dart';
+import 'outcomes_result_screen.dart';
+import 'unstuck_result_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final String? continueFromItemId;
@@ -359,15 +361,36 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppStateProvider>();
+    final preset = appState.selectedPreset;
+    
+    // Route to custom result screens for special presets
+    if (preset?.id == 'outcomes') {
+      return OutcomesResultScreen(
+        continueFromItemId: widget.continueFromItemId,
+      );
+    }
+    
+    if (preset?.id == 'unstuck') {
+      return UnstuckResultScreen(
+        continueFromItemId: widget.continueFromItemId,
+      );
+    }
+    
+    // Default behavior for all other presets
+    return _buildNormalResultScreen(context);
+  }
+
+  Widget _buildNormalResultScreen(BuildContext context) {
+    final appState = context.watch<AppStateProvider>();
+    final canUndo = _historyIndex > 0;
+    final canRedo = _historyIndex < _textHistory.length - 1;
+    
     final backgroundColor = const Color(0xFF000000);
     final surfaceColor = const Color(0xFF1A1A1A);
     final textColor = Colors.white;
     final secondaryTextColor = const Color(0xFF94A3B8);
     final primaryColor = const Color(0xFF3B82F6);
-
-    final appState = context.watch<AppStateProvider>();
-    final canUndo = _historyIndex > 0;
-    final canRedo = _historyIndex < _textHistory.length - 1;
 
     return Scaffold(
       backgroundColor: backgroundColor,
