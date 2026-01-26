@@ -8,6 +8,7 @@ import '../../models/recording_item.dart';
 import '../../services/project_service.dart';
 import '../../services/continue_service.dart';
 import '../../widgets/outcome_chip.dart';
+import 'recording_screen.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
@@ -412,8 +413,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         final appState = Provider.of<AppStateProvider>(this.context, listen: false);
         appState.setContinueContext(context);
         
-        // Navigate to Record tab (tab 0 in MainNavigation)
-        Navigator.popUntil(this.context, (route) => route.isFirst);
+        // Navigate to recording screen
+        Navigator.push(
+          this.context,
+          MaterialPageRoute(
+            builder: (context) => const RecordingScreen(),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -515,9 +521,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
 
     if (confirm == true) {
-      await _projectService.deleteProject(widget.projectId);
+      final appState = Provider.of<AppStateProvider>(context, listen: false);
+      await appState.deleteProject(widget.projectId);
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context); // Go back to library
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Project deleted'),

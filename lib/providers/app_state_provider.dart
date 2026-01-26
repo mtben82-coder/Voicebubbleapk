@@ -31,7 +31,9 @@ class AppStateProvider extends ChangeNotifier {
   bool get isRecording => _isRecording;
   bool get isProcessing => _isProcessing;
   List<ArchivedItem> get archivedItems => _archivedItems;
-  List<RecordingItem> get recordingItems => _recordingItems;
+  List<RecordingItem> get recordingItems => _recordingItems.where((item) => !item.hiddenInLibrary).toList();
+  
+  List<RecordingItem> get outcomesItems => _recordingItems.where((item) => !item.hiddenInOutcomes).toList();
   List<Project> get projects => _projects;
   ContinueContext? get continueContext => _continueContext;
   bool get isPremium => _isPremium;
@@ -204,6 +206,19 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
   
+  Future<void> hideInLibrary(String id) async {
+    final item = _recordingItems.firstWhere((item) => item.id == id);
+    final updatedItem = item.copyWith(hiddenInLibrary: true);
+    await updateRecording(updatedItem);
+  }
+  
+  Future<void> hideInOutcomes(String id) async {
+    final item = _recordingItems.firstWhere((item) => item.id == id);
+    final updatedItem = item.copyWith(hiddenInOutcomes: true);
+    await updateRecording(updatedItem);
+  }
+  
+  // Keep the old deleteRecording for permanent deletion when needed
   Future<void> deleteRecording(String id) async {
     final box = await Hive.openBox<RecordingItem>('recording_items');
     final key = box.keys.firstWhere(

@@ -78,8 +78,8 @@ class RecordingDetailScreen extends StatelessWidget {
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          onPressed: () => _showDeleteConfirmation(context, appState, item.id),
-                          icon: Icon(Icons.delete_outline, color: const Color(0xFFEF4444), size: 20),
+                          onPressed: () => _showDeleteOptions(context, appState, item.id),
+                          icon: Icon(Icons.more_vert, color: textColor, size: 20),
                         ),
                       ),
                     ],
@@ -362,6 +362,70 @@ class RecordingDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+  
+  void _showDeleteOptions(BuildContext context, AppStateProvider appState, String itemId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.visibility_off, color: Color(0xFF3B82F6)),
+                title: const Text('Hide from Library', style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  await appState.hideInLibrary(itemId);
+                  if (context.mounted) {
+                    Navigator.pop(context); // Close bottom sheet
+                    Navigator.pop(context); // Go back to library
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Hidden from library'),
+                        backgroundColor: Color(0xFF10B981),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.remove_circle_outline, color: Color(0xFFF59E0B)),
+                title: const Text('Hide from Outcomes', style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  await appState.hideInOutcomes(itemId);
+                  if (context.mounted) {
+                    Navigator.pop(context); // Close bottom sheet
+                    Navigator.pop(context); // Go back
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Hidden from outcomes'),
+                        backgroundColor: Color(0xFF10B981),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_forever, color: Color(0xFFEF4444)),
+                title: const Text('Delete Permanently', style: TextStyle(color: Color(0xFFEF4444))),
+                onTap: () {
+                  Navigator.pop(context); // Close bottom sheet
+                  _showDeleteConfirmation(context, appState, itemId);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 }

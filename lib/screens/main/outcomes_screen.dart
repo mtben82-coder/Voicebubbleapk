@@ -65,35 +65,6 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
               ),
             ),
 
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
-                  },
-                  style: TextStyle(color: textColor, fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: 'Search outcomes...',
-                    hintStyle: TextStyle(color: secondaryTextColor),
-                    prefixIcon: Icon(Icons.search, color: secondaryTextColor),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
             const SizedBox(height: 16),
 
             // Preset Filter Chips
@@ -115,7 +86,7 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
             Expanded(
               child: Consumer<AppStateProvider>(
                 builder: (context, appState, _) {
-                  final recordings = appState.recordingItems;
+                  final recordings = appState.outcomesItems;
 
                   if (recordings.isEmpty) {
                     return Center(

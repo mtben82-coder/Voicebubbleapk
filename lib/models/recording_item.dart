@@ -37,6 +37,12 @@ class RecordingItem {
 
   @HiveField(10)
   List<String> continuedInIds; // Items that built on this one
+  
+  @HiveField(11)
+  bool hiddenInLibrary; // Hidden from library view
+  
+  @HiveField(12)
+  bool hiddenInOutcomes; // Hidden from outcomes view
 
   RecordingItem({
     required this.id,
@@ -50,6 +56,8 @@ class RecordingItem {
     required this.presetId,
     this.continuedFromId,
     List<String>? continuedInIds,
+    this.hiddenInLibrary = false,
+    this.hiddenInOutcomes = false,
   }) : continuedInIds = continuedInIds ?? [];
 
   // Helper getter to convert string outcomes to enum list
@@ -93,6 +101,8 @@ class RecordingItem {
     String? presetId,
     String? continuedFromId,
     List<String>? continuedInIds,
+    bool? hiddenInLibrary,
+    bool? hiddenInOutcomes,
   }) {
     return RecordingItem(
       id: id ?? this.id,
@@ -106,6 +116,8 @@ class RecordingItem {
       presetId: presetId ?? this.presetId,
       continuedFromId: continuedFromId ?? this.continuedFromId,
       continuedInIds: continuedInIds ?? List.from(this.continuedInIds),
+      hiddenInLibrary: hiddenInLibrary ?? this.hiddenInLibrary,
+      hiddenInOutcomes: hiddenInOutcomes ?? this.hiddenInOutcomes,
     );
   }
 }

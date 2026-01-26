@@ -28,13 +28,15 @@ class RecordingItemAdapter extends TypeAdapter<RecordingItem> {
       presetId: fields[8] as String,
       continuedFromId: fields[9] as String?,
       continuedInIds: (fields[10] as List?)?.cast<String>(),
+      hiddenInLibrary: fields[11] as bool? ?? false,
+      hiddenInOutcomes: fields[12] as bool? ?? false,
     );
   }
 
   @override
   void write(BinaryWriter writer, RecordingItem obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +58,11 @@ class RecordingItemAdapter extends TypeAdapter<RecordingItem> {
       ..writeByte(9)
       ..write(obj.continuedFromId)
       ..writeByte(10)
-      ..write(obj.continuedInIds);
+      ..write(obj.continuedInIds)
+      ..writeByte(11)
+      ..write(obj.hiddenInLibrary)
+      ..writeByte(12)
+      ..write(obj.hiddenInOutcomes);
   }
 
   @override

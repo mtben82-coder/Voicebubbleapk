@@ -548,12 +548,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await appState.deleteRecording(itemId);
+              await appState.hideInLibrary(itemId);
               if (context.mounted) {
                 Navigator.pop(context); // Close dialog
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Recording deleted'),
+                    content: Text('Removed from library'),
                     backgroundColor: Color(0xFF10B981),
                     duration: Duration(seconds: 2),
                   ),
