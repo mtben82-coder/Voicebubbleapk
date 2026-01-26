@@ -522,7 +522,31 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
             );
           },
         ),
-      ),
+        // Star icon positioned on top - separate gesture detector
+        Positioned(
+          right: 40,
+          top: 0,
+          bottom: 0,
+          child: Center(
+            child: GestureDetector(
+              onTap: () {
+                widget.onToggleFavorite();
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Icon(
+                  widget.isFavorite ? Icons.star : Icons.star_border,
+                  size: 28,
+                  color: widget.isFavorite 
+                      ? const Color(0xFFFBBF24)
+                      : widget.secondaryTextColor.withOpacity(0.5),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
