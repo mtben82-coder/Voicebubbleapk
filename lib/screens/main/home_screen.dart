@@ -229,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: textColor,
+                          color: const Color(0xFF3B82F6),
                         ),
                       ),
                       Row(
@@ -268,6 +268,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   Row(
                     children: [
+                      // Activate Bubble Button (Android only)
+                      if (Platform.isAndroid && !_overlayEnabled) ...[
+                        GestureDetector(
+                          onTap: () async {
+                            await _toggleOverlay();
+                            await Future.delayed(const Duration(milliseconds: 500));
+                            await _checkOverlayStatus();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3B82F6).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF3B82F6).withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Text(
+                              'Activate Bubble',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF3B82F6),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       // Settings Button
                       Container(
                         width: 48,
@@ -373,8 +403,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Column(
                 children: [
-                  const SizedBox(height: 20),
-                    
                     // Record Button
                     GestureDetector(
                       onTap: () {
@@ -428,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         color: secondaryTextColor,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 24),
                     
                     // Language Selector Button
                     Padding(
@@ -510,7 +538,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     // Card 2: Language support (BELOW card 1)
                     Padding(
