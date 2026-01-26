@@ -379,76 +379,77 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
                   ),
                 ],
               ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            // Content preview
-            Text(
-              item.finalText,
-              style: TextStyle(
-                fontSize: 14,
-                color: isCompleted ? secondaryTextColor : textColor,
-                decoration: isCompleted ? TextDecoration.lineThrough : null,
-                decorationColor: isCompleted ? secondaryTextColor : null,
+              // Content preview
+              Text(
+                item.finalText,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isCompleted ? secondaryTextColor : textColor,
+                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                  decorationColor: isCompleted ? secondaryTextColor : null,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // Time and actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  item.formattedDate,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: secondaryTextColor,
+              // Time and actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    item.formattedDate,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: secondaryTextColor,
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    // Copy button
-                    InkWell(
-                      onTap: () {
-                        Clipboard.setData(ClipboardData(text: item.finalText));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Copied to clipboard'),
-                            backgroundColor: Color(0xFF10B981),
-                            duration: Duration(seconds: 1),
+                  Row(
+                    children: [
+                      // Copy button
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: item.finalText));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Copied to clipboard'),
+                              backgroundColor: Color(0xFF10B981),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.copy,
+                            size: 18,
+                            color: secondaryTextColor,
                           ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.copy,
-                          size: 18,
-                          color: secondaryTextColor,
                         ),
                       ),
-                    ),
-                    // Share button
-                    InkWell(
-                      onTap: () {
-                        Share.share(item.finalText);
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.share,
-                          size: 18,
-                          color: secondaryTextColor,
+                      // Share button
+                      InkWell(
+                        onTap: () {
+                          Share.share(item.finalText);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.share,
+                            size: 18,
+                            color: secondaryTextColor,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
