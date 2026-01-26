@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/recording_item.dart';
+import '../../models/tag.dart';
 import '../../widgets/outcome_chip.dart';
 import '../../widgets/preset_chip.dart';
+import '../../widgets/tag_chip.dart';
+import '../../widgets/add_tag_bottom_sheet.dart';
 import '../../widgets/add_to_project_dialog.dart';
 import '../../services/continue_service.dart';
 import '../../constants/presets.dart';
@@ -94,27 +97,114 @@ class RecordingDetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Chips: Preset chip (large) + Outcome chips (smaller)
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            // Preset chip - FIRST and prominent
-                            if (AppPresets.findById(item.presetId) != null)
-                              PresetChip(
-                                preset: AppPresets.findById(item.presetId)!,
-                                isLarge: true,
-                              ),
-                            
-                            // Outcome chips - SECOND and smaller
-                            if (item.outcomes.isNotEmpty)
-                              ...item.outcomeTypes.map((outcome) {
-                                return OutcomeChip(
-                                  outcomeType: outcome,
-                                  isSelected: true,
-                                  onTap: () {}, // Read-only
-                                );
-                              }).toList(),
-                          ],
+                        Consumer<AppStateProvider>(
+                          builder: (context, appState, _) {
+                            final tags = appState.tags;
+                            final itemTags = item.tags
+                                .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
+                                .where((t) => t != null)
+                                .cast<Tag>()
+                                .toList();
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    // Preset chip - FIRST and prominent
+                                    if (AppPresets.findById(item.presetId) != null)
+                                      PresetChip(
+                                        preset: AppPresets.findById(item.presetId)!,
+                                        isLarge: true,
+                                      ),
+                                    
+                                    // Outcome chips - SECOND and smaller
+                                    if (item.outcomes.isNotEmpty)
+                                      ...item.outcomeTypes.map((outcome) {
+                                        return OutcomeChip(
+                                          outcomeType: outcome,
+                                          isSelected: true,
+                                          onTap: () {}, // Read-only
+                                        );
+                                      }).toList(),
+                                  ],
+                                ),
+                                
+                                // Tags section - separate row below preset/outcome
+                                if (itemTags.isNotEmpty || true) ...[
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      // Existing tag chips
+                                      ...itemTags.map((tag) {
+                                        return TagChip(
+                                          tag: tag,
+                                          size: 'small',
+                                          showRemove: true,
+                                          onRemove: () async {
+                                            await appState.removeTagFromRecording(item.id, tag.id);
+                                          },
+                                        );
+                                      }).toList(),
+                                      
+                                      // Add Tag button
+                                      GestureDetector(
+                                        onTap: () async {
+                                          final result = await showModalBottomSheet<bool>(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder: (context) => AddTagBottomSheet(
+                                              recordingId: item.id,
+                                              currentTags: item.tags,
+                                            ),
+                                          );
+                                          // UI will update automatically via Provider
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF3B82F6).withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: const Color(0xFF3B82F6).withOpacity(0.4),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.add,
+                                                size: 12,
+                                                color: const Color(0xFF3B82F6),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Add Tag',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: const Color(0xFF3B82F6),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
 
                         const SizedBox(height: 16),

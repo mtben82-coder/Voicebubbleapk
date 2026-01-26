@@ -33,8 +33,6 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
   void _onScroll() {
     if (_scrollController.offset > 50 && _showHeader) {
       setState(() => _showHeader = false);
-    } else if (_scrollController.offset <= 50 && !_showHeader) {
-      setState(() => _showHeader = true);
     }
   }
 

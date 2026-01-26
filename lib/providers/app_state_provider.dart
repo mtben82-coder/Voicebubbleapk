@@ -5,8 +5,10 @@ import '../models/recording_item.dart';
 import '../models/project.dart';
 import '../models/continue_context.dart';
 import '../models/preset.dart';
+import '../models/tag.dart';
 import '../constants/languages.dart';
 import '../services/subscription_service.dart';
+import '../services/tag_service.dart';
 
 class AppStateProvider extends ChangeNotifier {
   String _transcription = '';
@@ -18,6 +20,7 @@ class AppStateProvider extends ChangeNotifier {
   List<ArchivedItem> _archivedItems = [];
   List<RecordingItem> _recordingItems = [];
   List<Project> _projects = [];
+  List<Tag> _tags = [];
   ContinueContext? _continueContext;
   bool _isPremium = false;
   DateTime? _subscriptionExpiry;
@@ -47,6 +50,7 @@ class AppStateProvider extends ChangeNotifier {
       await _loadArchivedItems();
       await _loadRecordingItems();
       await _loadProjects();
+      await _loadTags();
       await checkSubscriptionStatus();
     } catch (e) {
       debugPrint('ERROR in initialize: $e');
@@ -109,6 +113,17 @@ class AppStateProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('❌ ERROR in _loadProjects: $e');
       debugPrint('❌ Stack trace: $stackTrace');
+    }
+  }
+  
+  Future<void> _loadTags() async {
+    try {
+      final tagService = TagService();
+      _tags = await tagService.getAllTags();
+      debugPrint('🏷️ Loaded ${_tags.length} tags');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ ERROR in _loadTags: $e');
     }
   }
   
@@ -216,6 +231,62 @@ class AppStateProvider extends ChangeNotifier {
     final item = _recordingItems.firstWhere((item) => item.id == id);
     final updatedItem = item.copyWith(hiddenInOutcomes: true);
     await updateRecording(updatedItem);
+  }
+  
+  // Tag Management
+  Future<void> addTagToRecording(String recordingId, String tagId) async {
+    try {
+      final index = _recordingItems.indexWhere((item) => item.id == recordingId);
+      if (index != -1) {
+        final item = _recordingItems[index];
+        if (!item.tags.contains(tagId)) {
+          final updatedItem = item.copyWith(
+            tags: [...item.tags, tagId],
+          );
+          _recordingItems[index] = updatedItem;
+          
+          // Save to Hive
+          final box = await Hive.openBox<RecordingItem>('recording_items');
+          await box.put(updatedItem.id, updatedItem);
+          
+          debugPrint('🏷️ Added tag $tagId to recording $recordingId');
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error adding tag: $e');
+    }
+  }
+  
+  Future<void> removeTagFromRecording(String recordingId, String tagId) async {
+    try {
+      final index = _recordingItems.indexWhere((item) => item.id == recordingId);
+      if (index != -1) {
+        final item = _recordingItems[index];
+        final updatedTags = item.tags.where((t) => t != tagId).toList();
+        final updatedItem = item.copyWith(tags: updatedTags);
+        _recordingItems[index] = updatedItem;
+        
+        // Save to Hive
+        final box = await Hive.openBox<RecordingItem>('recording_items');
+        await box.put(updatedItem.id, updatedItem);
+        
+        debugPrint('🏷️ Removed tag $tagId from recording $recordingId');
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('❌ Error removing tag: $e');
+    }
+  }
+  
+  List<RecordingItem> getRecordingsByTag(String tagId) {
+    return _recordingItems.where((item) => 
+      !item.hiddenInLibrary && item.tags.contains(tagId)
+    ).toList();
+  }
+  
+  Future<void> refreshTags() async {
+    await _loadTags();
   }
   
   // Keep the old deleteRecording for permanent deletion when needed

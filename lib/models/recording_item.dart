@@ -46,6 +46,9 @@ class RecordingItem {
   
   @HiveField(13)
   bool isCompleted; // For tasks - whether they're completed
+  
+  @HiveField(14)
+  List<String> tags; // List of tag IDs
 
   RecordingItem({
     required this.id,
@@ -62,7 +65,9 @@ class RecordingItem {
     this.hiddenInLibrary = false,
     this.hiddenInOutcomes = false,
     this.isCompleted = false,
-  }) : continuedInIds = continuedInIds ?? [];
+    List<String>? tags,
+  }) : continuedInIds = continuedInIds ?? [],
+       tags = tags ?? [];
 
   // Helper getter to convert string outcomes to enum list
   List<OutcomeType> get outcomeTypes {
@@ -107,6 +112,8 @@ class RecordingItem {
     List<String>? continuedInIds,
     bool? hiddenInLibrary,
     bool? hiddenInOutcomes,
+    bool? isCompleted,
+    List<String>? tags,
   }) {
     return RecordingItem(
       id: id ?? this.id,
@@ -114,7 +121,7 @@ class RecordingItem {
       finalText: finalText ?? this.finalText,
       presetUsed: presetUsed ?? this.presetUsed,
       outcomes: outcomes ?? List.from(this.outcomes),
-      projectId: projectId ?? this.projectId,
+      projectId: projectId,
       createdAt: createdAt ?? this.createdAt,
       editHistory: editHistory ?? List.from(this.editHistory),
       presetId: presetId ?? this.presetId,
@@ -122,6 +129,8 @@ class RecordingItem {
       continuedInIds: continuedInIds ?? List.from(this.continuedInIds),
       hiddenInLibrary: hiddenInLibrary ?? this.hiddenInLibrary,
       hiddenInOutcomes: hiddenInOutcomes ?? this.hiddenInOutcomes,
+      isCompleted: isCompleted ?? this.isCompleted,
+      tags: tags ?? List.from(this.tags),
     );
   }
 }

@@ -11,12 +11,12 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 0;
+  int _currentIndex = 1; // Start on Record (middle)
 
   final List<Widget> _screens = const [
+    LibraryScreen(),
     HomeScreen(),
     OutcomesScreen(),
-    LibraryScreen(),
   ];
 
   @override
@@ -129,6 +129,67 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecordButton({
+    required int index,
+    required Color primaryColor,
+  }) {
+    final isSelected = _currentIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Big circular record button that sticks out
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [primaryColor, const Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Record',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? primaryColor : const Color(0xFF94A3B8),
+              ),
+            ),
+          ],
         ),
       ),
     );

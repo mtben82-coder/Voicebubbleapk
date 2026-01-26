@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/archived_item.dart';
 import '../models/recording_item.dart';
 import '../models/project.dart';
+import '../models/tag.dart';
 
 class StorageService {
   static const String _onboardingCompleteKey = 'onboarding_complete';
@@ -29,6 +30,10 @@ class StorageService {
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(ProjectAdapter());
       debugPrint('✅ ProjectAdapter registered (typeId: 2)');
+    }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(TagAdapter());
+      debugPrint('✅ TagAdapter registered (typeId: 3)');
     }
     
     debugPrint('🎉 ALL HIVE SETUP COMPLETE!');

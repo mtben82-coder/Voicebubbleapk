@@ -4,11 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/recording_item.dart';
-import '../../widgets/outcome_chip.dart';
+import '../../models/tag.dart';
 import '../../widgets/preset_chip.dart';
 import '../../widgets/project_card.dart';
 import '../../widgets/create_project_dialog.dart';
-import '../../widgets/preset_filter_chips.dart';
+import '../../widgets/tag_filter_chips.dart';
+import '../../widgets/tag_chip.dart';
+import '../../widgets/tag_management_dialog.dart';
 import '../../constants/presets.dart';
 import '../../services/continue_service.dart';
 import 'project_detail_screen.dart';
@@ -25,7 +27,7 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   bool _showProjects = false; // false = All, true = Projects
   String _searchQuery = '';
-  String? _selectedPresetId;
+  String? _selectedTagId; // For tag filtering
   final ScrollController _scrollController = ScrollController();
   bool _showHeader = true;
   final ContinueService _continueService = ContinueService();
@@ -46,8 +48,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void _onScroll() {
     if (_scrollController.offset > 50 && _showHeader) {
       setState(() => _showHeader = false);
-    } else if (_scrollController.offset <= 50 && !_showHeader) {
-      setState(() => _showHeader = true);
     }
   }
 
@@ -65,9 +65,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         child: Column(
           children: [
             // Header - hide on scroll
-            if (_showHeader)
+            if (_showHeader) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                 child: Row(
                   children: [
                     Icon(
@@ -84,21 +84,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         color: const Color(0xFF3B82F6),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'All your recordings and projects',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: secondaryTextColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
                   ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Text(
+                  'All your recordings and projects',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: secondaryTextColor,
+                  ),
+                ),
+              ),
+            ],
 
             // Segmented Control (All / Projects)
             Padding(
@@ -168,7 +167,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
             const SizedBox(height: 16),
 
-            // Search Bar + Filter Button
+            // Search Bar + Tag Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -202,22 +201,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   if (!_showProjects) ...[
                     const SizedBox(width: 12),
                     GestureDetector(
-                      onTap: () => _showFilterSheet(context, surfaceColor, textColor, secondaryTextColor),
+                      onTap: () async {
+                        await showDialog(
+                          context: context,
+                          builder: (context) => const TagManagementDialog(),
+                        );
+                        // Refresh tags after dialog closes
+                        if (mounted) {
+                          context.read<AppStateProvider>().refreshTags();
+                        }
+                      },
                       child: Container(
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: _selectedPresetId != null 
+                          color: _selectedTagId != null 
                               ? primaryColor.withOpacity(0.2) 
                               : surfaceColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: _selectedPresetId != null
+                          border: _selectedTagId != null
                               ? Border.all(color: primaryColor, width: 1)
                               : null,
                         ),
                         child: Icon(
-                          Icons.filter_list,
-                          color: _selectedPresetId != null ? primaryColor : secondaryTextColor,
+                          Icons.label,
+                          color: _selectedTagId != null ? primaryColor : secondaryTextColor,
                           size: 20,
                         ),
                       ),
@@ -227,7 +235,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // Tag Filter Chips (only show in "All" view)
+            if (!_showProjects)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: TagFilterChips(
+                  selectedTagId: _selectedTagId,
+                  onTagSelected: (tagId) {
+                    setState(() {
+                      _selectedTagId = tagId;
+                    });
+                  },
+                ),
+              ),
+
+            if (!_showProjects) const SizedBox(height: 16),
 
             // Content
             Expanded(
@@ -290,7 +314,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           );
         }
 
-        // Filter recordings based on search and preset
+        // Filter recordings based on search and tag
         var filteredRecordings = recordings;
         
         // Apply search filter
@@ -301,10 +325,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           }).toList();
         }
         
-        // Apply preset filter
-        if (_selectedPresetId != null) {
+        // Apply tag filter
+        if (_selectedTagId != null) {
           filteredRecordings = filteredRecordings.where((r) {
-            return r.presetId == _selectedPresetId;
+            return r.tags.contains(_selectedTagId);
           }).toList();
         }
 
@@ -355,28 +379,37 @@ class _LibraryScreenState extends State<LibraryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Chips row: Preset chip (large) + Outcome chips (smaller)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  // Preset chip - FIRST and prominent
-                  if (AppPresets.findById(item.presetId) != null)
-                    PresetChip(
-                      preset: AppPresets.findById(item.presetId)!,
-                      isLarge: true,
-                    ),
-                  
-                  // Outcome chips - SECOND and smaller
-                  if (item.outcomes.isNotEmpty)
-                    ...item.outcomeTypes.map((outcome) {
-                      return OutcomeChip(
-                        outcomeType: outcome,
-                        isSelected: true,
-                        onTap: () {}, // Read-only in library view
-                      );
-                    }).toList(),
-                ],
+              // Chips row: Preset chip (large) + Tag chips (smaller)
+              Consumer<AppStateProvider>(
+                builder: (context, appState, _) {
+                  final tags = appState.tags;
+                  final itemTags = item.tags
+                      .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
+                      .where((t) => t != null)
+                      .cast<Tag>()
+                      .toList();
+
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      // Preset chip - FIRST and prominent
+                      if (AppPresets.findById(item.presetId) != null)
+                        PresetChip(
+                          preset: AppPresets.findById(item.presetId)!,
+                          isLarge: true,
+                        ),
+                      
+                      // Tag chips - SECOND and smaller (NO outcome chips)
+                      ...itemTags.map((tag) {
+                        return TagChip(
+                          tag: tag,
+                          size: 'small',
+                        );
+                      }).toList(),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 12),
 
@@ -489,95 +522,107 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (context, appState, _) {
         final projects = appState.projects;
 
-        return Stack(
-          children: [
-            if (projects.isEmpty)
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            primaryColor.withOpacity(0.2),
-                            primaryColor.withOpacity(0.1),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        Icons.folder_outlined,
-                        size: 64,
-                        color: primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No Projects Yet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Create a project to organize recordings',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: secondaryTextColor,
-                      ),
-                    ),
-                  ],
+        if (projects.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.folder_outlined,
+                  size: 64,
+                  color: secondaryTextColor.withOpacity(0.5),
                 ),
-              )
-            else
-              ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 80),
-                itemCount: projects.length,
-                itemBuilder: (context, index) {
-                  final project = projects[index];
-                  return ProjectCard(
-                    project: project,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProjectDetailScreen(
-                            projectId: project.id,
+                const SizedBox(height: 16),
+                Text(
+                  'No projects yet',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: secondaryTextColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Create a project to organize recordings',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: secondaryTextColor.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          itemCount: projects.length + 1,
+          itemBuilder: (context, index) {
+            if (index == projects.length) {
+              // Create new project button
+              return Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 24),
+                child: GestureDetector(
+                  onTap: () async {
+                    await showDialog(
+                      context: context,
+                      builder: (context) => const CreateProjectDialog(),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: primaryColor.withOpacity(0.3),
+                        width: 2,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add, color: primaryColor, size: 24),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Create New Project',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: primaryColor,
                           ),
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
-            // FAB for creating new project
-            Positioned(
-              right: 24,
-              bottom: 24,
-              child: FloatingActionButton(
-                onPressed: () async {
-                  await showDialog(
-                    context: context,
-                    builder: (context) => const CreateProjectDialog(),
-                  );
-                },
-                backgroundColor: primaryColor,
-                child: Icon(Icons.add, color: textColor),
-              ),
-            ),
-          ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final project = projects[index];
+            return ProjectCard(
+              project: project,
+              surfaceColor: surfaceColor,
+              textColor: textColor,
+              secondaryTextColor: secondaryTextColor,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProjectDetailScreen(
+                      projectId: project.id,
+                    ),
+                  ),
+                );
+              },
+            );
+          },
         );
       },
     );
   }
-  
+
   Future<void> _continueFromItem(RecordingItem item) async {
     try {
       final context = await _continueService.buildContextFromItem(item.id);
@@ -649,63 +694,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ],
       ),
-    );
-  }
-  
-  void _showFilterSheet(BuildContext context, Color surfaceColor, Color textColor, Color secondaryTextColor) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Filter by Preset',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: Icon(Icons.close, color: secondaryTextColor),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: PresetFilterChips(
-                    selectedPresetId: _selectedPresetId,
-                    onPresetSelected: (presetId) {
-                      setState(() {
-                        _selectedPresetId = presetId;
-                      });
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

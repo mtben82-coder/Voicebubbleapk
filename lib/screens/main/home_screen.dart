@@ -473,30 +473,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                     ),
                     
-                    const SizedBox(height: 10),
-                    
-                    // Card 1: Speak to rewrite (BELOW the language selector)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _AnimatedFeatureCard(
-                        icon: Icons.edit_note_rounded,
-                        text: 'Speak to rewrite or ask anything',
-                        gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Card 2: Language support (BELOW card 1)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _AnimatedFeatureCard(
-                        icon: Icons.language_rounded,
-                        text: 'Speak in your language, most major languages supported',
-                        gradientColors: const [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
