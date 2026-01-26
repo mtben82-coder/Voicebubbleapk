@@ -244,7 +244,9 @@ class _AnimatedPresetCard extends StatefulWidget {
   final Color textColor;
   final Color secondaryTextColor;
   final Color primaryColor;
+  final bool isFavorite;
   final VoidCallback onTap;
+  final VoidCallback onToggleFavorite;
 
   const _AnimatedPresetCard({
     required this.preset,
@@ -252,7 +254,9 @@ class _AnimatedPresetCard extends StatefulWidget {
     required this.textColor,
     required this.secondaryTextColor,
     required this.primaryColor,
+    required this.isFavorite,
     required this.onTap,
+    required this.onToggleFavorite,
   });
 
   @override

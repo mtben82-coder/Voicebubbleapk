@@ -603,9 +603,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
             final project = projects[index];
             return ProjectCard(
               project: project,
-              surfaceColor: surfaceColor,
-              textColor: textColor,
-              secondaryTextColor: secondaryTextColor,
               onTap: () {
                 Navigator.push(
                   context,

@@ -6,7 +6,8 @@ import '../../services/ai_service.dart';
 import '../../services/continue_service.dart';
 import '../../models/recording_item.dart';
 import '../../models/extracted_outcome.dart';
-import '../../widgets/outcome_card.dart';
+import '../../models/outcome_type.dart';
+import '../../widgets/extracted_outcome_card.dart';
 import '../../widgets/add_to_project_dialog.dart';
 import 'preset_selection_screen.dart';
 import 'recording_screen.dart';
@@ -106,7 +107,7 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
           continuedFromId: continueContext?.singleItemId,
         );
 
-        await appState.addRecording(item);
+        await appState.saveRecording(item);
         
         // Add to project if continuing from a project
         if (continueContext?.projectId != null) {
@@ -133,14 +134,14 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
       orElse: () => items.first,
     );
     
-    final context = await continueService.buildContextFromItem(matchingItem.id);
-    appState.setContinueContext(context);
+    final continueContext = await continueService.buildContextFromItem(matchingItem.id);
+    appState.setContinueContext(continueContext);
     
     if (mounted) {
       Navigator.push(
-        this.context,
+        context,
         MaterialPageRoute(
-          builder: (context) => const RecordingScreen(),
+          builder: (ctx) => const RecordingScreen(),
         ),
       );
     }

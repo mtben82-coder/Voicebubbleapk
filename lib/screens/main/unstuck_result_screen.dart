@@ -105,7 +105,7 @@ class _UnstuckResultScreenState extends State<UnstuckResultScreen> {
         continuedFromId: continueContext?.singleItemId,
       );
 
-      await appState.addRecording(item);
+      await appState.saveRecording(item);
       
       // Add to project if continuing from a project
       if (continueContext?.projectId != null) {
