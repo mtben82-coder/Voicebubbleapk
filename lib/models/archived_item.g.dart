@@ -18,10 +18,10 @@ class ArchivedItemAdapter extends TypeAdapter<ArchivedItem> {
     };
     return ArchivedItem(
       id: fields[0] as String,
-      rawTranscript: fields[1] as String,
-      rewrittenText: fields[2] as String,
-      presetUsed: fields[3] as String,
-      createdAt: fields[4] as DateTime,
+      presetName: fields[1] as String,
+      originalText: fields[2] as String,
+      rewrittenText: fields[3] as String,
+      timestamp: fields[4] as DateTime,
     );
   }
 
@@ -32,13 +32,13 @@ class ArchivedItemAdapter extends TypeAdapter<ArchivedItem> {
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.rawTranscript)
+      ..write(obj.presetName)
       ..writeByte(2)
-      ..write(obj.rewrittenText)
+      ..write(obj.originalText)
       ..writeByte(3)
-      ..write(obj.presetUsed)
+      ..write(obj.rewrittenText)
       ..writeByte(4)
-      ..write(obj.createdAt);
+      ..write(obj.timestamp);
   }
 
   @override
