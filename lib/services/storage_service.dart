@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/archived_item.dart';
@@ -12,18 +13,25 @@ class StorageService {
   
   /// Initialize Hive and register adapters
   static Future<void> initialize() async {
+    debugPrint('🔧 Starting Hive initialization...');
     await Hive.initFlutter();
+    debugPrint('✅ Hive.initFlutter() completed!');
     
     // Register Hive type adapters
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(ArchivedItemAdapter());
+      debugPrint('✅ ArchivedItemAdapter registered (typeId: 0)');
     }
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(RecordingItemAdapter());
+      debugPrint('✅ RecordingItemAdapter registered (typeId: 1)');
     }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(ProjectAdapter());
+      debugPrint('✅ ProjectAdapter registered (typeId: 2)');
     }
+    
+    debugPrint('🎉 ALL HIVE SETUP COMPLETE!');
   }
   
   /// Check if onboarding has been completed
