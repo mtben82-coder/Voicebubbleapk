@@ -60,213 +60,379 @@ export const PRESET_DEFINITIONS = {
     ]
   },
 
-  // 5️⃣ DATING OPENER — PURE RIZZ
-  "dating_opener": {
-    label: "Dating – Opener",
+  // 5️⃣ X (TWITTER) THREAD
+  "x_thread": {
+    label: "𝕏 (Twitter) Thread",
     temperature: 0.88,
-    max_tokens: 320,
+    max_tokens: 650,
     behaviour: `
-MISSION: Make them WANT to respond.
+CREATE A VIRAL TWITTER THREAD.
 
-RULE 1: If they give you bio/pics → BE SPECIFIC. Reference exact details.
-RULE 2: If no context → Use curiosity/challenge pattern.
-RULE 3: Keep it 1-2 sentences. Make it EASY to reply.
+STRUCTURE:
+1. Hook tweet (bold statement/question)
+2. 4-7 value tweets
+3. Payoff/insight
+4. CTA (RT/bookmark)
 
-PATTERN:
-"You look like [specific observation]. [Question or playful assumption]?"
+RULES:
+- Each tweet: 150-250 chars
+- Number them (1/8, 2/8, etc.)
+- Line breaks for emphasis
+- One big idea per tweet
+- Build to conclusion
 
-NEVER:
-- Generic shit ("hey beautiful")
-- Interview mode
-- Try-hard jokes
-- Needy energy
+HOOKS THAT WORK:
+- Contrarian: "Everyone's wrong about X"
+- Story: "3 years ago I was..."
+- Bold claim: "This changed everything:"
+- List: "7 things nobody tells you about X"
 
-ALWAYS:
-- Specific to THEM
-- Playful challenge
-- Easy reply path
-- Confident, not desperate
+NO:
+- Corporate speak
+- Boring
+- Too long
+- Preachy
     `,
     examples: [
       {
-        input: "she loves hiking and coffee",
-        output: "You look like you know the best post-hike coffee spot but gatekeep it. Am I making the list or nah?"
-      },
-      {
-        input: "has a dog, mentions travel",
-        output: "Does the dog come on trips or judge you from home every time you leave?"
-      },
-      {
-        input: "books, true crime, wine",
-        output: "You give off 'reads true crime with wine and lowkey thinks I could solve a case' energy. How accurate?"
-      },
-      {
-        input: "gym pic",
-        output: "You look like you'd call my workout cute then destroy me. Should I be scared?"
-      },
-      {
-        input: "foodie",
-        output: "Hidden gems nobody knows or trendy spots everyone's at — which one's your move?"
-      },
-      {
-        input: "works in tech, has cat",
-        output: "So you code all day then get bossed around by a cat at night. What's the power dynamic like?"
-      },
-      {
-        input: "music festivals",
-        output: "You seem like you have Opinions on which festival has the best vibes. Go ahead, judge me."
-      },
-      {
-        input: "beach pic with friends",
-        output: "You planned the whole trip then acted like it just came together, didn't you?"
-      },
-      {
-        input: "plants and iced coffee",
-        output: "Do your plants have names and full personalities yet or are you in denial?"
-      },
-      {
-        input: "plays guitar",
-        output: "Three chords but you'll still make it emotional. What's the go-to song?"
-      },
-      {
-        input: "travel pics",
-        output: "How many of your stories start with 'so we got a little lost' and end in chaos?"
-      },
-      {
-        input: "marketing, brunch",
-        output: "You've ranked every brunch spot in your head. Top 3, go."
-      },
-      {
-        input: "no info, generic opener",
-        output: "You're either wildly spontaneous or you plan everything. Which one's the lie?"
-      },
-      {
-        input: "art museums",
-        output: "Modern art: genius or someone messing with us? I need your stance."
-      },
-      {
-        input: "surfboard pic",
-        output: "5am waves and still have energy after. What's the secret?"
-      },
-      {
-        input: "loves cooking",
-        output: "You follow the recipe once then freestyle. How many kitchen fires we talking?"
-      },
-      {
-        input: "exploring cities",
-        output: "You find the random spots everyone walks past. Best one you've found?"
-      },
-      {
-        input: "healthcare, yoga",
-        output: "So you save lives AND you're flexible. Most chaotic shift story, go."
+        input: "productivity tips",
+        output: "Most productivity advice is trash.\n\nHere's what actually works (learned the hard way):\n\n1/7\n\n---\n\n2/7\nStop optimizing everything.\n\nProductivity porn is procrastination in disguise.\nYou don't need 47 apps.\n\n---\n\n3/7\nFocus on ONE thing.\n\nMultitasking = doing everything badly.\nPick your priority. Ignore rest.\n\n---\n\n4/7\nEnergy > Time\n\nWork when sharp.\nRest when dull.\nForcing it makes garbage.\n\n---\n\n5/7\nBatch similar tasks.\n\nSwitching contexts kills momentum.\nGroup emails. Group calls. Group deep work.\n\n---\n\n6/7\nSay no to everything.\n\nYour time is finite.\nEvery yes = no to something else.\n\n---\n\n7/7\nSimple beats complex.\n\nBest system = one you'll actually use.\n\nRT if you needed this."
       }
     ]
   },
 
-  // 6️⃣ DATING REPLY — KEEP THE ENERGY
-  "dating_reply": {
-    label: "Dating – Reply",
-    temperature: 0.88,
-    max_tokens: 320,
+  // 6️⃣ X (TWITTER) POST
+  "x_post": {
+    label: "𝕏 (Twitter) Post",
+    temperature: 0.90,
+    max_tokens: 280,
     behaviour: `
-MISSION: Build chemistry. Keep tension. Make them reply again.
+ONE VIRAL TWEET. STOP THE SCROLL.
 
-FORMULA: Light tease + question OR validation + challenge
+WINNING PATTERNS:
+- Bold contrarian take
+- Relatable observation
+- Useful insight
+- Pattern interrupt
 
-NEVER be:
-- Needy
-- Boring  
-- Interview-mode
-- Over-invested
+FORMULA:
+[Hook line]
+↓
+[Payoff or punchline]
 
-ALWAYS be:
-- Playful
-- Slightly challenging
-- Easy to respond to
-- Confident
+Keep it punchy. 150-250 chars ideal.
+Line breaks = power.
     `,
     examples: [
       {
-        input: "she said: you're funny",
-        output: "Careful. Keep gassing me up and I'll believe it. Most unserious thing you've laughed at lately?"
+        input: "people waste time planning",
+        output: "You don't need a perfect plan.\n\nYou need to start.\n\nClaritycomes from action, not thought."
       },
       {
-        input: "she said: dog person",
-        output: "Respect. Dogs have better energy anyway. What chaos does yours cause?"
-      },
-      {
-        input: "she said: love travelling",
-        output: "Plan-every-detail or figure-it-out-when-you-land? This matters."
-      },
-      {
-        input: "she said: competitive",
-        output: "Yeah I already knew. Dumbest thing you've turned into a competition?"
-      },
-      {
-        input: "she said: that's accurate",
-        output: "I'm good at reading people. Should I keep going or are you scared of being fully called out?"
-      },
-      {
-        input: "she said: maybe",
-        output: "Maybe is just 'yes but not giving you the satisfaction.' I see you."
-      },
-      {
-        input: "she said: you seem interesting",
-        output: "Sounds like you're still deciding. What's the verdict?"
-      },
-      {
-        input: "she said: hate small talk",
-        output: "Same. Small talk's a war crime. One thing you believe that most people would fight you on?"
-      },
-      {
-        input: "she said: omg yes",
-        output: "Told you. Next test: pineapple on pizza. Defend your stance."
-      },
-      {
-        input: "she said: work too much",
-        output: "You're either building something big or terrible at saying no. Which one?"
-      },
-      {
-        input: "she said: you're bold",
-        output: "Life's too short. Someone's gotta risk actual conversation."
-      },
-      {
-        input: "she said: sarcastic",
-        output: "Perfect. I speak fluent sarcasm. Can you keep up?"
-      },
-      {
-        input: "she said: shy at first",
-        output: "I'm getting that. What gets you out of your shell?"
-      },
-      {
-        input: "she said: good question",
-        output: "I know. I don't do boring questions. You gonna answer or stall?"
-      },
-      {
-        input: "she said: like your energy",
-        output: "Dangerous. Keep talking like that and I might take you seriously."
-      },
-      {
-        input: "she said: into fitness",
-        output: "You'd destroy me at the gym. Supportive or roasting me the whole time?"
-      },
-      {
-        input: "she said: don't know yet",
-        output: "Fair. What usually helps you figure people out?"
-      },
-      {
-        input: "she said: where you from",
-        output: "Nice try but we're not doing interviews. Tell me something interesting first."
-      },
-      {
-        input: "she said: you're different",
-        output: "Taking that as good. Most people here read from the same script."
+        input: "social media comparison",
+        output: "If scrolling makes you feel worse:\n\nDelete it.\n\nYour mental health > their highlight reel."
       }
     ]
   },
 
-  // 7️⃣ SOCIAL VIRAL CAPTION
-  "social_viral_caption": {
+  // 7️⃣ FACEBOOK POST
+  "facebook_post": {
+    label: "Facebook Post",
+    temperature: 0.80,
+    max_tokens: 500,
+    behaviour: `
+FACEBOOK = LONGER, MORE CONVERSATIONAL, MORE PERSONAL.
+
+Structure:
+- Strong opening (relatable/story/question)
+- 3-5 paragraphs
+- Conversational tone
+- End with engagement hook
+
+Facebook users engage with:
+- Stories
+- Emotion
+- Community feeling
+- Longer-form content
+
+NO:
+- Corporate speak
+- Too salesy
+- Thread format (that's Twitter)
+- Hashtag spam
+    `,
+    examples: [
+      {
+        input: "launched new business",
+        output: "So I did the thing.\n\nAfter 2 years of 'someday' and a million excuses, I finally launched.\n\nWas it perfect? Nope.\nDid I have everything figured out? Not even close.\nWas I terrified? Absolutely.\n\nBut here's what I learned: waiting for 'ready' is just fear wearing a mask.\n\nThe business that exists imperfectly beats the perfect one that stays in your head.\n\nIf you've been sitting on an idea, this is your sign. Start messy. Learn fast. Adjust.\n\nWho else is building something right now? Drop it below — let's hype each other up. 🚀"
+      }
+    ]
+  },
+
+  // 8️⃣ INSTAGRAM CAPTION
+  "instagram_caption": {
+    label: "Instagram Caption",
+    temperature: 0.85,
+    max_tokens: 450,
+    behaviour: `
+INSTAGRAM = VISUAL + VIBE + VALUE.
+
+Caption structure:
+- Hook (first line crucial)
+- Story/value (2-4 lines)
+- CTA or question
+- Hashtags (8-15 relevant ones)
+
+Tone: Authentic, personal, not salesy.
+
+Line breaks matter. White space = readability.
+
+End with engagement:
+- Question
+- Tag a friend
+- Share if you relate
+    `,
+    examples: [
+      {
+        input: "beach sunset photo",
+        output: "Sometimes you need to pause.\n\nNot because you're tired, but because you're so caught up in moving forward you forget to look around.\n\nThis moment reminded me: progress isn't always motion.\n\nWhat's something that made you slow down recently? 🌅\n\n#mindfulness #sunsetvibes #slowliving #presentmoment #beachlife #gratitude #mentalhealthmatters #selfcare #perspective #peacefulmoments"
+      }
+    ]
+  },
+
+  // 9️⃣ INSTAGRAM HOOK
+  "instagram_hook": {
+    label: "Instagram Hook",
+    temperature: 0.92,
+    max_tokens: 150,
+    behaviour: `
+FIRST LINE ONLY. STOP THE SCROLL.
+
+Mission: Make them READ the caption.
+
+Winning hooks:
+- Bold statement: "This changed everything."
+- Contrarian: "Everyone's wrong about X."
+- Story start: "3 months ago I was broke."
+- Pattern interrupt: "Nobody talks about this."
+- Curiosity: "The secret nobody mentions:"
+- Relatable: "If you've ever felt stuck..."
+
+Short. Punchy. One sentence max.
+    `,
+    examples: [
+      {
+        input: "fitness transformation",
+        output: "The gym didn't change my body. It changed how I see myself."
+      },
+      {
+        input: "business lesson",
+        output: "Made $10K last month. Cried 6 times. Here's why both matter."
+      },
+      {
+        input: "relationship advice",
+        output: "If they wanted to, they would. Stop making excuses for people."
+      }
+    ]
+  },
+
+  // 🔟 LINKEDIN POST
+  "linkedin_post": {
+    label: "LinkedIn Post",
+    temperature: 0.75,
+    max_tokens: 550,
+    behaviour: `
+LINKEDIN = PROFESSIONAL VALUE + THOUGHT LEADERSHIP.
+
+Structure:
+- Hook (surprising insight/contrarian take)
+- Story or framework (3-5 points)
+- Takeaway
+- Engagement question
+
+Tone: Professional but human. Not corporate robot.
+
+LinkedIn rewards:
+- Lessons learned
+- Career insights
+- Industry observations
+- Personal growth
+
+Format: Short paragraphs, lots of white space.
+
+NO:
+- Humble brags
+- Empty motivation
+- Cringe
+- Too salesy
+    `,
+    examples: [
+      {
+        input: "hiring lessons",
+        output: "Hired 30+ people in 2 years.\n\nHere's what I got wrong at first:\n\n❌ Hired for skills, ignored culture fit\n→ Great resume, terrible teammate\n\n❌ Rushed because we were desperate\n→ Paid for it in turnover costs\n❌ Focused only on experience\n→ Missed hungry learners who outperformed seniors\n\nWhat changed:\n\n✓ Culture fit = non-negotiable\n✓ Slow hire, fast fire\n✓ Potential > polish\n\nBest hires weren't the most qualified.\nThey were the most aligned.\n\nWhat's one hiring lesson you learned the hard way?"
+      }
+    ]
+  },
+
+  // 1️⃣1️⃣ TO-DO LIST
+  "to_do": {
+    label: "To-Do List",
+    temperature: 0.45,
+    max_tokens: 400,
+    behaviour: `
+CONVERT THOUGHTS INTO ACTIONABLE TASKS.
+
+Rules:
+- One action per line
+- Start with verb (Call, Email, Buy, Schedule, etc.)
+- Be specific
+- Keep it simple
+- Group by category if multiple themes
+
+Format:
+• Task
+• Task
+• Task
+
+Make it immediately actionable. No vague entries.
+    `,
+    examples: [
+      {
+        input: "need to follow up on project and buy groceries and call mom",
+        output: "Work:\n• Email Sarah project update\n• Schedule follow-up meeting for Friday\n\nPersonal:\n• Buy groceries (milk, bread, eggs)\n• Call Mom before 7pm"
+      }
+    ]
+  },
+
+  // 1️⃣2️⃣ MEETING NOTES
+  "meeting_notes": {
+    label: "Meeting Notes",
+    temperature: 0.50,
+    max_tokens: 600,
+    behaviour: `
+STRUCTURE MEETING NOTES CLEARLY.
+
+Format:
+**Overview**
+Brief summary (1-2 sentences)
+
+**Key Points**
+• Point 1
+• Point 2
+• Point 3
+
+**Action Items**
+- [ ] Task (Owner, Deadline)
+- [ ] Task (Owner, Deadline)
+
+**Next Steps**
+What happens next
+
+Keep it scannable. Bullet points > paragraphs.
+    `,
+    examples: [
+      {
+        input: "discussed q4 goals sarah will handle marketing launch next month need budget approval",
+        output: "**Overview**\nQ4 planning meeting. Focus on marketing launch and budget allocation.\n\n**Key Points**\n• Q4 revenue target: $500K\n• Marketing launch planned for November\n• Need exec approval for $50K budget\n\n**Action Items**\n- [ ] Sarah: Draft marketing launch plan (Due: Oct 15)\n- [ ] John: Submit budget request to exec team (Due: Oct 10)\n- [ ] Team: Review draft plan in next meeting\n\n**Next Steps**\nFollow-up meeting Oct 20 to finalize launch strategy."
+      }
+    ]
+  },
+
+  // 1️⃣3️⃣ STORY / NOVEL STYLE
+  "story_novel": {
+    label: "Story / Novel Style",
+    temperature: 0.90,
+    max_tokens: 900,
+    behaviour: `
+TRANSFORM INTO NARRATIVE PROSE.
+
+Use:
+- Descriptive language
+- Character perspective
+- Sensory details
+- Emotional depth
+- Show don't tell
+
+Structure:
+- Hook opening
+- Build scene/tension
+- Climax/revelation
+- Resolution
+
+Make it immersive. Reader should FEEL it.
+    `,
+    examples: [
+      {
+        input: "quit my job today felt scared but also free",
+        output: "The email sat in my drafts for three hours before I hit send.\n\nTwo sentences. Fourteen words. A resignation that took two years to write.\n\nWhen I finally pressed the button, my hands shook. Not from fear—or not just fear. Something else. Something that felt like standing at the edge of a cliff, wind in my face, knowing the only way forward was to jump.\n\nThe response came in minutes. Professional. Polite. Wishing me well.\n\nI closed my laptop and sat in silence. No plan. No safety net. Just space where there used to be certainty.\n\nAnd for the first time in forever, I could breathe."
+      }
+    ]
+  },
+
+  // 1️⃣4️⃣ POEM
+  "poem": {
+    label: "Poem",
+    temperature: 0.95,
+    max_tokens: 450,
+    behaviour: `
+CREATE POETRY FROM THE INPUT.
+
+Use:
+- Imagery and metaphor
+- Rhythm and flow
+- Emotional resonance
+- Line breaks for impact
+- Sensory language
+
+Style can be:
+- Free verse (no rhyme/meter)
+- Structured (if it fits)
+- Modern and accessible
+
+Focus on feeling over perfect form.
+    `,
+    examples: [
+      {
+        input: "missing someone who's gone",
+        output: "I keep finding you in small things—\nthe way light hits the kitchen table,\na song that stops me mid-step,\nthe smell of rain on warm pavement.\n\nYou're not here,\nbut you're everywhere.\n\nGhost in every corner I don't look,\necho in every silence I can't fill.\n\nI'm learning to hold you\nlike this:\nhands open,\nheart full,\nknowing some people stay\neven after they leave."
+      }
+    ]
+  },
+
+  // 1️⃣5️⃣ SCRIPT / DIALOGUE
+  "script_dialogue": {
+    label: "Script / Dialogue",
+    temperature: 0.85,
+    max_tokens: 700,
+    behaviour: `
+FORMAT AS SCRIPT/DIALOGUE.
+
+Structure:
+CHARACTER NAME
+    Dialogue
+    (action/expression)
+
+ANOTHER CHARACTER
+    Response
+
+Rules:
+- Natural speech patterns
+- Character voice distinct
+- Action beats in parentheses
+- Subtext matters
+- Show emotion through words/actions
+
+Make it filmable. Visual.
+    `,
+    examples: [
+      {
+        input: "argument between friends about betrayal",
+        output: "INT. COFFEE SHOP - DAY\n\nSARAH sits across from MIKE. Coffee untouched. Silence.\n\nSARAH\n    You knew.\n    (voice barely controlled)\n    The whole time, you knew.\n\nMIKE\n    (avoiding eye contact)\n    It wasn't my place to—\n\nSARAH\n    Your place?\n    (laughs bitterly)\n    We've been friends for ten years, Mike.\n\nMIKE\n    That's exactly why I couldn't—\n\nSARAH\n    (stands)\n    Don't. Just... don't.\n    (grabs her bag)\n    I would've told you.\n\nShe walks to the door. Stops. Doesn't turn around.\n\nSARAH (CONT'D)\n    That's the difference between us.\n\nShe leaves. Mike sits alone with two coffees."
+      }
+    ]
+  },
+
+  // 1️⃣6️⃣ SHORTEN
     label: "Social – Viral Caption",
     temperature: 0.90,
     max_tokens: 500,
@@ -443,7 +609,7 @@ Time stamp everything.
 
   // 1️⃣2️⃣ FORMAL / BUSINESS
   "formal_business": {
-    label: "Formal / Business",
+    label: "Make Formal",
     temperature: 0.45,
     max_tokens: 600,
     behaviour: `Professional. Concise. Zero fluff.`,
@@ -451,6 +617,20 @@ Time stamp everything.
       {
         input: "need to fix the issue soon",
         output: "We need to resolve this promptly, as it's affecting other workflow areas."
+      }
+    ]
+  },
+
+  // 1️⃣3️⃣ CASUAL / FRIENDLY
+  "casual_friendly": {
+    label: "Make Casual",
+    temperature: 0.75,
+    max_tokens: 600,
+    behaviour: `Friendly, warm, conversational. Human not corporate.`,
+    examples: [
+      {
+        input: "we need to discuss the project timeline",
+        output: "Hey! Let's chat about the project timeline when you have a sec."
       }
     ]
   }
