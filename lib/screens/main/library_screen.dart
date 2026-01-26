@@ -28,7 +28,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool _showProjects = false;
   String _searchQuery = '';
   String? _selectedTagId;
-  final ContinueService _continueService = ContinueService();
 
   @override
   Widget build(BuildContext context) {
@@ -66,85 +65,79 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   padding: const EdgeInsets.all(24),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      // Header
+                      // Header with All/Projects buttons on same line
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.library_books, color: textColor, size: 28),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Library',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: primaryColor,
+                          Row(
+                            children: [
+                              Icon(Icons.library_books, color: textColor, size: 28),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Library',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          // Compact All/Projects control
+                          Container(
+                            decoration: BoxDecoration(
+                              color: surfaceColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(3),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => setState(() => _showProjects = false),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: !_showProjects ? primaryColor : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'All',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: !_showProjects ? textColor : secondaryTextColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => setState(() => _showProjects = true),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _showProjects ? primaryColor : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Projects',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: _showProjects ? textColor : secondaryTextColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'All your recordings and projects',
-                        style: TextStyle(fontSize: 14, color: secondaryTextColor),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Segmented Control
-                      Container(
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _showProjects = false),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: !_showProjects ? primaryColor : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'All',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: !_showProjects ? textColor : secondaryTextColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _showProjects = true),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: _showProjects ? primaryColor : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'Projects',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _showProjects ? textColor : secondaryTextColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                       const SizedBox(height: 16),
 
-                      // Search Bar + Tag Button
+                      // Search Bar + Tag Button (no subtitle)
                       Row(
                         children: [
                           Expanded(
@@ -223,11 +216,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 },
                               )),
                       ] else ...[
-                        // Recordings list
+                        // Recordings grid
                         if (recordings.isEmpty)
                           _buildEmptyState('No recordings yet', 'Your recordings will appear here', secondaryTextColor)
                         else
-                          ...recordings.map((item) => _buildRecordingCard(item, surfaceColor, textColor, secondaryTextColor)),
+                          // Grid layout for recordings
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                            ),
+                            itemCount: recordings.length,
+                            itemBuilder: (context, index) {
+                              return _buildRecordingCard(
+                                recordings[index],
+                                surfaceColor,
+                                textColor,
+                                secondaryTextColor,
+                              );
+                            },
+                          ),
                       ],
                     ]),
                   ),
@@ -260,89 +272,89 @@ class _LibraryScreenState extends State<LibraryScreen> {
     Color textColor,
     Color secondaryTextColor,
   ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RecordingDetailScreen(recordingId: item.id)),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Consumer<AppStateProvider>(
-                builder: (context, appState, _) {
-                  final tags = appState.tags;
-                  final itemTags = item.tags
-                      .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
-                      .where((t) => t != null)
-                      .cast<Tag>()
-                      .toList();
-                  return Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (AppPresets.findById(item.presetId) != null)
-                        PresetChip(preset: AppPresets.findById(item.presetId)!, isLarge: true),
-                      ...itemTags.map((tag) => TagChip(tag: tag, size: 'small')).toList(),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              Text(
-                item.finalText,
-                style: TextStyle(fontSize: 14, color: textColor),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(item.formattedDate, style: TextStyle(fontSize: 12, color: secondaryTextColor)),
-                  Row(
-                    children: [
-                      _buildIconButton(Icons.play_arrow, () async {
-                        final ctx = await _continueService.buildContextFromItem(item.id);
-                        context.read<AppStateProvider>().setContinueContext(ctx);
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const RecordingScreen()));
-                      }),
-                      const SizedBox(width: 8),
-                      _buildIconButton(Icons.copy, () {
-                        Clipboard.setData(ClipboardData(text: item.finalText));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Copied'), duration: Duration(seconds: 1)),
-                        );
-                      }),
-                      const SizedBox(width: 8),
-                      _buildIconButton(Icons.share, () => Share.share(item.finalText)),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => RecordingDetailScreen(recordingId: item.id)),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildIconButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date/time at top
+            Text(
+              item.formattedDate,
+              style: TextStyle(
+                fontSize: 11,
+                color: secondaryTextColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Title (first line of content, bold)
+            Text(
+              item.finalText.split('\n').first,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            
+            // Preview text (remaining content)
+            Text(
+              item.finalText,
+              style: TextStyle(
+                fontSize: 14,
+                color: secondaryTextColor,
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            
+            const Spacer(),
+            
+            // Tags at bottom as colored text
+            Consumer<AppStateProvider>(
+              builder: (context, appState, _) {
+                final tags = appState.tags;
+                final itemTags = item.tags
+                    .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
+                    .where((t) => t != null)
+                    .cast<Tag>()
+                    .toList();
+                
+                if (itemTags.isEmpty) return const SizedBox(height: 8);
+                
+                return Text(
+                  itemTags.map((tag) => tag.name).join(', '),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(itemTags.first.color),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
