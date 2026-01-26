@@ -20,6 +20,17 @@ class OutcomeDetailScreen extends StatefulWidget {
 
 class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
   String _searchQuery = '';
+  
+  List<RecordingItem> get filteredItems {
+    if (_searchQuery.isEmpty) {
+      return widget.items;
+    }
+    return widget.items.where((item) {
+      return item.finalText.toLowerCase().contains(_searchQuery) ||
+          item.rawTranscript.toLowerCase().contains(_searchQuery) ||
+          item.presetUsed.toLowerCase().contains(_searchQuery);
+    }).toList();
+  }
 
   List<Color> _getGradientColors() {
     switch (widget.outcomeType) {
@@ -54,7 +65,7 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
           item.createdAt.day == today.day;
     }).toList();
 
-    final yesterdayItems = widget.items.where((item) {
+    final yesterdayItems = filteredItems.where((item) {
       return item.createdAt.year == yesterday.year &&
           item.createdAt.month == yesterday.month &&
           item.createdAt.day == yesterday.day;
