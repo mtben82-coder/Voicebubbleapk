@@ -449,7 +449,7 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
