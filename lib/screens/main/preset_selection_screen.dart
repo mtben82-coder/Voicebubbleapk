@@ -482,13 +482,6 @@ class _AnimatedPresetCardState extends State<_AnimatedPresetCard>
                         ],
                       ),
                     ),
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: widget.secondaryTextColor.withOpacity(0.5),
-                      ),
-                    ],
-                  ),
-                ),
                 // Shimmer overlay
                 Positioned.fill(
                   child: ClipRRect(

@@ -46,13 +46,60 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header - hide on scroll
-            if (_showHeader) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                child: Row(
+        child: Consumer<AppStateProvider>(
+          builder: (context, appState, _) {
+            final recordings = appState.outcomesItems;
+
+            if (recordings.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.dashboard_outlined,
+                      size: 64,
+                      color: secondaryTextColor.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No recordings yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap Record to create your first one',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: secondaryTextColor.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Group recordings by outcome
+            final outcomeGroups = <OutcomeType, List<RecordingItem>>{};
+            for (final outcome in OutcomeType.values) {
+              outcomeGroups[outcome] = [];
+            }
+
+            for (final recording in recordings) {
+              for (final outcomeStr in recording.outcomes) {
+                final outcome = OutcomeTypeExtension.fromString(outcomeStr);
+                outcomeGroups[outcome]!.add(recording);
+              }
+            }
+
+            return ListView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(24),
+              children: [
+                // Header inside scroll view
+                Row(
                   children: [
                     Icon(
                       Icons.dashboard,
@@ -70,84 +117,27 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
                     ),
                   ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: Text(
+                const SizedBox(height: 8),
+                Text(
                   'Your AI-generated content, organized',
                   style: TextStyle(
                     fontSize: 14,
                     color: secondaryTextColor,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
 
-            // Outcome Groups
-            Expanded(
-              child: Consumer<AppStateProvider>(
-                builder: (context, appState, _) {
-                  final recordings = appState.outcomesItems;
+                // Messages
+                _buildOutcomeSection(
+                  context,
+                  OutcomeType.message,
+                  outcomeGroups[OutcomeType.message]!,
+                  textColor,
+                  secondaryTextColor,
+                ),
+                const SizedBox(height: 16),
 
-                  if (recordings.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.dashboard_outlined,
-                            size: 64,
-                            color: secondaryTextColor.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No recordings yet',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: secondaryTextColor,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap Record to create your first one',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: secondaryTextColor.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  // Group recordings by outcome
-                  final outcomeGroups = <OutcomeType, List<RecordingItem>>{};
-                  for (final outcome in OutcomeType.values) {
-                    outcomeGroups[outcome] = [];
-                  }
-
-                  for (final recording in recordings) {
-                    for (final outcomeStr in recording.outcomes) {
-                      final outcome = OutcomeTypeExtension.fromString(outcomeStr);
-                      outcomeGroups[outcome]!.add(recording);
-                    }
-                  }
-
-                  return ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    children: [
-                      // Messages
-                      _buildOutcomeSection(
-                        context,
-                        OutcomeType.message,
-                        outcomeGroups[OutcomeType.message]!,
-                        textColor,
-                        secondaryTextColor,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Content
+                // Content
                       _buildOutcomeSection(
                         context,
                         OutcomeType.content,
@@ -190,9 +180,6 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
                   );
                 },
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
