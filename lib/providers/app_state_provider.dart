@@ -131,21 +131,34 @@ class AppStateProvider extends ChangeNotifier {
   
   // NEW: Save recording with new model (preferred method)
   Future<void> saveRecording(RecordingItem item) async {
-    final box = await Hive.openBox<RecordingItem>('recording_items');
-    await box.add(item);
-    await _loadRecordingItems();
-    
-    // Also save to old format for backward compatibility
-    final archivedItem = ArchivedItem(
-      id: item.id,
-      presetName: item.presetUsed,
-      originalText: item.rawTranscript,
-      rewrittenText: item.finalText,
-      timestamp: item.createdAt,
-    );
-    await saveToArchive(archivedItem);
-    
-    debugPrint('💾 Recording saved to both stores');
+    try {
+      debugPrint('💾 saveRecording called for item: ${item.id}');
+      
+      final box = await Hive.openBox<RecordingItem>('recording_items');
+      debugPrint('💾 Box opened, current items: ${box.length}');
+      
+      await box.add(item);
+      debugPrint('💾 Item added to box, new count: ${box.length}');
+      
+      await _loadRecordingItems();
+      debugPrint('💾 Items loaded, _recordingItems count: ${_recordingItems.length}');
+      
+      // Also save to old format for backward compatibility
+      final archivedItem = ArchivedItem(
+        id: item.id,
+        presetName: item.presetUsed,
+        originalText: item.rawTranscript,
+        rewrittenText: item.finalText,
+        timestamp: item.createdAt,
+      );
+      await saveToArchive(archivedItem);
+      
+      debugPrint('✅ Recording saved to both stores successfully');
+      debugPrint('✅ recordingItems getter returns: ${recordingItems.length} items');
+    } catch (e, stackTrace) {
+      debugPrint('❌ ERROR in saveRecording: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
+    }
   }
   
   // Update an existing recording

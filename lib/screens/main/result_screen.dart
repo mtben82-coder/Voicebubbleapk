@@ -220,23 +220,38 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _saveRecording() async {
-    final appState = context.read<AppStateProvider>();
+    try {
+      final appState = context.read<AppStateProvider>();
 
-    // Create new RecordingItem
-    final item = RecordingItem(
-      id: const Uuid().v4(),
-      rawTranscript: appState.transcription,
-      finalText: _rewrittenText,
-      presetUsed: appState.selectedPreset?.name ?? 'Unknown',
-      outcomes: _selectedOutcomes.map((o) => o.toStorageString()).toList(),
-      projectId: null,
-      createdAt: DateTime.now(),
-      editHistory: List.from(_textHistory),
-      presetId: appState.selectedPreset?.id ?? '',
-    );
+      debugPrint('🔍 Starting _saveRecording...');
+      debugPrint('🔍 Transcription: ${appState.transcription}');
+      debugPrint('🔍 Rewritten text: $_rewrittenText');
+      debugPrint('🔍 Selected outcomes: $_selectedOutcomes');
 
-    await appState.saveRecording(item);
-    debugPrint('💾 Recording saved: ${item.id}');
+      // Create new RecordingItem
+      final item = RecordingItem(
+        id: const Uuid().v4(),
+        rawTranscript: appState.transcription,
+        finalText: _rewrittenText,
+        presetUsed: appState.selectedPreset?.name ?? 'Unknown',
+        outcomes: _selectedOutcomes.map((o) => o.toStorageString()).toList(),
+        projectId: null,
+        createdAt: DateTime.now(),
+        editHistory: List.from(_textHistory),
+        presetId: appState.selectedPreset?.id ?? '',
+      );
+
+      debugPrint('💾 Created item: ${item.id}');
+      debugPrint('💾 Item outcomes: ${item.outcomes}');
+      
+      await appState.saveRecording(item);
+      
+      debugPrint('✅ Recording saved successfully!');
+      debugPrint('✅ Total recordings now: ${appState.recordingItems.length}');
+    } catch (e, stackTrace) {
+      debugPrint('❌ ERROR in _saveRecording: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
+    }
   }
 
   Future<void> _copyToClipboard() async {
