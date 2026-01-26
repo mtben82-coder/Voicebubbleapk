@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -26,17 +28,30 @@ class _RecordingScreenState extends State<RecordingScreen>
   final AIService _aiService = AIService();
   
   bool _isRecording = false;
+  bool _isPaused = false;
   bool _isProcessing = false;
   String? _audioPath;
   late AnimationController _pulseController;
   
-  // Sound wave animation
-  List<double> _waveHeights = [0.3, 0.5, 0.7, 0.5, 0.3];
+  // Timer
+  Timer? _timer;
+  int _recordingSeconds = 0;
+  int _recordingMilliseconds = 0;
+  
+  // Sound wave animation - more bars for the waveform effect
+  final int _waveBarCount = 50;
+  List<double> _waveHeights = [];
   double _currentSoundLevel = 0.0;
+  final Random _random = Random();
+  
+  // App colors
+  final Color _primaryBlue = const Color(0xFF3B82F6);
+  final Color _darkBlue = const Color(0xFF2563EB);
   
   @override
   void initState() {
     super.initState();
+    _waveHeights = List.generate(_waveBarCount, (index) => 0.1 + _random.nextDouble() * 0.2);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -47,21 +62,46 @@ class _RecordingScreenState extends State<RecordingScreen>
   @override
   void dispose() {
     _pulseController.dispose();
+    _timer?.cancel();
     _speech.stop();
     _audioRecorder.dispose();
     super.dispose();
   }
   
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (!_isPaused) {
+        setState(() {
+          _recordingMilliseconds += 100;
+          if (_recordingMilliseconds >= 1000) {
+            _recordingMilliseconds = 0;
+            _recordingSeconds++;
+          }
+        });
+      }
+    });
+  }
+  
+  String _formatTime() {
+    final minutes = (_recordingSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_recordingSeconds % 60).toString().padLeft(2, '0');
+    final millis = (_recordingMilliseconds ~/ 100).toString();
+    return '$minutes:$seconds.$millis';
+  }
+  
   void _updateWaveHeights(double soundLevel) {
     // Normalize sound level (typically -2 to 10, we want 0.1 to 1.0)
-    final normalizedLevel = (soundLevel.clamp(-2, 8) + 2) / 10;
+    final normalizedLevel = ((soundLevel.clamp(-2, 8) + 2) / 10).clamp(0.1, 1.0);
     
-    // Update each wave bar with some variation
-    for (int i = 0; i < _waveHeights.length; i++) {
-      // Add some randomness and variation to each bar
-      final variation = (i - 2).abs() / 5; // Center bars are taller
-      _waveHeights[i] = (normalizedLevel * 0.7 + 0.3) * (1 - variation * 0.3);
-    }
+    // Shift existing waves to the left and add new one at the end
+    setState(() {
+      for (int i = 0; i < _waveHeights.length - 1; i++) {
+        _waveHeights[i] = _waveHeights[i + 1];
+      }
+      // Add some randomness to make it look more natural
+      _waveHeights[_waveHeights.length - 1] = 
+          (normalizedLevel * 0.6 + 0.1 + _random.nextDouble() * 0.3).clamp(0.1, 1.0);
+    });
   }
   
   Future<void> _initSpeech() async {
@@ -98,10 +138,10 @@ class _RecordingScreenState extends State<RecordingScreen>
         partialResults: true,
         onSoundLevelChange: (level) {
           // Update sound waves based on audio level
-          setState(() {
-            _currentSoundLevel = level;
+          _currentSoundLevel = level;
+          if (!_isPaused) {
             _updateWaveHeights(level);
-          });
+          }
         },
         cancelOnError: false,
         listenFor: const Duration(minutes: 5), // Max 5 minutes
@@ -110,10 +150,38 @@ class _RecordingScreenState extends State<RecordingScreen>
       setState(() {
         _isRecording = true;
       });
+      
+      _startTimer();
 
       print('Recording started: $_audioPath');
     } catch (e) {
       print('Error starting recording: $e');
+    }
+  }
+  
+  Future<void> _pauseRecording() async {
+    if (_isPaused) {
+      // Resume
+      await _audioRecorder.resume();
+      setState(() {
+        _isPaused = false;
+      });
+    } else {
+      // Pause
+      await _audioRecorder.pause();
+      setState(() {
+        _isPaused = true;
+      });
+    }
+  }
+  
+  Future<void> _cancelRecording() async {
+    _timer?.cancel();
+    await _speech.stop();
+    await _audioRecorder.stop();
+    
+    if (mounted) {
+      Navigator.pop(context);
     }
   }
   
@@ -123,6 +191,8 @@ class _RecordingScreenState extends State<RecordingScreen>
     setState(() {
       _isProcessing = true;
     });
+    
+    _timer?.cancel();
 
     try {
       // Stop live speech
@@ -205,217 +275,159 @@ class _RecordingScreenState extends State<RecordingScreen>
       );
     }
   }
-
-  Future<void> _handleDone() async {
-    await _stopRecording();
-  }
   
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = const Color(0xFF000000); // Always black
-    final textColor = Colors.white; // Always white text
-    final secondaryTextColor = const Color(0xFF94A3B8); // Light gray
-    final surfaceColor = const Color(0xFF1A1A1A); // Dark gray for cards
-    
-    final selectedPreset = context.watch<AppStateProvider>().selectedPreset;
-    
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: Colors.black,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // Close button
-            Positioned(
-              top: 24,
-              left: 24,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(48),
-                ),
-                child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(
-                    Icons.close,
-                    color: textColor,
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(height: 40),
             
-            // Main content
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Animated microphone
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Pulse animation
-                        if (_isRecording)
-                          AnimatedBuilder(
-                            animation: _pulseController,
-                            builder: (context, child) {
-                              return Container(
-                                width: 160 + (40 * _pulseController.value),
-                                height: 160 + (40 * _pulseController.value),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(200),
-                                  color: const Color(0xFF3B82F6).withOpacity(
-                                    0.2 * (1 - _pulseController.value),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        // Microphone button - Blue
-                        Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(0.5),
-                                blurRadius: 40,
-                                offset: const Offset(0, 15),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.mic,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 48),
-                    
-                    // Status
-                    Text(
-                      _isProcessing
-                          ? 'Processing...'
-                          : _isRecording
-                              ? 'Listening...'
-                              : 'Ready',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _isProcessing
-                          ? 'Getting perfect transcription'
-                          : 'Speak naturally',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: secondaryTextColor,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    
-                    // Sound Wave Visualization
-                    if (_isRecording)
-                      SizedBox(
-                        height: 120,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: List.generate(_waveHeights.length, (index) {
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 100),
-                              width: 8,
-                              height: 120 * _waveHeights[index].clamp(0.2, 1.0),
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFF3B82F6),
-                                    const Color(0xFF2563EB),
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF9333EA).withOpacity(0.5),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            
-            // Stop button
-            Positioned(
-              bottom: 32,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: GestureDetector(
-                  onTap: _isProcessing ? null : _handleDone,
-                  child: Container(
-                    width: 128,
-                    height: 128,
+            // Waveform visualization
+            Container(
+              height: 120,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: List.generate(_waveBarCount, (index) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 80),
+                    width: 3,
+                    height: (_isPaused ? 0.15 : _waveHeights[index]) * 100,
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
                     decoration: BoxDecoration(
-                      color: _isProcessing ? Colors.white.withOpacity(0.5) : Colors.white,
-                      borderRadius: BorderRadius.circular(128),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(2),
+                      color: _primaryBlue,
                     ),
-                    child: Center(
-                      child: _isProcessing
-                          ? SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 4,
-                                valueColor: AlwaysStoppedAnimation(backgroundColor),
-                              ),
-                            )
-                          : Text(
-                              'Done',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: backgroundColor,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
+            
+            const Spacer(),
+            
+            // Recording label
+            Text(
+              _isPaused ? 'Paused' : (_isProcessing ? 'Processing...' : 'Recording'),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Timer
+            Text(
+              _formatTime(),
+              style: const TextStyle(
+                fontSize: 72,
+                fontWeight: FontWeight.w300,
+                color: Colors.white,
+                letterSpacing: -2,
+              ),
+            ),
+            
+            const SizedBox(height: 60),
+            
+            // Control buttons
+            if (_isProcessing)
+              // Processing indicator
+              Column(
+                children: [
+                  SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 4,
+                      valueColor: AlwaysStoppedAnimation(_primaryBlue),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Getting perfect transcription',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Cancel button
+                  GestureDetector(
+                    onTap: _cancelRecording,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF2A2A2A),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  
+                  // Stop button (red circle with white square)
+                  GestureDetector(
+                    onTap: _stopRecording,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _primaryBlue,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  
+                  // Pause button
+                  GestureDetector(
+                    onTap: _pauseRecording,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF2A2A2A),
+                      ),
+                      child: Icon(
+                        _isPaused ? Icons.play_arrow : Icons.pause,
+                        color: _isPaused ? _primaryBlue : Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            
+            const Spacer(),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 }
-
