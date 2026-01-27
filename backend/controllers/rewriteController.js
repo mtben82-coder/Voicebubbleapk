@@ -11,7 +11,7 @@ import { AppError } from "../utils/errors.js";
 import { createChatCompletion, createChatCompletionStream } from "../services/openaiService.js";
 import { buildMessages, getPresetParameters } from "../prompt_engine/builder.js";
 import { getRewriteFromCache, setRewriteInCache } from "../cache/rewriteCache.js";
-import { validateAndEnhance, cleanSlop } from "./qualityvalidator.js";
+import { validateAndEnhance, cleanSlop } from "./qualityValidator.js";
 
 // ============================================================
 // POST /api/rewrite/batch
