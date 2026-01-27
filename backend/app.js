@@ -12,6 +12,16 @@ import subscriptionRoutes from "./routes/subscription.js";
 
 import { AppError, globalErrorHandler } from "./utils/errors.js";
 
+// Try to import extract routes (optional - backward compatible)
+let extractRoutes = null;
+try {
+  const module = await import("./routes/extract.js");
+  extractRoutes = module.default;
+  console.log("✅ Extract routes loaded");
+} catch (err) {
+  console.warn("⚠️ Extract routes not available (old deployment):", err.message);
+}
+
 const app = express();
 
 // ========= MIDDLEWARE =========
