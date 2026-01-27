@@ -10,6 +10,7 @@ import '../constants/languages.dart';
 import '../services/subscription_service.dart';
 import '../services/tag_service.dart';
 import '../services/language_service.dart';
+import '../services/reminder_manager.dart';
 
 class AppStateProvider extends ChangeNotifier {
   String _transcription = '';
@@ -168,8 +169,6 @@ ContinueContext? get continueContext => _continueContext;
     await LanguageService.saveSelectedLanguage(language.code);
     debugPrint('💾 Saved language preference: ${language.name} (${language.code})');
   }
-    notifyListeners();
-  }
   
   void setRecording(bool value) {
     _isRecording = value;
@@ -321,6 +320,12 @@ ContinueContext? get continueContext => _continueContext;
       orElse: () => null,
     );
     if (key != null) {
+      // Cancel any scheduled reminder before deleting
+      final item = box.get(key);
+      if (item != null) {
+        await ReminderManager().cancelReminderForDeletedItem(item);
+      }
+      
       await box.delete(key);
       await _loadRecordingItems();
       debugPrint('🗑️ Recording deleted: $id');

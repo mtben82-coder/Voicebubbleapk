@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/ai_service.dart';
+import '../../services/reminder_manager.dart';
 import '../../models/recording_item.dart';
 import '../../models/outcome_type.dart';
 import '../../models/unstuck_response.dart';
@@ -128,6 +129,27 @@ class _UnstuckResultScreenState extends State<UnstuckResultScreen> {
           action: newAction,
         );
       });
+    }
+  }
+  
+  Future<void> _showReminderPicker() async {
+    if (_savedItemId == null) return;
+    
+    final appState = context.read<AppStateProvider>();
+    final item = appState.recordingItems.firstWhere(
+      (i) => i.id == _savedItemId,
+      orElse: () => appState.recordingItems.first,
+    );
+    
+    await ReminderManager().showReminderPicker(
+      context: context,
+      item: item,
+      appState: appState,
+    );
+    
+    // Refresh to show updated reminder
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -293,16 +315,7 @@ class _UnstuckResultScreenState extends State<UnstuckResultScreen> {
                                 UnstuckActionWidget(
                                   initialAction: _unstuckData!.action,
                                   onActionChanged: _onActionChanged,
-                                  onReminderTap: () {
-                                    // Show reminder dialog (optional, non-forced)
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: const Text('Reminder feature coming soon'),
-                                        backgroundColor: calmColor,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  },
+                                  onReminderTap: _showReminderPicker,
                                 ),
                               
                               const SizedBox(height: 60),

@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/extracted_outcome.dart';
+import '../models/recording_item.dart';
 import '../widgets/outcome_chip.dart';
+import '../widgets/reminder_button.dart';
 
 class ExtractedOutcomeCard extends StatefulWidget {
   final ExtractedOutcome outcome;
   final VoidCallback onContinue;
   final Function(String) onTextChanged;
+  final RecordingItem? savedItem; // The actual saved item with reminder info
+  final VoidCallback? onReminderPressed;
   
   const ExtractedOutcomeCard({
     super.key,
     required this.outcome,
     required this.onContinue,
     required this.onTextChanged,
+    this.savedItem,
+    this.onReminderPressed,
   });
 
   @override
@@ -57,10 +63,22 @@ class _ExtractedOutcomeCardState extends State<ExtractedOutcomeCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Outcome type chip
-          OutcomeChip(
-            outcomeType: widget.outcome.type,
-            isSelected: true,
-            onTap: () {},
+          Row(
+            children: [
+              OutcomeChip(
+                outcomeType: widget.outcome.type,
+                isSelected: true,
+                onTap: () {},
+              ),
+              const Spacer(),
+              // Reminder button (only if savedItem provided)
+              if (widget.savedItem != null && widget.onReminderPressed != null)
+                ReminderButton(
+                  reminderDateTime: widget.savedItem!.reminderDateTime,
+                  onPressed: widget.onReminderPressed!,
+                  compact: true,
+                ),
+            ],
           ),
           
           const SizedBox(height: 12),

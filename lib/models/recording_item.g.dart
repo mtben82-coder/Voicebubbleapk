@@ -32,13 +32,15 @@ class RecordingItemAdapter extends TypeAdapter<RecordingItem> {
       hiddenInOutcomes: fields[12] as bool? ?? false,
       isCompleted: fields[13] as bool? ?? false,
       tags: (fields[14] as List?)?.cast<String>(),
+      reminderDateTime: fields[15] as DateTime?,
+      reminderNotificationId: fields[16] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, RecordingItem obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +70,11 @@ class RecordingItemAdapter extends TypeAdapter<RecordingItem> {
       ..writeByte(13)
       ..write(obj.isCompleted)
       ..writeByte(14)
-      ..write(obj.tags);
+      ..write(obj.tags)
+      ..writeByte(15)
+      ..write(obj.reminderDateTime)
+      ..writeByte(16)
+      ..write(obj.reminderNotificationId);
   }
 
   @override

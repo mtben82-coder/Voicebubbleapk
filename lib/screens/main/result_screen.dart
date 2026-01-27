@@ -7,12 +7,14 @@ import '../../providers/app_state_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/refinement_service.dart';
 import '../../services/continue_service.dart';
+import '../../services/reminder_manager.dart';
 import '../../models/recording_item.dart';
 import '../../models/outcome_type.dart';
 import '../../widgets/editable_result_box.dart';
 import '../../widgets/outcome_chip.dart';
 import '../../widgets/refinement_buttons.dart';
 import '../../widgets/add_to_project_dialog.dart';
+import '../../widgets/reminder_button.dart';
 import 'preset_selection_screen.dart';
 import 'recording_screen.dart';
 import 'outcomes_result_screen.dart';
@@ -374,6 +376,27 @@ class _ResultScreenState extends State<ResultScreen> {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
+  
+  Future<void> _showReminderPicker() async {
+    if (_savedItemId == null) return;
+    
+    final appState = context.read<AppStateProvider>();
+    final item = appState.recordingItems.firstWhere(
+      (i) => i.id == _savedItemId,
+      orElse: () => appState.recordingItems.first,
+    );
+    
+    await ReminderManager().showReminderPicker(
+      context: context,
+      item: item,
+      appState: appState,
+    );
+    
+    // Refresh to show updated reminder
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -620,6 +643,22 @@ class _ResultScreenState extends State<ResultScreen> {
                               }).toList(),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          
+                          // Reminder button (only show after item is saved)
+                          if (_savedItemId != null)
+                            Consumer<AppStateProvider>(
+                              builder: (context, appState, _) {
+                                final item = appState.recordingItems.firstWhere(
+                                  (i) => i.id == _savedItemId,
+                                  orElse: () => appState.recordingItems.first,
+                                );
+                                return ReminderButton(
+                                  reminderDateTime: item.reminderDateTime,
+                                  onPressed: _showReminderPicker,
+                                );
+                              },
+                            ),
                           const SizedBox(height: 24),
 
                           // Add to Project Button

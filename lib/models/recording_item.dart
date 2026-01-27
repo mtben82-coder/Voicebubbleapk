@@ -49,6 +49,12 @@ class RecordingItem {
   
   @HiveField(14)
   List<String> tags; // List of tag IDs
+  
+  @HiveField(15)
+  DateTime? reminderDateTime; // When to trigger notification
+  
+  @HiveField(16)
+  int? reminderNotificationId; // Store notification ID for cancellation
 
   RecordingItem({
     required this.id,
@@ -66,6 +72,8 @@ class RecordingItem {
     this.hiddenInOutcomes = false,
     this.isCompleted = false,
     List<String>? tags,
+    this.reminderDateTime,
+    this.reminderNotificationId,
   }) : continuedInIds = continuedInIds ?? [],
        tags = tags ?? [];
 
@@ -114,6 +122,9 @@ class RecordingItem {
     bool? hiddenInOutcomes,
     bool? isCompleted,
     List<String>? tags,
+    DateTime? reminderDateTime,
+    int? reminderNotificationId,
+    bool clearReminder = false, // Flag to explicitly clear reminder
   }) {
     return RecordingItem(
       id: id ?? this.id,
@@ -131,6 +142,8 @@ class RecordingItem {
       hiddenInOutcomes: hiddenInOutcomes ?? this.hiddenInOutcomes,
       isCompleted: isCompleted ?? this.isCompleted,
       tags: tags ?? List.from(this.tags),
+      reminderDateTime: clearReminder ? null : (reminderDateTime ?? this.reminderDateTime),
+      reminderNotificationId: clearReminder ? null : (reminderNotificationId ?? this.reminderNotificationId),
     );
   }
 }

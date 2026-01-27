@@ -7,6 +7,7 @@ import 'providers/app_state_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/subscription_service.dart';
 import 'services/storage_service.dart'; // ADD THIS
+import 'services/reminder_manager.dart';
 import 'screens/main/main_navigation.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
@@ -25,6 +26,10 @@ void main() async {
   // Initialize Hive storage - CRITICAL FOR SAVING!
   await StorageService.initialize();
   debugPrint('✅ Hive storage initialized successfully');
+  
+  // Initialize reminder system
+  await ReminderManager().initialize();
+  debugPrint('✅ Reminder system initialized');
   
   // Initialize In-App Purchase system
   await SubscriptionService().initialize();

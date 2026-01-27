@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:provider/provider.dart';
 import '../../models/outcome_type.dart';
 import '../../models/recording_item.dart';
+import '../../providers/app_state_provider.dart';
+import '../../widgets/reminder_button.dart';
+import '../../services/reminder_manager.dart';
 import 'recording_detail_screen.dart';
 
 class OutcomeDetailScreen extends StatefulWidget {
@@ -22,6 +26,19 @@ class OutcomeDetailScreen extends StatefulWidget {
 class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
   String _searchQuery = '';
   final Map<String, bool> _completedTasks = {}; // Track completion state locally
+  
+  Future<void> _showReminderPicker(RecordingItem item) async {
+    final appState = context.read<AppStateProvider>();
+    await ReminderManager().showReminderPicker(
+      context: context,
+      item: item,
+      appState: appState,
+    );
+    // Refresh to show updated reminder
+    if (mounted) {
+      setState(() {});
+    }
+  }
   
   List<RecordingItem> get filteredItems {
     if (_searchQuery.isEmpty) {
@@ -331,6 +348,14 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
                       ),
                     ),
                   ),
+                  // Reminder button for tasks
+                  if (isTask) ...[
+                    ReminderButton(
+                      reminderDateTime: item.reminderDateTime,
+                      onPressed: () => _showReminderPicker(item),
+                      compact: true,
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 8),

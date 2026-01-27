@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/continue_service.dart';
+import '../../services/reminder_manager.dart';
 import '../../models/recording_item.dart';
 import '../../models/extracted_outcome.dart';
 import '../../models/outcome_type.dart';
@@ -30,6 +31,7 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
   List<ExtractedOutcome> _outcomes = [];
   bool _showFullContext = false;
   String? _savedItemId;
+  final Map<int, String> _outcomeToItemId = {}; // Map outcome index to saved item ID
 
   @override
   void initState() {
@@ -92,7 +94,8 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
     if (preset == null) return;
 
     try {
-      for (final outcome in _outcomes) {
+      for (int i = 0; i < _outcomes.length; i++) {
+        final outcome = _outcomes[i];
         final itemId = const Uuid().v4();
         
         final item = RecordingItem(
@@ -109,6 +112,9 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
 
         await appState.saveRecording(item);
         
+        // Map this outcome index to its saved item ID
+        _outcomeToItemId[i] = itemId;
+        
         // Add to project if continuing from a project
         if (continueContext?.projectId != null) {
           await appState.addItemToProject(continueContext!.projectId!, itemId);
@@ -118,6 +124,28 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
       debugPrint('✅ Saved ${_outcomes.length} outcomes');
     } catch (e) {
       debugPrint('❌ Error saving outcomes: $e');
+    }
+  }
+  
+  Future<void> _showReminderPickerForOutcome(int outcomeIndex) async {
+    final itemId = _outcomeToItemId[outcomeIndex];
+    if (itemId == null) return;
+    
+    final appState = context.read<AppStateProvider>();
+    final item = appState.recordingItems.firstWhere(
+      (i) => i.id == itemId,
+      orElse: () => appState.recordingItems.first,
+    );
+    
+    await ReminderManager().showReminderPicker(
+      context: context,
+      item: item,
+      appState: appState,
+    );
+    
+    // Refresh to show updated reminder
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -292,10 +320,21 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
                               ..._outcomes.asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final outcome = entry.value;
+                                final itemId = _outcomeToItemId[index];
+                                final appState = context.read<AppStateProvider>();
+                                final savedItem = itemId != null 
+                                    ? appState.recordingItems.firstWhere(
+                                        (i) => i.id == itemId,
+                                        orElse: () => appState.recordingItems.first,
+                                      )
+                                    : null;
+                                
                                 return ExtractedOutcomeCard(
                                   outcome: outcome,
                                   onContinue: () => _continueFromOutcome(outcome),
                                   onTextChanged: (newText) => _onOutcomeTextChanged(index, newText),
+                                  savedItem: savedItem,
+                                  onReminderPressed: () => _showReminderPickerForOutcome(index),
                                 );
                               }).toList(),
                               
