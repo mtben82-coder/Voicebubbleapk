@@ -162,7 +162,9 @@ class _RecordingScreenState extends State<RecordingScreen>
         partialResults: true,
         onSoundLevelChange: (level) {
           // Update target sound level - the wave animation timer will smoothly animate toward this
-          final normalizedLevel = ((level.clamp(-2, 10) + 2) / 12).clamp(0.2, 1.0);
+          // Sound levels typically range from -2 (silence) to 10 (loud)
+          // Normalize to 0.3 (minimum wave) to 1.0 (maximum wave) for better visual feedback
+          final normalizedLevel = ((level.clamp(-2, 10) + 2) / 12).clamp(0.3, 1.0);
           _targetSoundLevel = normalizedLevel;
         },
         cancelOnError: false,

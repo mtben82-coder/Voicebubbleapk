@@ -282,7 +282,7 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Task checkbox + Preset name + Done button row
+              // Task checkbox + Preset name row (no Done button)
               Row(
                 children: [
                   if (isTask) ...[
@@ -328,52 +328,6 @@ class _OutcomeDetailScreenState extends State<OutcomeDetailScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: gradientColors[0],
-                      ),
-                    ),
-                  ),
-                  // Done button on top right
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _completedTasks[item.id] = !isCompleted;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isCompleted 
-                            ? const Color(0xFF10B981).withOpacity(0.15)
-                            : gradientColors[0].withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isCompleted 
-                              ? const Color(0xFF10B981)
-                              : gradientColors[0],
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                            size: 14,
-                            color: isCompleted 
-                                ? const Color(0xFF10B981)
-                                : gradientColors[0],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isCompleted ? 'Done' : 'Mark',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: isCompleted 
-                                  ? const Color(0xFF10B981)
-                                  : gradientColors[0],
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
