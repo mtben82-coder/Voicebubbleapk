@@ -9,6 +9,7 @@ import '../models/tag.dart';
 import '../constants/languages.dart';
 import '../services/subscription_service.dart';
 import '../services/tag_service.dart';
+import '../services/language_service.dart';
 
 class AppStateProvider extends ChangeNotifier {
   String _transcription = '';
@@ -52,9 +53,26 @@ ContinueContext? get continueContext => _continueContext;
       await _loadRecordingItems();
       await _loadProjects();
       await _loadTags();
+      await _loadSavedLanguage(); // 🔥 Load saved language preference
       await checkSubscriptionStatus();
     } catch (e) {
       debugPrint('ERROR in initialize: $e');
+    }
+  }
+  
+  /// Load saved language preference from storage
+  Future<void> _loadSavedLanguage() async {
+    try {
+      final languageCode = await LanguageService.getSelectedLanguage();
+      final language = AppLanguages.all.firstWhere(
+        (lang) => lang.code == languageCode,
+        orElse: () => AppLanguages.defaultLanguage,
+      );
+      _selectedLanguage = language;
+      debugPrint('✅ Loaded saved language: ${language.name} (${language.code})');
+    } catch (e) {
+      debugPrint('❌ Error loading saved language: $e');
+      _selectedLanguage = AppLanguages.defaultLanguage;
     }
   }
   
@@ -143,8 +161,13 @@ ContinueContext? get continueContext => _continueContext;
     notifyListeners();
   }
   
-  void setSelectedLanguage(Language language) {
+  void setSelectedLanguage(Language language) async {
     _selectedLanguage = language;
+    notifyListeners();
+    // 🔥 Save language preference to storage
+    await LanguageService.saveSelectedLanguage(language.code);
+    debugPrint('💾 Saved language preference: ${language.name} (${language.code})');
+  }
     notifyListeners();
   }
   
