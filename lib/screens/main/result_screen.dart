@@ -118,15 +118,18 @@ class _ResultScreenState extends State<ResultScreen> {
       
       // Save or update the recording
       if (_savedItemId != null) {
-        // Only update if we already saved this result (within the same session, not a continuation)
+        // Only update if we already saved this result (within the same session)
         await _updateExistingItem();
-      } else if (continueContext != null) {
-        // Whether single item OR project, always CREATE new item
+      } else if (continueContext != null && continueContext.singleItemId != null) {
+        // 🔥 CONTINUING FROM A SINGLE CARD — UPDATE THE ORIGINAL CARD
+        await _updateOriginalCard(continueContext.singleItemId!);
+        appState.clearContinueContext();
+      } else if (continueContext != null && continueContext.projectId != null) {
+        // Continuing from PROJECT — create new card in project
         await _saveRecording();
-        if (continueContext.projectId != null && _savedItemId != null) {
+        if (_savedItemId != null) {
           await appState.addItemToProject(continueContext.projectId!, _savedItemId!);
         }
-        // Clear continue context after saving
         appState.clearContinueContext();
       } else {
         // Normal new recording
@@ -354,6 +357,45 @@ class _ResultScreenState extends State<ResultScreen> {
     } catch (e, stackTrace) {
       debugPrint('❌ ERROR updating item: $e');
       debugPrint('❌ Stack trace: $stackTrace');
+    }
+  }
+
+  /// Update the original card with combined content (for Continue feature)
+  Future<void> _updateOriginalCard(String originalItemId) async {
+    try {
+      final appState = context.read<AppStateProvider>();
+      
+      // Find the original item
+      final originalItem = appState.recordingItems.firstWhere(
+        (item) => item.id == originalItemId,
+        orElse: () => throw Exception('Original item not found'),
+      );
+      
+      // Combine the old text with new text
+      // The AI was given the original text as context, so _rewrittenText 
+      // should already be a coherent continuation/combination
+      final combinedText = '${originalItem.finalText}\n\n$_rewrittenText';
+      
+      // Create updated item
+      final updatedItem = originalItem.copyWith(
+        finalText: combinedText,
+        rawTranscript: '${originalItem.rawTranscript}\n\n${appState.transcription}',
+        editHistory: [...originalItem.editHistory, combinedText],
+      );
+      
+      // Save the update
+      await appState.updateRecording(updatedItem);
+      
+      // Set savedItemId to the original so further edits update it
+      _savedItemId = originalItemId;
+      
+      debugPrint('✅ Updated original card: $originalItemId with continued content');
+    } catch (e, stackTrace) {
+      debugPrint('❌ ERROR updating original card: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
+      
+      // Fallback: save as new item if update fails
+      await _saveRecording();
     }
   }
 
