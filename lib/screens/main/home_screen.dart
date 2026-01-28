@@ -422,6 +422,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 24),
                     
+                    // Upload Audio Button (MOVED ABOVE language selector)
+                    GestureDetector(
+                      onTap: _pickAudioFile,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: surfaceColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF10B981),
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.upload_file,
+                              color: Color(0xFF10B981),
+                              size: 22,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Upload Audio File',
+                              style: TextStyle(
+                                color: Color(0xFF10B981),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 20),
+                    
                     // Language Selector Button
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -487,43 +524,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           );
                         },
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 20),
-                    
-                    // Upload Audio Button
-                    GestureDetector(
-                      onTap: _pickAudioFile,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF10B981),
-                            width: 2,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.upload_file,
-                              color: Color(0xFF10B981),
-                              size: 22,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Upload Audio File',
-                              style: TextStyle(
-                                color: Color(0xFF10B981),
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                     

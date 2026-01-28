@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 import '../../models/smart_action.dart';
+import '../../models/recording_item.dart';
+import '../../models/outcome_type.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/ai_service.dart';
 import 'home_screen.dart';
@@ -40,22 +43,80 @@ class _SmartActionsResultScreenState extends State<SmartActionsResultScreen> {
     });
 
     try {
+      print('🔵 Smart Actions: Starting extraction...');
+      print('🔵 Transcription: ${widget.transcription}');
+      print('🔵 Language: ${widget.languageCode}');
+      
       final aiService = AIService();
       final response = await aiService.extractSmartActions(
         widget.transcription,
         widget.languageCode,
       );
 
+      print('🔵 Response received: ${response.actions.length} actions');
+      for (var action in response.actions) {
+        print('🔵 Action: ${action.type.name} - ${action.title}');
+      }
+
       setState(() {
         _actions = response.actions;
         _isLoading = false;
       });
-    } catch (e) {
+
+      print('🔵 UI updated with ${_actions.length} actions');
+      
+      // Save actions to library
+      await _saveActionsToLibrary();
+    } catch (e, stackTrace) {
+      print('🔴 Smart Actions Error: $e');
+      print('🔴 Stack: $stackTrace');
       setState(() {
         _hasError = true;
         _errorMessage = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _saveActionsToLibrary() async {
+    if (_actions.isEmpty) return;
+
+    try {
+      final appState = context.read<AppStateProvider>();
+      
+      // Save each action as a recording item
+      for (var action in _actions) {
+        final itemId = const Uuid().v4();
+        final item = RecordingItem(
+          id: itemId,
+          transcription: widget.transcription,
+          rewrittenText: action.formattedText,
+          timestamp: DateTime.now(),
+          presetId: 'smart_actions',
+          outcomeType: _getOutcomeType(action.type),
+          tags: [],
+        );
+        
+        await appState.addRecording(item);
+        print('✅ Saved action to library: ${action.title}');
+      }
+    } catch (e) {
+      print('⚠️ Failed to save actions to library: $e');
+    }
+  }
+
+  OutcomeType _getOutcomeType(SmartActionType type) {
+    switch (type) {
+      case SmartActionType.calendar:
+        return OutcomeType.task;
+      case SmartActionType.email:
+        return OutcomeType.message;
+      case SmartActionType.todo:
+        return OutcomeType.task;
+      case SmartActionType.note:
+        return OutcomeType.note;
+      case SmartActionType.message:
+        return OutcomeType.message;
     }
   }
 
