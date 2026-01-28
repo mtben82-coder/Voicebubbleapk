@@ -616,7 +616,7 @@ class _ResultScreenState extends State<ResultScreen> {
     if (preset?.id == 'smart_actions') {
       return SmartActionsResultScreen(
         transcription: appState.transcription,
-        languageCode: appState.selectedLanguage,
+        languageCode: appState.selectedLanguage.code,
       );
     }
     

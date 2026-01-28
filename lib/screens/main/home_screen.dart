@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, File;
+import 'package:file_picker/file_picker.dart';
 import '../../providers/app_state_provider.dart';
 import '../../constants/presets.dart';
 import '../../constants/languages.dart';
 import '../../models/preset.dart';
 import '../../services/native_overlay_service.dart';
+import '../../services/ai_service.dart';
 import '../../widgets/continue_banner.dart';
 import '../../widgets/language_selector_popup.dart';
 import '../main/recording_screen.dart';
@@ -190,6 +192,100 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           );
         }
       }
+    }
+  }
+  
+  /// Pick and upload audio file
+  Future<void> _pickAudioFile() async {
+    try {
+      // Show file picker for audio files
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['mp3', 'm4a', 'wav', 'aac', 'ogg', 'flac'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final fileName = result.files.single.name;
+        
+        if (!mounted) return;
+        
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Transcribing audio...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        
+        try {
+          // Transcribe the audio file
+          final aiService = AIService();
+          final transcription = await aiService.transcribeAudio(file);
+          
+          if (!mounted) return;
+          Navigator.pop(context); // Close loading dialog
+          
+          if (transcription.isEmpty) {
+            throw Exception('No speech detected in audio file');
+          }
+          
+          // Set transcription in app state
+          final appState = context.read<AppStateProvider>();
+          appState.setTranscription(transcription);
+          
+          // Navigate to preset selection
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PresetSelectionScreen(fromRecording: true),
+            ),
+          );
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✓ Transcribed: ${transcription.substring(0, transcription.length > 50 ? 50 : transcription.length)}...'),
+              backgroundColor: const Color(0xFF10B981),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          Navigator.pop(context); // Close loading dialog
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to transcribe audio: ${e.toString()}'),
+              backgroundColor: const Color(0xFFEF4444),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick file: ${e.toString()}'),
+          backgroundColor: const Color(0xFFEF4444),
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
   
