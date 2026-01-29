@@ -462,13 +462,7 @@ class _TemplateFillScreenState extends State<TemplateFillScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RecordingScreen(
-          isTemplateMode: true,
-          templatePrompt: widget.template.voicePrompts[_currentPromptIndex].prompt,
-          onRecordingComplete: (response) {
-            _handleVoiceResponse(response);
-          },
-        ),
+        builder: (context) => const RecordingScreen(),
       ),
     );
   }
@@ -534,6 +528,7 @@ class _TemplateFillScreenState extends State<TemplateFillScreen>
         rawTranscript: 'Template: ${widget.template.name}',
         finalText: documentContent,
         presetId: 'template',
+        presetUsed: 'template',
         createdAt: DateTime.now(),
         outcomes: [],
         editHistory: [],

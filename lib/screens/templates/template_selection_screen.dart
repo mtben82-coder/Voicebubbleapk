@@ -383,7 +383,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen>
     // Check if premium template and user has access
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     
-    if (template.isPremium && !appState.isProUser) {
+    if (template.isPremium && !appState.isPro) {
       _showPremiumDialog(template);
       return;
     }
