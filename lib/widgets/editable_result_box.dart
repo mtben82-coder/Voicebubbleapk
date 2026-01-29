@@ -22,15 +22,12 @@ class EditableResultBox extends StatefulWidget {
 class _EditableResultBoxState extends State<EditableResultBox> {
   late TextEditingController _controller;
   Timer? _debounce;
+  Timer? _selectionTimer;
   
-  // Selection tracking
   bool _hasSelection = false;
   String _selectedText = '';
   int _selectionStart = 0;
   int _selectionEnd = 0;
-  Offset _selectionPosition = Offset.zero;
-  final FocusNode _focusNode = FocusNode();
-  final GlobalKey _textFieldKey = GlobalKey();
 
   @override
   void initState() {
@@ -54,57 +51,39 @@ class _EditableResultBoxState extends State<EditableResultBox> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _selectionTimer?.cancel();
     _controller.removeListener(_onSelectionChanged);
     _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
   void _onSelectionChanged() {
-    final selection = _controller.selection;
-    
-    if (selection.baseOffset != selection.extentOffset) {
-      // Text is selected
-      final start = selection.start;
-      final end = selection.end;
-      final text = _controller.text.substring(start, end);
+    _selectionTimer?.cancel();
+    _selectionTimer = Timer(const Duration(milliseconds: 300), () {
+      final selection = _controller.selection;
       
-      if (text.trim().isNotEmpty) {
-        setState(() {
-          _hasSelection = true;
-          _selectedText = text;
-          _selectionStart = start;
-          _selectionEnd = end;
-        });
+      if (selection.baseOffset != selection.extentOffset) {
+        final start = selection.start;
+        final end = selection.end;
+        final text = _controller.text.substring(start, end);
         
-        // Get position for menu
-        _updateSelectionPosition();
+        if (text.trim().isNotEmpty && text.length > 1) {
+          setState(() {
+            _hasSelection = true;
+            _selectedText = text;
+            _selectionStart = start;
+            _selectionEnd = end;
+          });
+        }
+      } else {
+        if (_hasSelection) {
+          setState(() {
+            _hasSelection = false;
+            _selectedText = '';
+          });
+        }
       }
-    } else {
-      // No selection
-      if (_hasSelection) {
-        setState(() {
-          _hasSelection = false;
-          _selectedText = '';
-        });
-      }
-    }
-  }
-
-  void _updateSelectionPosition() {
-    // Get the approximate position of selection
-    final RenderBox? renderBox = 
-        _textFieldKey.currentContext?.findRenderObject() as RenderBox?;
-    
-    if (renderBox != null) {
-      final offset = renderBox.localToGlobal(Offset.zero);
-      setState(() {
-        _selectionPosition = Offset(
-          offset.dx + renderBox.size.width / 2,
-          offset.dy + 60, // Position below the text
-        );
-      });
-    }
+    });
   }
 
   void _onTextChanged(String value) {
@@ -116,45 +95,51 @@ class _EditableResultBoxState extends State<EditableResultBox> {
 
   void _showAIMenu() {
     if (_selectedText.isEmpty) return;
+    HapticFeedback.mediumImpact();
     
-    HapticFeedback.lightImpact();
-    
-    showTextSelectionAIMenu(
+    showModalBottomSheet(
       context: context,
-      selectedText: _selectedText,
-      globalPosition: _selectionPosition,
-      onReplace: (newText) {
-        // Replace the selected text with AI result
-        final beforeSelection = _controller.text.substring(0, _selectionStart);
-        final afterSelection = _controller.text.substring(_selectionEnd);
-        final newFullText = beforeSelection + newText + afterSelection;
-        
-        _controller.text = newFullText;
-        _controller.selection = TextSelection.collapsed(
-          offset: _selectionStart + newText.length,
-        );
-        
-        widget.onTextChanged(newFullText);
-        
-        setState(() {
-          _hasSelection = false;
-          _selectedText = '';
-        });
-        
-        HapticFeedback.mediumImpact();
-      },
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+        child: TextSelectionAIMenu(
+          selectedText: _selectedText,
+          onReplace: (newText) {
+            Navigator.pop(context);
+            _replaceSelection(newText);
+          },
+          onDismiss: () => Navigator.pop(context),
+        ),
+      ),
     );
+  }
+
+  void _replaceSelection(String newText) {
+    final before = _controller.text.substring(0, _selectionStart);
+    final after = _controller.text.substring(_selectionEnd);
+    final newFull = before + newText + after;
+    
+    _controller.text = newFull;
+    _controller.selection = TextSelection.collapsed(
+      offset: _selectionStart + newText.length,
+    );
+    
+    widget.onTextChanged(newFull);
+    setState(() {
+      _hasSelection = false;
+      _selectedText = '';
+    });
+    HapticFeedback.mediumImpact();
   }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = const Color(0xFF3B82F6);
-    final textColor = Colors.white;
+    const primaryColor = Color(0xFF3B82F6);
+    const textColor = Colors.white;
 
     return Stack(
       children: [
         Container(
-          key: _textFieldKey,
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -173,153 +158,77 @@ class _EditableResultBoxState extends State<EditableResultBox> {
             ),
           ),
           child: widget.isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(primaryColor),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Refining...',
-                        style: TextStyle(
-                          color: textColor.withOpacity(0.6),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  onChanged: _onTextChanged,
-                  maxLines: null,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    height: 1.6,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Your text will appear here...',
-                    hintStyle: TextStyle(
-                      color: textColor.withOpacity(0.3),
+              ? const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(primaryColor),
                     ),
                   ),
-                  // Enable text selection toolbar
-                  enableInteractiveSelection: true,
-                  contextMenuBuilder: (context, editableTextState) {
-                    // Custom context menu with AI option
-                    return AdaptiveTextSelectionToolbar(
-                      anchors: editableTextState.contextMenuAnchors,
-                      children: [
-                        // AI Actions button
-                        TextSelectionToolbarTextButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          onPressed: () {
-                            editableTextState.hideToolbar();
-                            _showAIMenu();
-                          },
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.auto_awesome, size: 18, color: Color(0xFF8B5CF6)),
-                              SizedBox(width: 6),
-                              Text('AI Actions', style: TextStyle(color: Color(0xFF8B5CF6))),
-                            ],
-                          ),
-                        ),
-                        // Standard Cut
-                        TextSelectionToolbarTextButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          onPressed: () {
-                            editableTextState.cutSelection(SelectionChangedCause.toolbar);
-                          },
-                          child: const Text('Cut'),
-                        ),
-                        // Standard Copy
-                        TextSelectionToolbarTextButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          onPressed: () {
-                            editableTextState.copySelection(SelectionChangedCause.toolbar);
-                          },
-                          child: const Text('Copy'),
-                        ),
-                        // Standard Paste
-                        TextSelectionToolbarTextButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          onPressed: () {
-                            editableTextState.pasteText(SelectionChangedCause.toolbar);
-                          },
-                          child: const Text('Paste'),
-                        ),
-                        // Standard Select All
-                        TextSelectionToolbarTextButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          onPressed: () {
-                            editableTextState.selectAll(SelectionChangedCause.toolbar);
-                          },
-                          child: const Text('Select All'),
-                        ),
-                      ],
-                    );
-                  },
+                )
+              : Theme(
+                  data: Theme.of(context).copyWith(
+                    textSelectionTheme: TextSelectionThemeData(
+                      selectionColor: primaryColor.withOpacity(0.3),
+                      cursorColor: primaryColor,
+                      selectionHandleColor: primaryColor,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _controller,
+                    onChanged: _onTextChanged,
+                    maxLines: null,
+                    cursorColor: primaryColor,
+                    style: const TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                      height: 1.6,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Your text will appear here...',
+                      hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
+                    ),
+                  ),
                 ),
         ),
         
-        // Floating AI Button when text is selected
+        // Small floating AI button
         if (_hasSelection && _selectedText.isNotEmpty)
           Positioned(
             right: 8,
-            top: 8,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 200),
-              builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
-              },
-              child: GestureDetector(
-                onTap: _showAIMenu,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+            bottom: 8,
+            child: GestureDetector(
+              onTap: _showAIMenu,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                    SizedBox(width: 4),
+                    Text(
+                      'AI',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: Colors.white, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'AI',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
