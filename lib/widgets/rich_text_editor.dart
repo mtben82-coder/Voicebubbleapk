@@ -197,13 +197,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
       selection.start,
       selection.end - selection.start,
       newText,
-      quill.ChangeSource.local,
-    );
-    
-    // Update selection to end of new text
-    _controller.updateSelection(
       TextSelection.collapsed(offset: selection.start + newText.length),
-      quill.ChangeSource.local,
     );
 
     setState(() {
