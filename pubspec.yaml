@@ -69,8 +69,6 @@ dependencies:
 dependency_overrides:
   # Fix flutter_inappwebview namespace issue
   flutter_inappwebview: ^6.1.5
-  # Fix gal_linux compatibility issue
-  gal: ^2.2.0
 
 dev_dependencies:
   flutter_test:
