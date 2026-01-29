@@ -65,7 +65,7 @@ dependencies:
   # Rich Text Editor
   flutter_quill: ^9.0.0
   flutter_quill_extensions: ^9.0.0
-  gal: ^2.2.0
+  gal: 2.2.0  # Exact version to avoid compatibility issues
 dependency_overrides:
   # Fix flutter_inappwebview namespace issue
   flutter_inappwebview: ^6.1.5
