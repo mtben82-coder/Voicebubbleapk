@@ -2,7 +2,7 @@ import 'dart:ui';
 // Force re-commit to sync to GitHub
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/text_transformation_service.dart';
+import '../services/ai_text_transformation_service.dart';
 import '../providers/app_state_provider.dart';
 
 class AIActionsMenu extends StatefulWidget {
@@ -32,7 +32,7 @@ class _AIActionsMenuState extends State<AIActionsMenu>
   bool _isProcessing = false;
   String? _processingAction;
   
-  final _transformationService = TextTransformationService();
+  final _transformationService = AITextTransformationService();
 
   final List<AIAction> _actions = [
     AIAction(id: 'rewrite', name: 'Rewrite', icon: '✨', description: 'Make it clearer & more impactful', color: Color(0xFF3B82F6)),
@@ -178,7 +178,7 @@ class _AIActionsMenuState extends State<AIActionsMenu>
         if (language == null) { setState(() { _isProcessing = false; _processingAction = null; }); return; }
         transformedText = await _transformationService.translateText(widget.selectedText, language);
       } else {
-        transformedText = await _transformationService.transformText(widget.selectedText, action.id, context: 'Rich text editor selection');
+        transformedText = await _transformationService.transformText(text: widget.selectedText, action: action.id);
       }
       widget.onTextReplaced(transformedText);
       widget.onDismiss();
