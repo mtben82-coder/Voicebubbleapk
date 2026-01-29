@@ -169,26 +169,4 @@ class NotificationService {
   Future<void> cancelReminderByItemId(String itemId) async {
     await cancelReminder(itemId.hashCode.abs() % 2147483647);
   }
-
-  /// Test notification - shows immediately
-  Future<void> testNotificationNow() async {
-    if (!_initialized) await initialize();
-
-    await _notifications.show(
-      99999,
-      '🔔 Test Notification',
-      'If you see this, notifications work!',
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          importance: Importance.max,
-          priority: Priority.max,
-          playSound: true,
-          enableVibration: true,
-        ),
-      ),
-    );
-    debugPrint('🧪 Test notification sent');
-  }
 }
