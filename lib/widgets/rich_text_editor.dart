@@ -3,13 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'ai_actions_menu.dart';
+import '../services/refinement_service.dart';
 
 // ============================================================
-//        RICH TEXT EDITOR WIDGET
+//        RICH TEXT EDITOR WIDGET — WITH AI SELECTION MENU
 // ============================================================
 
-// KEYBOARD SHORTCUTS INTENTS
 class SaveIntent extends Intent {}
 class BoldIntent extends Intent {}
 class ItalicIntent extends Intent {}
@@ -39,6 +38,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
   late quill.QuillController _controller;
   final FocusNode _focusNode = FocusNode();
   Timer? _saveTimer;
+  Timer? _selectionTimer;
   bool _showSaved = false;
   bool _hasUnsavedChanges = false;
   late AnimationController _saveIndicatorController;
@@ -46,41 +46,35 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
   int _wordCount = 0;
   int _characterCount = 0;
   
-  // AI Menu state
-  bool _showAIMenu = false;
+  // Selection tracking
+  bool _hasSelection = false;
   String _selectedText = '';
-  TextSelection? _currentSelection;
+  int _selectionStart = 0;
+  int _selectionEnd = 0;
 
   @override
   void initState() {
     super.initState();
     _initializeController();
-    _controller.addListener(_onTextChanged);
-    _controller.addListener(_onSelectionChanged);
+    _controller.addListener(_onControllerChanged);
     
     _saveIndicatorController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _saveIndicatorAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _saveIndicatorController,
-      curve: Curves.easeInOut,
-    ));
+    _saveIndicatorAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _saveIndicatorController, curve: Curves.easeInOut),
+    );
   }
 
   void _initializeController() {
     quill.Document doc;
     
-    // Try to load from formatted content (Delta JSON)
     if (widget.initialFormattedContent != null && widget.initialFormattedContent!.isNotEmpty) {
       try {
         final deltaJson = jsonDecode(widget.initialFormattedContent!);
         doc = quill.Document.fromJson(deltaJson);
       } catch (e) {
-        // Fallback to plain text
         doc = quill.Document()..insert(0, widget.initialPlainText ?? '');
       }
     } else if (widget.initialPlainText != null && widget.initialPlainText!.isNotEmpty) {
@@ -98,85 +92,72 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
   @override
   void dispose() {
     _saveTimer?.cancel();
-    _controller.removeListener(_onTextChanged);
+    _selectionTimer?.cancel();
+    _controller.removeListener(_onControllerChanged);
     _controller.dispose();
     _focusNode.dispose();
     _saveIndicatorController.dispose();
     super.dispose();
   }
 
-  void _onTextChanged() {
+  void _onControllerChanged() {
     if (widget.readOnly) return;
-
+    
+    // Update word/character count
     final plainText = _controller.document.toPlainText();
-    final words = plainText.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length;
-    final characters = plainText.length;
-
+    final words = plainText.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+    
     setState(() {
       _hasUnsavedChanges = true;
       _showSaved = false;
       _wordCount = words;
-      _characterCount = characters;
+      _characterCount = plainText.length;
     });
 
-    if (_saveTimer?.isActive ?? false) _saveTimer!.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 500), () {
-      _saveContent();
-    });
+    // Check selection with debounce
+    _selectionTimer?.cancel();
+    _selectionTimer = Timer(const Duration(milliseconds: 200), _checkSelection);
+
+    // Auto-save with debounce
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 500), _saveContent);
   }
 
-  void _onSelectionChanged() {
+  void _checkSelection() {
+    if (!mounted) return;
+    
     final selection = _controller.selection;
-    if (selection.isValid && !selection.isCollapsed && !widget.readOnly) {
-      final plainText = _controller.document.toPlainText();
-      if (selection.start < plainText.length && selection.end <= plainText.length) {
-        final selectedText = plainText.substring(selection.start, selection.end).trim();
-        
-        if (selectedText.isNotEmpty) {
+    final plainText = _controller.document.toPlainText();
+    
+    if (selection.baseOffset != selection.extentOffset) {
+      final start = selection.start;
+      final end = selection.end;
+      
+      if (end <= plainText.length) {
+        final text = plainText.substring(start, end);
+        if (text.trim().length > 1) {
           setState(() {
-            _currentSelection = selection;
-            _selectedText = selectedText;
-            _showAIMenu = true;
+            _hasSelection = true;
+            _selectedText = text;
+            _selectionStart = start;
+            _selectionEnd = end;
           });
           return;
         }
       }
     }
     
-    setState(() {
-      _showAIMenu = false;
-      _currentSelection = null;
-      _selectedText = '';
-    });
-  }
-
-  void _replaceSelectedText(String newText) {
-    if (_currentSelection == null) return;
-
-    final selection = _currentSelection!;
-    _controller.replaceText(
-      selection.start,
-      selection.end - selection.start,
-      newText,
-      TextSelection.collapsed(offset: selection.start + newText.length),
-    );
-    
-    setState(() {
-      _showAIMenu = false;
-      _currentSelection = null;
-      _selectedText = '';
-    });
-  }
-
-  void _dismissAIMenu() {
-    setState(() {
-      _showAIMenu = false;
-      _currentSelection = null;
-      _selectedText = '';
-    });
+    if (_hasSelection) {
+      setState(() {
+        _hasSelection = false;
+        _selectedText = '';
+      });
+    }
   }
 
   Future<void> _saveContent() async {
+    if (!mounted) return;
+    
     try {
       final deltaJson = jsonEncode(_controller.document.toDelta().toJson());
       final plainText = _controller.document.toPlainText().trim();
@@ -200,24 +181,46 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
         });
       }
     } catch (e) {
-      debugPrint('Error saving content: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+      debugPrint('Save error: $e');
     }
   }
 
+  void _showAIMenu() {
+    if (_selectedText.isEmpty) return;
+    HapticFeedback.mediumImpact();
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AIMenuSheet(
+        selectedText: _selectedText,
+        onResult: (newText) {
+          Navigator.pop(ctx);
+          _replaceSelection(newText);
+        },
+      ),
+    );
+  }
+
+  void _replaceSelection(String newText) {
+    _controller.replaceText(
+      _selectionStart,
+      _selectionEnd - _selectionStart,
+      newText,
+      null,
+    );
+    
+    setState(() {
+      _hasSelection = false;
+      _selectedText = '';
+    });
+    
+    HapticFeedback.mediumImpact();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor = const Color(0xFF1A1A1A);
-    final textColor = Colors.white;
+    const surfaceColor = Color(0xFF1A1A1A);
 
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
@@ -241,7 +244,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
           children: [
             Column(
               children: [
-                // Formatting Toolbar
+                // Toolbar
                 if (!widget.readOnly)
                   Container(
                     color: surfaceColor,
@@ -253,15 +256,15 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                         showBoldButton: true,
                         showItalicButton: true,
                         showUnderLineButton: true,
-                        showStrikeThrough: true,
-                        showColorButton: true,
-                        showBackgroundColorButton: true,
+                        showStrikeThrough: false,
+                        showColorButton: false,
+                        showBackgroundColorButton: false,
                         showListNumbers: true,
                         showListBullets: true,
                         showListCheck: true,
                         showCodeBlock: false,
-                        showQuote: true,
-                        showIndent: true,
+                        showQuote: false,
+                        showIndent: false,
                         showLink: false,
                         showUndo: true,
                         showRedo: true,
@@ -270,10 +273,10 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                         showSubscript: false,
                         showSuperscript: false,
                         showSmallButton: false,
-                        showInlineCode: true,
-                        showClearFormat: true,
+                        showInlineCode: false,
+                        showClearFormat: false,
                         showHeaderStyle: true,
-                        showAlignmentButtons: true,
+                        showAlignmentButtons: false,
                       ),
                     ),
                   ),
@@ -281,6 +284,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                 // Editor
                 Expanded(
                   child: Container(
+                    color: Colors.black,
                     padding: const EdgeInsets.all(16),
                     child: quill.QuillEditor.basic(
                       focusNode: _focusNode,
@@ -289,74 +293,55 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                         padding: EdgeInsets.zero,
                         autoFocus: !widget.readOnly,
                         expands: true,
-                        placeholder: widget.readOnly ? 'No content yet...' : 'Start typing your masterpiece...',
+                        placeholder: 'Start typing...',
                         readOnly: widget.readOnly,
+                        customStyles: quill.DefaultStyles(
+                          paragraph: quill.DefaultTextBlockStyle(
+                            const TextStyle(color: Colors.white, fontSize: 16, height: 1.6),
+                            const quill.VerticalSpacing(0, 0),
+                            const quill.VerticalSpacing(0, 0),
+                            null,
+                          ),
+                          placeHolder: quill.DefaultTextBlockStyle(
+                            TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 16),
+                            const quill.VerticalSpacing(0, 0),
+                            const quill.VerticalSpacing(0, 0),
+                            null,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
 
-                // Status Bar
+                // Status bar
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: surfaceColor,
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.white.withOpacity(0.1),
-                        width: 1,
-                      ),
-                    ),
+                    border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
                   ),
                   child: Row(
                     children: [
                       Text(
                         '$_wordCount words • $_characterCount characters',
-                        style: TextStyle(
-                          color: textColor.withOpacity(0.6),
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
                       ),
                       const Spacer(),
                       if (_hasUnsavedChanges)
-                        Row(
+                        const Row(
                           children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF59E0B),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Unsaved changes',
-                              style: TextStyle(
-                                color: Color(0xFFF59E0B),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                            Icon(Icons.circle, color: Color(0xFFF59E0B), size: 6),
+                            SizedBox(width: 6),
+                            Text('Unsaved', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 12)),
                           ],
                         ),
                       if (_showSaved)
                         const Row(
                           children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: Color(0xFF10B981),
-                              size: 14,
-                            ),
+                            Icon(Icons.check_circle, color: Color(0xFF10B981), size: 14),
                             SizedBox(width: 6),
-                            Text(
-                              'Saved',
-                              style: TextStyle(
-                                color: Color(0xFF10B981),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                            Text('Saved', style: TextStyle(color: Color(0xFF10B981), fontSize: 12)),
                           ],
                         ),
                     ],
@@ -365,64 +350,129 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
               ],
             ),
             
-            // AI Actions Menu
-            if (_showAIMenu && _currentSelection != null)
+            // AI BUTTON - shows when text selected
+            if (_hasSelection)
               Positioned(
-                top: 100,
-                left: 20,
-                child: AIActionsMenu(
-                  selectedText: _selectedText,
-                  selection: _currentSelection!,
-                  onTextReplaced: _replaceSelectedText,
-                  onDismiss: _dismissAIMenu,
-                ),
-              ),
-
-            // Animated Save Indicator
-            if (_showSaved)
-              Positioned(
-                top: 16,
                 right: 16,
-                child: AnimatedBuilder(
-                  animation: _saveIndicatorAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _saveIndicatorAnimation.value,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF10B981).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.white, size: 16),
-                            SizedBox(width: 6),
-                            Text(
-                              'Saved',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                bottom: 60,
+                child: FloatingActionButton.small(
+                  onPressed: _showAIMenu,
+                  backgroundColor: const Color(0xFF8B5CF6),
+                  child: const Icon(Icons.auto_awesome, size: 18),
                 ),
               ),
-            
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// AI MENU BOTTOM SHEET
+// ============================================================
+
+class _AIMenuSheet extends StatefulWidget {
+  final String selectedText;
+  final Function(String) onResult;
+
+  const _AIMenuSheet({required this.selectedText, required this.onResult});
+
+  @override
+  State<_AIMenuSheet> createState() => _AIMenuSheetState();
+}
+
+class _AIMenuSheetState extends State<_AIMenuSheet> {
+  bool _loading = false;
+  String? _active;
+  final _service = RefinementService();
+
+  Future<void> _run(String id) async {
+    if (_loading) return;
+    setState(() { _loading = true; _active = id; });
+
+    try {
+      String result;
+      switch (id) {
+        case 'magic': result = await _service.refineText(widget.selectedText, RefinementType.professional); break;
+        case 'shorten': result = await _service.shorten(widget.selectedText); break;
+        case 'expand': result = await _service.expand(widget.selectedText); break;
+        case 'pro': result = await _service.makeProfessional(widget.selectedText); break;
+        case 'casual': result = await _service.makeCasual(widget.selectedText); break;
+        case 'grammar': result = await _service.fixGrammar(widget.selectedText); break;
+        default: result = widget.selectedText;
+      }
+      widget.onResult(result);
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Color(0xFF8B5CF6), size: 20),
+              SizedBox(width: 8),
+              Text('AI Actions', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Magic button - full width
+          _btn('magic', '✨ Magic', Icons.auto_awesome, const Color(0xFF8B5CF6)),
+          const SizedBox(height: 8),
+          // Buttons
+          Row(children: [
+            _btn('shorten', 'Shorten', Icons.compress, const Color(0xFFF59E0B)),
+            const SizedBox(width: 8),
+            _btn('expand', 'Expand', Icons.expand, const Color(0xFF3B82F6)),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            _btn('pro', 'Professional', Icons.work, const Color(0xFF0891B2)),
+            const SizedBox(width: 8),
+            _btn('casual', 'Casual', Icons.mood, const Color(0xFF10B981)),
+          ]),
+          const SizedBox(height: 8),
+          _btn('grammar', 'Fix Grammar', Icons.check, const Color(0xFFEC4899)),
+        ],
+      ),
+    );
+  }
+
+  Widget _btn(String id, String label, IconData icon, Color color) {
+    final isActive = _active == id && _loading;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _run(id),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive ? color.withOpacity(0.2) : const Color(0xFF2A2A2A),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isActive)
+                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: color))
+              else
+                Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
+            ],
+          ),
         ),
       ),
     );
