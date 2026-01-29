@@ -820,3 +820,130 @@ RULES:
   }
 
 };
+
+// ============================================================
+// REFINEMENT PRESETS (User-initiated quick actions)
+// ============================================================
+
+// Add refinement-specific presets that are more aggressive
+PRESET_DEFINITIONS["_refine_shorten"] = {
+  label: "Shorten (Refinement)",
+  temperature: 0.3,
+  max_tokens: 300,
+  behaviour: `
+CUT THIS TEXT BY 40-60% WHILE KEEPING ALL MEANING.
+
+RULES:
+- Remove every unnecessary word
+- Kill fluff, filler, redundancy
+- Keep 100% of the core message
+- Maintain exact same tone
+- Make it punchy and tight
+- Don't change meaning AT ALL
+- Output MUST be significantly shorter
+
+BE RUTHLESS. Every word must earn its place.
+  `,
+  examples: []
+};
+
+PRESET_DEFINITIONS["_refine_expand"] = {
+  label: "Expand (Refinement)",
+  temperature: 0.6,
+  max_tokens: 800,
+  behaviour: `
+EXPAND THIS TEXT BY 2-3X WHILE KEEPING THE SAME VOICE.
+
+ADD:
+- More detail and context
+- Examples and specifics
+- Emotional depth
+- Richer description
+- Supporting points
+
+RULES:
+- Keep their exact tone and style
+- Make it deeper, not just longer
+- Add real value, not fluff
+- Should still sound like them
+- Output MUST be significantly longer and richer
+
+EXPAND THOUGHTFULLY. Add substance, not padding.
+  `,
+  examples: []
+};
+
+PRESET_DEFINITIONS["_refine_casual"] = {
+  label: "Make Casual (Refinement)",
+  temperature: 0.6,
+  max_tokens: 500,
+  behaviour: `
+CONVERT THIS TO SUPER CASUAL, FRIENDLY TONE.
+
+MAKE IT:
+- Like texting a friend
+- Warm and relaxed
+- Use contractions (don't, can't, it's)
+- Informal vocabulary
+- Friendly and approachable
+- Natural and conversational
+
+RULES:
+- Keep the same meaning
+- Drop all formality
+- Sound human and real
+- No corporate speak
+- No stiff language
+
+OUTPUT MUST BE NOTICEABLY MORE CASUAL.
+  `,
+  examples: []
+};
+
+PRESET_DEFINITIONS["_refine_professional"] = {
+  label: "Make Professional (Refinement)",
+  temperature: 0.4,
+  max_tokens: 600,
+  behaviour: `
+CONVERT THIS TO PROFESSIONAL, FORMAL TONE.
+
+MAKE IT:
+- Business appropriate
+- Polished and respectful
+- Complete sentences
+- NO contractions (do not, cannot, will not)
+- NO slang or casual phrases
+- Professional vocabulary
+- Executive-ready
+
+RULES:
+- Keep the same meaning
+- Add formality and polish
+- Appropriate for clients/executives
+- Clear and concise
+- Professional but not robotic
+
+OUTPUT MUST BE NOTICEABLY MORE PROFESSIONAL.
+  `,
+  examples: []
+};
+
+PRESET_DEFINITIONS["_refine_grammar"] = {
+  label: "Fix Grammar (Refinement)",
+  temperature: 0.3,
+  max_tokens: 500,
+  behaviour: `
+FIX GRAMMAR, SPELLING, AND PUNCTUATION ONLY.
+
+RULES:
+- Fix errors ONLY
+- Do NOT change wording
+- Do NOT change tone
+- Do NOT restructure
+- Keep their exact voice
+- Just fix mistakes
+
+MINIMAL CHANGES. Only fix what's wrong.
+  `,
+  examples: []
+};
