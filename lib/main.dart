@@ -9,6 +9,8 @@ import 'services/subscription_service.dart';
 import 'services/storage_service.dart'; // ADD THIS
 import 'services/reminder_manager.dart';
 import 'services/analytics_service.dart';
+// Elite Projects
+import 'projectsnew/elite_projects_router.dart';
 import 'screens/main/main_navigation.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
@@ -40,7 +42,37 @@ void main() async {
   await SubscriptionService().initialize();
   debugPrint('✅ Subscription service initialized');
   
+  // Initialize Elite Projects system
+  await eliteProjects.initialize();
+  debugPrint('✅ Elite Projects system initialized');
+  
+  // Set up Elite Projects callbacks
+  _setupEliteProjectsCallbacks();
+  
   runApp(const MyApp());
+}
+
+/// Set up Elite Projects integration callbacks
+void _setupEliteProjectsCallbacks() {
+  // Connect recording flow
+  eliteProjects.onRecordRequested = (context, project, sectionId) {
+    // Navigate to existing recording screen with project context
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecordingScreen(
+          // TODO: Add project context parameters when RecordingScreen supports them
+        ),
+      ),
+    );
+  };
+  
+  // Connect AI presets (TODO: Connect to your AI service)
+  eliteProjects.onAIPresetRequested = (context, presetId, aiContext, project) {
+    debugPrint('🤖 AI Preset requested: $presetId for project: ${project.name}');
+    debugPrint('🧠 AI Context: ${aiContext.substring(0, 200)}...');
+    // TODO: Call your existing AI service with the rich context
+  };
 }
 
 class MyApp extends StatelessWidget {

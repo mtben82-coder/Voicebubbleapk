@@ -5,6 +5,8 @@ import '../models/archived_item.dart';
 import '../models/recording_item.dart';
 import '../models/project.dart';
 import '../models/tag.dart';
+// Elite Projects imports
+import '../projectsnew/elite_project_adapters.dart';
 
 class StorageService {
   static const String _onboardingCompleteKey = 'onboarding_complete';
@@ -35,6 +37,11 @@ class StorageService {
       Hive.registerAdapter(TagAdapter());
       debugPrint('✅ TagAdapter registered (typeId: 3)');
     }
+    
+    // Register Elite Projects adapters (typeIds 50-65)
+    debugPrint('🔧 Registering Elite Projects adapters...');
+    registerEliteProjectAdapters();
+    debugPrint('✅ Elite Projects adapters registered!');
     
     debugPrint('🎉 ALL HIVE SETUP COMPLETE!');
   }
