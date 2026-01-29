@@ -139,7 +139,7 @@ const eulogyInterview = [
     id: 'eulogy_story',
     question: "Tell me a story about them. A moment that captures who they really were. It can be funny, touching, or both.",
     whyItMatters: "Stories are how we remember people. A good eulogy has at least one story that makes people laugh and cry.",
-    exampleAnswer: "When grandma was 85, a guy broke into her house. She was in the kitchen making tea. She grabbed her frying pan, chased him through the living room, caught him at the front door, and made him apologize. Then - and this is the part that's so HER - she made him sit down and tell her why he was stealing. He was desperate, needed money. She gave him $50, made him a sandwich, and told him to come back anytime but through the front door. He actually did come back, years later, to tell her he'd turned his life around.",
+    exampleAnswer: "When grandma was 85, a guy broke into her house. She was in the kitchen making tea. She grabbed her frying pan, chased him through the living room, caught him at the front door, and made him apologize. Then - and this is the part that's so HER - she made him sit down and tell her why he was stealing. He was desperate, needed money. She gave him \$50, made him a sandwich, and told him to come back anytime but through the front door. He actually did come back, years later, to tell her he'd turned his life around.",
     pushForMore: "Do you have another story? Maybe something more everyday?",
     proTips: [
       "Pick a story that reveals their character",
@@ -217,7 +217,7 @@ const performanceReviewInterview = [
     id: 'review_achievements',
     question: "What were their biggest wins this review period? I want specific projects, outcomes, and impact.",
     whyItMatters: "The review needs concrete accomplishments. 'Did good work' means nothing. Specific achievements matter for their career.",
-    exampleAnswer: "Alex led the payment migration project - zero downtime moving $200M in annual transactions to the new system. He also mentored two junior engineers, both of whom got promoted this year. He built the new monitoring dashboard that reduced incident response time by 40%.",
+    exampleAnswer: "Alex led the payment migration project - zero downtime moving \$200M in annual transactions to the new system. He also mentored two junior engineers, both of whom got promoted this year. He built the new monitoring dashboard that reduced incident response time by 40%.",
     pushForMore: "Can you add metrics to any of these? Revenue, percentage improvement, team impact?",
     proTips: [
       "Be specific: project names, numbers, timeline",

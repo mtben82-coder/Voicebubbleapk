@@ -536,7 +536,7 @@ const pitchDeckInterview = [
     id: 'pitch_solution',
     question: "How does your product solve this? Walk me through the user experience - what happens when Sarah opens your app?",
     whyItMatters: "The solution needs to be obviously better. If it's only slightly better, no one will switch.",
-    exampleAnswer: "Sarah opens the app, sees available walkers near her with ratings and photos. She taps 'Book Now', picks a 30-minute walk, and a verified walker shows up in 15 minutes. She gets GPS tracking of the walk, photos of Max at the park, and a notification when he's back home safe. Total time: 90 seconds to book. Cost: $25.",
+    exampleAnswer: "Sarah opens the app, sees available walkers near her with ratings and photos. She taps 'Book Now', picks a 30-minute walk, and a verified walker shows up in 15 minutes. She gets GPS tracking of the walk, photos of Max at the park, and a notification when he's back home safe. Total time: 90 seconds to book. Cost: \$25.",
     pushForMore: "Why is this 10x better than the alternative?",
     proTips: [
       "Show don't tell - walk through the experience",
@@ -557,7 +557,7 @@ const pitchDeckInterview = [
     id: 'pitch_market',
     question: "How big is this market? I want TAM, SAM, SOM if you know them, or just help me understand the size of the opportunity.",
     whyItMatters: "VCs need to see a path to a big outcome. A great solution to a tiny problem isn't venture-scale.",
-    exampleAnswer: "The US pet care market is $100 billion and growing 6% yearly. Dog services specifically is $30 billion. Our serviceable market - urban dog owners who work full-time - is about $5 billion. We're starting in SF where there are 200,000 households with dogs and an average income of $120K.",
+    exampleAnswer: "The US pet care market is \$100 billion and growing 6% yearly. Dog services specifically is \$30 billion. Our serviceable market - urban dog owners who work full-time - is about \$5 billion. We're starting in SF where there are 200,000 households with dogs and an average income of \$120K.",
     pushForMore: "Where did these numbers come from? Are these paying customers or potential customers?",
     proTips: [
       "Bottom-up is more credible than top-down",
@@ -580,7 +580,7 @@ const pitchDeckInterview = [
     id: 'pitch_traction',
     question: "What traction do you have? Users, revenue, growth rate, waitlist - whatever you've got.",
     whyItMatters: "Traction is proof. Ideas are cheap. Execution is everything.",
-    exampleAnswer: "We launched 6 months ago. 10,000 users, 3,000 monthly active. $50K monthly recurring revenue, growing 30% month over month. 4.9 stars on the App Store with 500 reviews. NPS of 72. Retention at day 30 is 40%, which is strong for consumer apps.",
+    exampleAnswer: "We launched 6 months ago. 10,000 users, 3,000 monthly active. \$50K monthly recurring revenue, growing 30% month over month. 4.9 stars on the App Store with 500 reviews. NPS of 72. Retention at day 30 is 40%, which is strong for consumer apps.",
     pushForMore: "What's your growth rate? How are people finding you?",
     proTips: [
       "Lead with your BEST metric",
@@ -603,7 +603,7 @@ const pitchDeckInterview = [
     id: 'pitch_business',
     question: "How do you make money? What's the business model and unit economics?",
     whyItMatters: "Investors need to see a path to profitability, even if it's years away.",
-    exampleAnswer: "We take 20% of every booking. Average order value is $25, so we make $5 per walk. Customer acquisition cost is $15, but average customer lifetime value is $300 because they book twice a week for 6+ months. We also have a subscription tier at $99/month for unlimited walks that 20% of active users have upgraded to - that's where the margin is.",
+    exampleAnswer: "We take 20% of every booking. Average order value is \$25, so we make \$5 per walk. Customer acquisition cost is \$15, but average customer lifetime value is \$300 because they book twice a week for 6+ months. We also have a subscription tier at \$99/month for unlimited walks that 20% of active users have upgraded to - that's where the margin is.",
     pushForMore: "What are your unit economics? Do you make money on each transaction?",
     proTips: [
       "Know your CAC (customer acquisition cost), LTV (lifetime value), and margins",
@@ -648,7 +648,7 @@ const pitchDeckInterview = [
     id: 'pitch_ask',
     question: "How much are you raising and what will you use it for? What milestones will you hit?",
     whyItMatters: "The ask needs to be specific with clear milestones. Vague asks = no investment.",
-    exampleAnswer: "We're raising $2 million at a $10 million post-money valuation. 18 months of runway. Use of funds: 50% on engineering to build the platform, 30% on customer acquisition to launch in 3 more cities, 20% on operations. Milestones: hit $500K MRR, expand to 5 cities, reach 100K users. Those metrics position us for a Series A.",
+    exampleAnswer: "We're raising \$2 million at a \$10 million post-money valuation. 18 months of runway. Use of funds: 50% on engineering to build the platform, 30% on customer acquisition to launch in 3 more cities, 20% on operations. Milestones: hit \$500K MRR, expand to 5 cities, reach 100K users. Those metrics position us for a Series A.",
     pushForMore: "What milestones will this money help you hit?",
     proTips: [
       "Be specific: amount, valuation if you have one, use of funds",

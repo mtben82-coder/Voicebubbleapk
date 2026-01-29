@@ -164,7 +164,7 @@ class TemplateAIService {
     // Remove common AI intro/outro phrases
     final slopPatterns = [
       RegExp(r'^(Sure|Certainly|Of course|Absolutely)[,!]\s*', caseSensitive: false),
-      RegExp(r'^(Here is|Here\'s|I\'ve created|I have created)[^.]*\.\s*', caseSensitive: false),
+      RegExp(r"^(Here is|Here's|I've created|I have created)[^.]*\.\s*", caseSensitive: false),
       RegExp(r'\s*(Hope this helps|Let me know if you need|Feel free to)[^.]*\.?\s*$', caseSensitive: false),
       RegExp(r'^(Based on your inputs?,?|Using the information provided,?)\s*', caseSensitive: false),
     ];

@@ -81,6 +81,7 @@ In your main.dart or app initialization:
 */
 
 // main.dart
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'features/elite_projects/elite_project_models.dart';
 import 'features/elite_projects/elite_projects_router.dart';
@@ -210,7 +211,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ...,
+      body: const Placeholder(), // Your existing content
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

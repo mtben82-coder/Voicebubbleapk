@@ -112,7 +112,7 @@ const coverLetterTemplate = AppTemplate(
       hint: 'Your relevant experience, achievements, what you bring to THIS role',
       aiPrompt: 'Connect their needs to your specific experience. Use concrete examples.',
       icon: Icons.trending_up,
-      placeholder: 'Built payment systems processing $10M monthly, reduced fraud 60%, led platform team',
+      placeholder: 'Built payment systems processing \$10M monthly, reduced fraud 60%, led platform team',
     ),
     TemplateSection(
       id: 'fit',
