@@ -8,6 +8,7 @@ import '../../models/recording_item.dart';
 import '../../services/project_service.dart';
 import '../../services/continue_service.dart';
 import '../../widgets/outcome_chip.dart';
+import '../../widgets/rich_text_editor.dart';
 import 'recording_screen.dart';
 import 'recording_detail_screen.dart';
 
@@ -54,6 +55,36 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       _items = items;
       _isLoading = false;
     });
+  }
+
+  Future<void> _saveProjectContent(String plainText, String deltaJson) async {
+    if (_project == null) return;
+
+    try {
+      final updatedProject = _project!.copyWith(
+        content: plainText,
+        formattedContent: deltaJson,
+        updatedAt: DateTime.now(),
+      );
+
+      await _projectService.updateProject(updatedProject);
+      
+      setState(() {
+        _project = updatedProject;
+      });
+
+      debugPrint('✅ Saved project content for: ${_project!.id}');
+    } catch (e) {
+      debugPrint('❌ Error saving project content: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving content: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -178,6 +209,46 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 ],
               ),
             ),
+
+            // Project Content Editor
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    'Project Notes',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: RichTextEditor(
+                      initialFormattedContent: _project!.formattedContent,
+                      initialPlainText: _project!.content ?? '',
+                      onSave: (plainText, deltaJson) => _saveProjectContent(plainText, deltaJson),
+                      readOnly: false,
+                      showToolbar: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
 
             // Continue Project Button
             if (_items.isNotEmpty)

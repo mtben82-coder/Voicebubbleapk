@@ -10,11 +10,12 @@ import '../../widgets/preset_chip.dart';
 import '../../widgets/tag_chip.dart';
 import '../../widgets/add_tag_bottom_sheet.dart';
 import '../../widgets/add_to_project_dialog.dart';
+import '../../widgets/rich_text_editor.dart';
 import '../../services/continue_service.dart';
 import '../../constants/presets.dart';
 import 'recording_screen.dart';
 
-class RecordingDetailScreen extends StatelessWidget {
+class RecordingDetailScreen extends StatefulWidget {
   final String recordingId;
 
   const RecordingDetailScreen({
@@ -22,6 +23,11 @@ class RecordingDetailScreen extends StatelessWidget {
     required this.recordingId,
   });
 
+  @override
+  State<RecordingDetailScreen> createState() => _RecordingDetailScreenState();
+}
+
+class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final backgroundColor = const Color(0xFF000000);
@@ -36,13 +42,13 @@ class RecordingDetailScreen extends StatelessWidget {
         child: Consumer<AppStateProvider>(
           builder: (context, appState, _) {
             final item = appState.recordingItems.firstWhere(
-              (r) => r.id == recordingId,
+              (r) => r.id == widget.recordingId,
               orElse: () => throw Exception('Recording not found'),
             );
 
             return Column(
               children: [
-                // Header
+                // Header with 3-dot menu
                 Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Row(
@@ -63,312 +69,135 @@ class RecordingDetailScreen extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          'Recording Details',
+                          _getTitleFromContent(item.finalText),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                             color: textColor,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Delete button
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => _showDeleteOptions(context, appState, item.id),
-                          icon: Icon(Icons.more_vert, color: textColor, size: 20),
-                        ),
+                      // 3-dot menu
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_vert, color: textColor, size: 20),
+                        color: surfaceColor,
+                        onSelected: (value) => _handleMenuAction(context, appState, item, value),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'continue',
+                            child: Row(
+                              children: [
+                                Icon(Icons.add_circle_outline, color: primaryColor, size: 18),
+                                const SizedBox(width: 12),
+                                Text('Continue', style: TextStyle(color: textColor)),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'share',
+                            child: Row(
+                              children: [
+                                Icon(Icons.share, color: textColor, size: 18),
+                                const SizedBox(width: 12),
+                                Text('Share', style: TextStyle(color: textColor)),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'add_to_project',
+                            child: Row(
+                              children: [
+                                Icon(Icons.folder_outlined, color: textColor, size: 18),
+                                const SizedBox(width: 12),
+                                Text('Add to Project', style: TextStyle(color: textColor)),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'manage_tags',
+                            child: Row(
+                              children: [
+                                Icon(Icons.local_offer, color: textColor, size: 18),
+                                const SizedBox(width: 12),
+                                Text('Manage Tags', style: TextStyle(color: textColor)),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_forever, color: Color(0xFFEF4444), size: 18),
+                                const SizedBox(width: 12),
+                                Text('Delete', style: TextStyle(color: Color(0xFFEF4444))),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Chips: Preset chip (large) + Outcome chips (smaller)
-                        Consumer<AppStateProvider>(
-                          builder: (context, appState, _) {
-                            final tags = appState.tags;
-                            final itemTags = item.tags
-                                .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
-                                .where((t) => t != null)
-                                .cast<Tag>()
-                                .toList();
+                // Chips (small, read-only)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Consumer<AppStateProvider>(
+                    builder: (context, appState, _) {
+                      final tags = appState.tags;
+                      final itemTags = item.tags
+                          .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
+                          .where((t) => t != null)
+                          .cast<Tag>()
+                          .toList();
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    // Preset chip - FIRST and prominent
-                                    if (AppPresets.findById(item.presetId) != null)
-                                      PresetChip(
-                                        preset: AppPresets.findById(item.presetId)!,
-                                        isLarge: true,
-                                      ),
-                                    
-                                    // Outcome chips - SECOND and smaller
-                                    if (item.outcomes.isNotEmpty)
-                                      ...item.outcomeTypes.map((outcome) {
-                                        return OutcomeChip(
-                                          outcomeType: outcome,
-                                          isSelected: true,
-                                          onTap: () {}, // Read-only
-                                        );
-                                      }).toList(),
-                                  ],
-                                ),
-                                
-                                // Tags section - separate row below preset/outcome
-                                if (itemTags.isNotEmpty || true) ...[
-                                  const SizedBox(height: 12),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      // Existing tag chips
-                                      ...itemTags.map((tag) {
-                                        return TagChip(
-                                          tag: tag,
-                                          size: 'small',
-                                          showRemove: true,
-                                          onRemove: () async {
-                                            await appState.removeTagFromRecording(item.id, tag.id);
-                                          },
-                                        );
-                                      }).toList(),
-                                      
-                                      // Add Tag button
-                                      GestureDetector(
-                                        onTap: () async {
-                                          final result = await showModalBottomSheet<bool>(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            backgroundColor: Colors.transparent,
-                                            builder: (context) => AddTagBottomSheet(
-                                              recordingId: item.id,
-                                              currentTags: item.tags,
-                                            ),
-                                          );
-                                          // UI will update automatically via Provider
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF3B82F6).withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(14),
-                                            border: Border.all(
-                                              color: const Color(0xFF3B82F6).withOpacity(0.4),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.add,
-                                                size: 12,
-                                                color: const Color(0xFF3B82F6),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'Add Tag',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: const Color(0xFF3B82F6),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Date
-                        Text(
-                          item.formattedDate,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Full text (not truncated)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                primaryColor.withOpacity(0.1),
-                                const Color(0xFF2563EB).withOpacity(0.1),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          // Preset chip - small
+                          if (AppPresets.findById(item.presetId) != null)
+                            PresetChip(
+                              preset: AppPresets.findById(item.presetId)!,
+                              isLarge: false,
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: primaryColor.withOpacity(0.3),
-                              width: 2,
-                            ),
-                          ),
-                          child: SelectableText(
-                            item.finalText,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: textColor,
-                              height: 1.6,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Action buttons
-                        Row(
-                          children: [
-                            // Copy button
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: item.finalText));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Copied to clipboard'),
-                                      backgroundColor: Color(0xFF10B981),
-                                      duration: Duration(seconds: 1),
-                                    ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: surfaceColor,
-                                  foregroundColor: textColor,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.copy, size: 18),
-                                label: const Text('Copy'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Share button
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Share.share(item.finalText);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: surfaceColor,
-                                  foregroundColor: textColor,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.share, size: 18),
-                                label: const Text('Share'),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Continue button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _handleContinue(context, appState, item),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: const Icon(Icons.add_circle_outline, size: 20),
-                            label: const Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Add to Project button
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                isScrollControlled: true,
-                                builder: (context) => AddToProjectDialog(
-                                  recordingItemId: item.id,
-                                ),
+                          
+                          // Outcome chips - small
+                          if (item.outcomes.isNotEmpty)
+                            ...item.outcomeTypes.map((outcome) {
+                              return OutcomeChip(
+                                outcomeType: outcome,
+                                isSelected: true,
+                                onTap: () {}, // Read-only
                               );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: textColor,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: BorderSide(
-                                color: primaryColor.withOpacity(0.3),
-                                width: 1,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: Icon(Icons.folder_outlined, size: 20, color: primaryColor),
-                            label: Text(
-                              'Add to Project',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: textColor,
-                              ),
-                            ),
-                          ),
-                        ),
+                            }).toList(),
 
-                        const SizedBox(height: 32),
-                      ],
-                    ),
+                          // Tag chips - small
+                          ...itemTags.map((tag) {
+                            return TagChip(
+                              tag: tag,
+                              size: 'small',
+                              showRemove: false, // Read-only in editor
+                            );
+                          }).toList(),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Rich Text Editor (FULL SCREEN)
+                Expanded(
+                  child: RichTextEditor(
+                    initialFormattedContent: item.formattedContent,
+                    initialPlainText: item.finalText,
+                    onSave: (plainText, deltaJson) => _saveContent(appState, item, plainText, deltaJson),
+                    readOnly: false,
                   ),
                 ),
               ],
@@ -376,7 +205,87 @@ class RecordingDetailScreen extends StatelessWidget {
           },
         ),
       ),
+      // Floating Continue Button (bottom right)
+      floatingActionButton: Consumer<AppStateProvider>(
+        builder: (context, appState, _) {
+          final item = appState.recordingItems.firstWhere(
+            (r) => r.id == widget.recordingId,
+            orElse: () => throw Exception('Recording not found'),
+          );
+          
+          return FloatingActionButton(
+            onPressed: () => _handleContinue(context, appState, item),
+            backgroundColor: primaryColor,
+            tooltip: 'Continue with AI',
+            child: const Icon(
+              Icons.add_circle_outline,
+              color: Colors.white,
+              size: 24,
+            ),
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+
+  String _getTitleFromContent(String content) {
+    if (content.isEmpty) return 'Untitled';
+    
+    // Get first line or first 50 characters
+    final firstLine = content.split('\n').first.trim();
+    if (firstLine.length <= 50) return firstLine;
+    
+    return '${firstLine.substring(0, 47)}...';
+  }
+
+  Future<void> _saveContent(AppStateProvider appState, RecordingItem item, String plainText, String deltaJson) async {
+    try {
+      final updatedItem = item.copyWith(
+        finalText: plainText,
+        formattedContent: deltaJson,
+      );
+      
+      await appState.updateRecording(updatedItem);
+      debugPrint('✅ Saved formatted content for item: ${item.id}');
+    } catch (e) {
+      debugPrint('❌ Error saving formatted content: $e');
+    }
+  }
+
+  void _handleMenuAction(BuildContext context, AppStateProvider appState, RecordingItem item, String action) {
+    switch (action) {
+      case 'continue':
+        _handleContinue(context, appState, item);
+        break;
+      case 'share':
+        Share.share(item.finalText);
+        break;
+      case 'add_to_project':
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => AddToProjectDialog(
+            recordingItemId: item.id,
+          ),
+        );
+        break;
+      case 'manage_tags':
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AddTagBottomSheet(
+            recordingId: item.id,
+            currentTags: item.tags,
+          ),
+        );
+        break;
+      case 'delete':
+        _showDeleteConfirmation(context, appState, item.id);
+        break;
+    }
   }
 
   void _handleContinue(BuildContext context, AppStateProvider appState, RecordingItem item) async {
@@ -452,34 +361,6 @@ class RecordingDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-  
-  void _showDeleteOptions(BuildContext context, AppStateProvider appState, String itemId) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.delete_forever, color: Color(0xFFEF4444)),
-                title: const Text('Delete Permanently', style: TextStyle(color: Color(0xFFEF4444))),
-                onTap: () {
-                  Navigator.pop(context); // Close bottom sheet
-                  _showDeleteConfirmation(context, appState, itemId);
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
     );
   }
 }

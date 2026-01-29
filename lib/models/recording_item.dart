@@ -55,6 +55,9 @@ class RecordingItem {
   
   @HiveField(16)
   int? reminderNotificationId; // Store notification ID for cancellation
+  
+  @HiveField(17)
+  String? formattedContent; // Quill Delta JSON for rich text editing
 
   RecordingItem({
     required this.id,
@@ -74,6 +77,7 @@ class RecordingItem {
     List<String>? tags,
     this.reminderDateTime,
     this.reminderNotificationId,
+    this.formattedContent,
   }) : continuedInIds = continuedInIds ?? [],
        tags = tags ?? [];
 
@@ -124,6 +128,7 @@ class RecordingItem {
     List<String>? tags,
     DateTime? reminderDateTime,
     int? reminderNotificationId,
+    String? formattedContent,
     bool clearReminder = false, // Flag to explicitly clear reminder
   }) {
     return RecordingItem(
@@ -144,6 +149,7 @@ class RecordingItem {
       tags: tags ?? List.from(this.tags),
       reminderDateTime: clearReminder ? null : (reminderDateTime ?? this.reminderDateTime),
       reminderNotificationId: clearReminder ? null : (reminderNotificationId ?? this.reminderNotificationId),
+      formattedContent: formattedContent ?? this.formattedContent,
     );
   }
 }

@@ -4,13 +4,17 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   cloud_firestore
+  file_selector_windows
   firebase_auth
   firebase_core
   flutter_timezone
+  gal
+  irondash_engine_context
   permission_handler_windows
   record_windows
   share_plus
   speech_to_text_windows
+  super_native_extensions
   url_launcher_windows
 )
 

@@ -25,6 +25,12 @@ class Project {
   @HiveField(6)
   int? colorIndex; // Index for predefined colors (0-5)
 
+  @HiveField(7)
+  String? content; // Plain text content for the project
+
+  @HiveField(8)
+  String? formattedContent; // Quill Delta JSON for rich text
+
   Project({
     required this.id,
     required this.name,
@@ -33,6 +39,8 @@ class Project {
     required this.updatedAt,
     this.description,
     this.colorIndex,
+    this.content,
+    this.formattedContent,
   });
 
   // Helper getter for formatted date
@@ -63,6 +71,8 @@ class Project {
     DateTime? updatedAt,
     String? description,
     int? colorIndex,
+    String? content,
+    String? formattedContent,
   }) {
     return Project(
       id: id ?? this.id,
@@ -72,6 +82,8 @@ class Project {
       updatedAt: updatedAt ?? this.updatedAt,
       description: description ?? this.description,
       colorIndex: colorIndex ?? this.colorIndex,
+      content: content ?? this.content,
+      formattedContent: formattedContent ?? this.formattedContent,
     );
   }
 }
