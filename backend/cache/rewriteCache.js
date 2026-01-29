@@ -12,7 +12,7 @@ const REWRITE_TTL =
 
 function buildKey({ text, presetId, language = "auto" }) {
   const hash = hashContent(text);
-  // Include version in key so old cache is ignored
+  files // Include version in key so old cache is ignored
   return `${CACHE_VERSION}:rewrite:${presetId}:${language}:${hash}`;
 }
 

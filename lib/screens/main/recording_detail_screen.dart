@@ -48,30 +48,30 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
 
             return Column(
               children: [
-                // Header with 3-dot menu
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
+                // Compact Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: surfaceColor,
-                          borderRadius: BorderRadius.circular(40),
+                          borderRadius: BorderRadius.circular(18),
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           onPressed: () => Navigator.pop(context),
-                          icon: Icon(Icons.arrow_back, color: textColor, size: 20),
+                          icon: Icon(Icons.arrow_back, color: textColor, size: 18),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _getTitleFromContent(item.finalText),
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: textColor,
                           ),
@@ -79,12 +79,19 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // 3-dot menu
-                      PopupMenuButton<String>(
-                        icon: Icon(Icons.more_vert, color: textColor, size: 20),
-                        color: surfaceColor,
-                        onSelected: (value) => _handleMenuAction(context, appState, item, value),
-                        itemBuilder: (context) => [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: surfaceColor,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: PopupMenuButton<String>(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(Icons.more_vert, color: textColor, size: 18),
+                          color: surfaceColor,
+                          onSelected: (value) => _handleMenuAction(context, appState, item, value),
+                          itemBuilder: (context) => [
                           PopupMenuItem(
                             value: 'continue',
                             child: Row(
@@ -137,59 +144,11 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
                             ),
                           ),
                         ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-
-                // Chips (small, read-only)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Consumer<AppStateProvider>(
-                    builder: (context, appState, _) {
-                      final tags = appState.tags;
-                      final itemTags = item.tags
-                          .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
-                          .where((t) => t != null)
-                          .cast<Tag>()
-                          .toList();
-
-                      return Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          // Preset chip - small
-                          if (AppPresets.findById(item.presetId) != null)
-                            PresetChip(
-                              preset: AppPresets.findById(item.presetId)!,
-                              isLarge: false,
-                            ),
-                          
-                          // Outcome chips - small
-                          if (item.outcomes.isNotEmpty)
-                            ...item.outcomeTypes.map((outcome) {
-                              return OutcomeChip(
-                                outcomeType: outcome,
-                                isSelected: true,
-                                onTap: () {}, // Read-only
-                              );
-                            }).toList(),
-
-                          // Tag chips - small
-                          ...itemTags.map((tag) {
-                            return TagChip(
-                              tag: tag,
-                              size: 'small',
-                              showRemove: false, // Read-only in editor
-                            );
-                          }).toList(),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 16),
 
                 // Rich Text Editor (FULL SCREEN)
                 Expanded(
