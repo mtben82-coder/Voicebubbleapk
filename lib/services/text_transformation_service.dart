@@ -1,126 +1,157 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
-
-// ============================================================
-//        TEXT TRANSFORMATION SERVICE
-// ============================================================
-//
-// Handles all AI text transformations for the select text menu.
-// This is where the magic happens - turning selected text into gold.
-//
-// ============================================================
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TextTransformationService {
-  static const String _baseUrl = 'https://voicebubble-backend.onrender.com';
-  
-  /// Transform selected text using AI
+  static final TextTransformationService _instance = TextTransformationService._internal();
+  factory TextTransformationService() => _instance;
+  TextTransformationService._internal();
+
+  final String _baseUrl = dotenv.env['API_BASE_URL'] ?? 'https://voicebubble-production.up.railway.app';
+
+  /// Transform text using AI
   Future<String> transformText({
     required String text,
     required String action,
     String? context,
-    String? language,
   }) async {
     try {
+      print('🤖 Transforming text: $action | "${text.substring(0, text.length > 50 ? 50 : text.length)}..."');
+
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/transform/text'),
+        Uri.parse('$_baseUrl/api/transform/transform'),
         headers: {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
           'text': text,
           'action': action,
-          'context': context ?? '',
-          'language': language ?? 'auto',
+          'context': context,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['transformedText'] ?? text;
+        if (data['success'] == true) {
+          final transformedText = data['transformedText'] as String;
+          print('✅ Text transformation successful: "${transformedText.substring(0, transformedText.length > 50 ? 50 : transformedText.length)}..."');
+          return transformedText;
+        } else {
+          throw Exception(data['error'] ?? 'Unknown error');
+        }
       } else {
-        debugPrint('❌ Transform API error: ${response.statusCode}');
-        throw Exception('Failed to transform text: ${response.statusCode}');
+        throw Exception('HTTP ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
-      debugPrint('❌ Transform service error: $e');
+      print('❌ Text transformation error: $e');
       rethrow;
     }
   }
 
-  /// Rewrite text to be clearer and more engaging
-  Future<String> rewriteText(String text, {String? context}) async {
-    return transformText(
-      text: text,
-      action: 'rewrite',
-      context: context,
-    );
+  /// Transform multiple texts in batch
+  Future<List<TransformationResult>> batchTransformText({
+    required List<String> texts,
+    required String action,
+    String? context,
+  }) async {
+    try {
+      print('🤖 Batch transforming ${texts.length} texts: $action');
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/transform/batch-transform'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'texts': texts,
+          'action': action,
+          'context': context,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final results = (data['results'] as List).map((result) {
+            return TransformationResult(
+              originalText: result['originalText'],
+              transformedText: result['transformedText'],
+              success: result['success'],
+              error: result['error'],
+            );
+          }).toList();
+          
+          print('✅ Batch transformation complete: ${results.where((r) => r.success).length}/${results.length} successful');
+          return results;
+        } else {
+          throw Exception(data['error'] ?? 'Unknown error');
+        }
+      } else {
+        throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      print('❌ Batch text transformation error: $e');
+      rethrow;
+    }
   }
 
-  /// Expand text with more details and examples
-  Future<String> expandText(String text, {String? context}) async {
-    return transformText(
-      text: text,
-      action: 'expand',
-      context: context,
-    );
-  }
+  /// Get available transformation actions
+  Future<List<TransformationAction>> getTransformationActions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/transform/actions'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
 
-  /// Shorten text while keeping key points
-  Future<String> shortenText(String text, {String? context}) async {
-    return transformText(
-      text: text,
-      action: 'shorten',
-      context: context,
-    );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final actions = (data['actions'] as List).map((action) {
+            return TransformationAction(
+              id: action['id'],
+              name: action['name'],
+              description: action['description'],
+            );
+          }).toList();
+          
+          return actions;
+        } else {
+          throw Exception(data['error'] ?? 'Unknown error');
+        }
+      } else {
+        throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      print('❌ Get transformation actions error: $e');
+      rethrow;
+    }
   }
+}
 
-  /// Make text more professional and formal
-  Future<String> makeProfessional(String text, {String? context}) async {
-    return transformText(
-      text: text,
-      action: 'professional',
-      context: context,
-    );
-  }
+class TransformationResult {
+  final String originalText;
+  final String? transformedText;
+  final bool success;
+  final String? error;
 
-  /// Make text more casual and friendly
-  Future<String> makeCasual(String text, {String? context}) async {
-    return transformText(
-      text: text,
-      action: 'casual',
-      context: context,
-    );
-  }
+  TransformationResult({
+    required this.originalText,
+    this.transformedText,
+    required this.success,
+    this.error,
+  });
+}
 
-  /// Translate text to specified language
-  Future<String> translateText(String text, String targetLanguage, {String? context}) async {
-    return transformText(
-      text: text,
-      action: 'translate',
-      context: context,
-      language: targetLanguage,
-    );
-  }
+class TransformationAction {
+  final String id;
+  final String name;
+  final String description;
 
-  /// Get available languages for translation
-  List<Map<String, String>> getAvailableLanguages() {
-    return [
-      {'code': 'es', 'name': 'Spanish'},
-      {'code': 'fr', 'name': 'French'},
-      {'code': 'de', 'name': 'German'},
-      {'code': 'it', 'name': 'Italian'},
-      {'code': 'pt', 'name': 'Portuguese'},
-      {'code': 'ru', 'name': 'Russian'},
-      {'code': 'ja', 'name': 'Japanese'},
-      {'code': 'ko', 'name': 'Korean'},
-      {'code': 'zh', 'name': 'Chinese'},
-      {'code': 'ar', 'name': 'Arabic'},
-      {'code': 'hi', 'name': 'Hindi'},
-      {'code': 'nl', 'name': 'Dutch'},
-      {'code': 'sv', 'name': 'Swedish'},
-      {'code': 'no', 'name': 'Norwegian'},
-      {'code': 'da', 'name': 'Danish'},
-    ];
-  }
+  TransformationAction({
+    required this.id,
+    required this.name,
+    required this.description,
+  });
 }

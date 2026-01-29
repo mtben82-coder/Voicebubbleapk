@@ -1,14 +1,15 @@
-// backend/routes/textTransform.js
-
 import express from 'express';
-import { transformText } from '../controllers/textTransformController.js';
+import * as textTransformController from '../controllers/textTransformController.js';
 
 const router = express.Router();
 
-/**
- * POST /api/transform/text
- * Transform selected text using AI
- */
-router.post('/text', transformText);
+// Transform single text
+router.post('/transform', textTransformController.transformText);
+
+// Batch transform multiple texts
+router.post('/batch-transform', textTransformController.batchTransformText);
+
+// Get available transformation actions
+router.get('/actions', textTransformController.getTransformationActions);
 
 export default router;
