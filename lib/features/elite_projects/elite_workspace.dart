@@ -982,7 +982,6 @@ class _EliteWorkspaceState extends State<EliteWorkspace> with TickerProviderStat
           final context = EliteProjectAIContextService.generateFullContext(
             widget.project,
             sectionId: _selectedSectionId,
-            currentSectionContent: _textController.text,
           );
           widget.onAIPresetPressed!(preset.id, context);
         }
@@ -1227,7 +1226,6 @@ class _EliteWorkspaceState extends State<EliteWorkspace> with TickerProviderStat
                 final context = EliteProjectAIContextService.generateFullContext(
                   widget.project,
                   sectionId: _selectedSectionId,
-                  currentSectionContent: _textController.text,
                 );
                 widget.onAIPresetPressed!('${widget.project.type.name}_continue', context);
               }
