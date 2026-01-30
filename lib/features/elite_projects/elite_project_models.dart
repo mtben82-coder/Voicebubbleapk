@@ -21,6 +21,10 @@ enum ExportFormat {
   latex,
   rtf,
   csv,
+  showNotes,
+  transcript,
+  script,
+  description,
 }
 
 extension ExportFormatExtension on ExportFormat {
@@ -36,6 +40,10 @@ extension ExportFormatExtension on ExportFormat {
       case ExportFormat.latex: return 'LaTeX';
       case ExportFormat.rtf: return 'Rich Text';
       case ExportFormat.csv: return 'CSV';
+      case ExportFormat.showNotes: return 'Show Notes';
+      case ExportFormat.transcript: return 'Transcript';
+      case ExportFormat.script: return 'Script';
+      case ExportFormat.description: return 'Description';
     }
   }
 
@@ -51,6 +59,10 @@ extension ExportFormatExtension on ExportFormat {
       case ExportFormat.latex: return '.tex';
       case ExportFormat.rtf: return '.rtf';
       case ExportFormat.csv: return '.csv';
+      case ExportFormat.showNotes: return '.txt';
+      case ExportFormat.transcript: return '.txt';
+      case ExportFormat.script: return '.txt';
+      case ExportFormat.description: return '.txt';
     }
   }
 }
@@ -451,6 +463,17 @@ extension SectionStatusExtension on SectionStatus {
       case SectionStatus.reviewing: return 'Reviewing';
       case SectionStatus.completed: return 'Completed';
       case SectionStatus.complete: return 'Complete';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case SectionStatus.notStarted: return '⚪';
+      case SectionStatus.inProgress: return '🔵';
+      case SectionStatus.drafted: return '🟠';
+      case SectionStatus.reviewing: return '🟣';
+      case SectionStatus.completed: return '🟢';
+      case SectionStatus.complete: return '🟢';
     }
   }
 
@@ -1500,6 +1523,72 @@ class EliteProject {
     isArchived: json['isArchived'] ?? false,
     isPinned: json['isPinned'] ?? false,
   );
+}
+
+// =============================================================================
+// PROJECT STATISTICS
+// =============================================================================
+
+class ProjectStatistics {
+  final int totalProjects;
+  final int activeProjects;
+  final int archivedProjects;
+  final int totalWords;
+  final int totalSections;
+  final int completedSections;
+  final Map<EliteProjectType, int> projectsByType;
+  final int currentStreak;
+  final int longestStreak;
+
+  const ProjectStatistics({
+    this.totalProjects = 0,
+    this.activeProjects = 0,
+    this.archivedProjects = 0,
+    this.totalWords = 0,
+    this.totalSections = 0,
+    this.completedSections = 0,
+    this.projectsByType = const {},
+    this.currentStreak = 0,
+    this.longestStreak = 0,
+  });
+
+  double get completionRate => 
+      totalSections > 0 ? completedSections / totalSections : 0.0;
+
+  factory ProjectStatistics.fromProjects(List<EliteProject> projects) {
+    int totalWords = 0;
+    int totalSections = 0;
+    int completedSections = 0;
+    final typeCount = <EliteProjectType, int>{};
+    int currentStreak = 0;
+    int longestStreak = 0;
+
+    for (final project in projects) {
+      totalWords += project.progress.totalWordCount;
+      totalSections += project.structure.sections.length;
+      completedSections += project.completedSectionsCount;
+      typeCount[project.type] = (typeCount[project.type] ?? 0) + 1;
+      
+      if (project.progress.currentStreak > currentStreak) {
+        currentStreak = project.progress.currentStreak;
+      }
+      if (project.progress.longestStreak > longestStreak) {
+        longestStreak = project.progress.longestStreak;
+      }
+    }
+
+    return ProjectStatistics(
+      totalProjects: projects.length,
+      activeProjects: projects.where((p) => !p.isArchived).length,
+      archivedProjects: projects.where((p) => p.isArchived).length,
+      totalWords: totalWords,
+      totalSections: totalSections,
+      completedSections: completedSections,
+      projectsByType: typeCount,
+      currentStreak: currentStreak,
+      longestStreak: longestStreak,
+    );
+  }
 }
 
 // =============================================================================
