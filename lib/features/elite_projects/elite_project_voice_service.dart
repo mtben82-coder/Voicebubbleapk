@@ -56,7 +56,7 @@ class EliteProjectVoiceService {
       nextSectionHint: nextSectionHint,
       aiContext: EliteProjectAIContextService.generateFullContext(
         project,
-        currentSectionId: sectionId,
+        sectionId: sectionId,
         currentSectionContent: section.content,
       ),
       suggestedPresets: _getSuggestedPresetsForSection(project, section),
@@ -153,7 +153,7 @@ class EliteProjectVoiceService {
   ) async {
     // This would call your AI service to extract entities
     // For now, return empty list - implement based on your AI backend
-    final extractionPrompt = EliteProjectAIContextService.generateMemoryExtractionPrompt(
+    final extractionPrompt = EliteProjectAIContextService.generateFullContext(
       project,
       content,
     );
@@ -224,7 +224,7 @@ class EliteProjectVoiceService {
     if (section.status == SectionStatus.inProgress) {
       return 'Continue working';
     }
-    if (section.status == SectionStatus.needsRevision) {
+    if (section.status == SectionStatus.reviewing) {
       return 'Needs revision';
     }
     return 'Add more content';
@@ -233,7 +233,7 @@ class EliteProjectVoiceService {
   int _estimateRecordingTime(ProjectSection section, EliteProject project) {
     // Rough estimate: 150 words per minute of speaking
     // Average section might need 300-500 words
-    final targetWords = project.goals?.dailyWordGoal ?? 500;
+    final targetWords = project.projectGoals?.dailyWordTarget ?? 500;
     return (targetWords / 150).ceil();
   }
 

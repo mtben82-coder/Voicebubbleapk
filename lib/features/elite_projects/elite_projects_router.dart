@@ -103,9 +103,6 @@ class EliteProjectsRouter {
             _showDefaultRecordDialog(context, project, sectionId);
           }
         },
-        onOpenSection: (sectionId) {
-          Navigator.push(context, sectionEditorScreen(context, project, sectionId));
-        },
       ),
     );
   }

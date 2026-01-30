@@ -527,7 +527,7 @@ class EliteProjectService extends ChangeNotifier {
     
     if (_activeProjectId == projectId) {
       _activeProjectId = _projects.isNotEmpty ? _projects.first.id : null;
-      await _settingsBox?.put('activeProjectId', _activeProjectId);
+      await _settingsBox?.put('activeProjectId', _activeProjectId ?? '');
     }
     
     notifyListeners();

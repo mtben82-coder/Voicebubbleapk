@@ -53,8 +53,8 @@ class EliteProjectAdapter extends TypeAdapter<EliteProject> {
       subtitle: fields[3] as String?,
       structure: fields[4] as ProjectStructure,
       progress: fields[5] as ProjectProgress,
-      memory: fields[6] as ProjectAIMemory,
-      goals: fields[7] as ProjectGoals?,
+      memory: fields[6] as ProjectMemory?,
+      projectGoals: fields[7] as ProjectGoals?,
       templateId: fields[8] as String?,
       colorIndex: fields[9] as int? ?? 0,
       isArchived: fields[10] as bool? ?? false,
@@ -217,7 +217,7 @@ class ProjectProgressAdapter extends TypeAdapter<ProjectProgress> {
       sectionsComplete: fields[2] as int? ?? 0,
       currentStreak: fields[3] as int? ?? 0,
       longestStreak: fields[4] as int? ?? 0,
-      lastWorkedDate: fields[5] as DateTime?,
+      lastSessionAt: fields[5] as DateTime?,
       dailyHistory: (fields[6] as List?)?.cast<DailyProgress>() ?? [],
     );
   }
@@ -237,7 +237,7 @@ class ProjectProgressAdapter extends TypeAdapter<ProjectProgress> {
       ..writeByte(4)
       ..write(obj.longestStreak)
       ..writeByte(5)
-      ..write(obj.lastWorkedDate)
+      ..write(obj.lastSessionAt)
       ..writeByte(6)
       ..write(obj.dailyHistory);
   }

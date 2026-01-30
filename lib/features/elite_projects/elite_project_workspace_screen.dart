@@ -636,22 +636,22 @@ class _EliteProjectWorkspaceScreenState extends State<EliteProjectWorkspaceScree
 
   Widget _buildContentArea(ProjectSection section, bool isDark) {
     // Show recordings/content in this section
-    if (section.itemIds.isEmpty) {
+    if (section.recordingIds.isEmpty) {
       return _buildEmptyContent(section, isDark);
     }
     
     // TODO: Load and display recordings
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      itemCount: section.itemIds.length,
+      itemCount: section.recordingIds.length,
       itemBuilder: (context, index) {
-        return _buildContentItem(section.itemIds[index], isDark);
+        return _buildContentItem(section.recordingIds[index], isDark);
       },
     );
   }
 
   Widget _buildEmptyContent(ProjectSection section, bool isDark) {
-    final placeholder = section.metadata['placeholder'] as String?;
+    final placeholder = section.metadata?['placeholder'] as String?;
     
     return Center(
       child: Padding(

@@ -183,7 +183,7 @@ class _EliteProjectMemoryEditorState extends State<EliteProjectMemoryEditor>
                   padding: const EdgeInsets.all(16),
                   itemCount: characters.length,
                   itemBuilder: (context, index) {
-                    return _buildCharacterCard(characters[index], isDark);
+                    return _buildCharacterCard(characters.values.elementAt(index), isDark);
                   },
                 ),
         ),
@@ -417,7 +417,7 @@ class _EliteProjectMemoryEditorState extends State<EliteProjectMemoryEditor>
                   padding: const EdgeInsets.all(16),
                   itemCount: locations.length,
                   itemBuilder: (context, index) {
-                    return _buildLocationCard(locations[index], isDark);
+                    return _buildLocationCard(locations.values.elementAt(index), isDark);
                   },
                 ),
         ),

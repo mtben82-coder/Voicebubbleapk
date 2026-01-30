@@ -21,10 +21,11 @@ class StorageService {
     debugPrint('✅ Hive.initFlutter() completed!');
     
     // Register Hive type adapters
-    if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(ArchivedItem.adapter);
-      debugPrint('✅ ArchivedItemAdapter registered (typeId: 0)');
-    }
+    // ArchivedItem adapter removed - not needed
+    // if (!Hive.isAdapterRegistered(0)) {
+    //   Hive.registerAdapter(ArchivedItem.adapter);
+    //   debugPrint('✅ ArchivedItemAdapter registered (typeId: 0)');
+    // }
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(RecordingItemAdapter());
       debugPrint('✅ RecordingItemAdapter registered (typeId: 1)');

@@ -708,7 +708,7 @@ class _EliteProjectSelectionScreenState extends State<EliteProjectSelectionScree
                     name: template.name,
                     description: template.description,
                     isDark: isDark,
-                    tips: template.tips,
+                    // tips: template.tips, // Removed - not in model
                     onTap: () {
                       Navigator.pop(context);
                       _showCreateProjectDialog(type, template);
