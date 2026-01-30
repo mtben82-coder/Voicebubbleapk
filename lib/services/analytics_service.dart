@@ -257,34 +257,7 @@ class AnalyticsService {
   }
 
   // ============================================================
-  // SMART ACTIONS EVENTS
-  // ============================================================
-
-  Future<void> logSmartActionsUsed({
-    required int actionsDetected,
-    required List<String> actionTypes,
-  }) async {
-    await _analytics.logEvent(
-      name: 'smart_actions_used',
-      parameters: {
-        'actions_detected': actionsDetected,
-        'action_types': actionTypes.join(','),
-      },
-    );
-  }
-
-  Future<void> logSmartActionExported({
-    required String actionType,
-    required String exportDestination,
-  }) async {
-    await _analytics.logEvent(
-      name: 'smart_action_exported',
-      parameters: {
-        'action_type': actionType,
-        'export_destination': exportDestination,
-      },
-    );
-  }
+  // Smart actions analytics removed
 
   // ============================================================
   // SUBSCRIPTION EVENTS

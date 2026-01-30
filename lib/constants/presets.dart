@@ -37,15 +37,7 @@ class AppPresets {
           color: const Color(0xFF67E8F9), // Light Cyan - calming
         ),
         
-        // 4. SMART ACTIONS - Electric Blue (POWER)
-        Preset(
-          id: 'smart_actions',
-          icon: Icons.bolt,
-          name: 'Smart Actions',
-          description: 'Auto-detect calendar, tasks, emails, notes',
-          category: 'All Presets',
-          color: const Color(0xFF3B82F6), // Electric Blue
-        ),
+        // Smart Actions preset removed
         
         // 5. Quick Reply - Bright Blue (CONTRAST)
         Preset(
