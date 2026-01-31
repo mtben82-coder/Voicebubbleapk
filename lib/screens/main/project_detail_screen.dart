@@ -242,38 +242,21 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         ],
                       ),
                     )
-                : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 8),
-                        if (_items.isEmpty)
-                          _buildEmptyState('No recordings yet', 'Your recordings will appear here', secondaryTextColor)
-                        else
-                          // Grid layout for recordings - same as library
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                            itemCount: _items.length,
-                            itemBuilder: (context, index) {
-                              return _buildItemCard(
-                                _items[index],
-                                surfaceColor,
-                                textColor,
-                                secondaryTextColor,
-                                gradientColors,
-                              );
-                            },
-                          ),
-                        const SizedBox(height: 100), // Extra space at bottom
-                      ],
-                    ),
+                : Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      ..._items.map((item) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        child: _buildItemCard(
+                          item,
+                          surfaceColor,
+                          textColor,
+                          secondaryTextColor,
+                          gradientColors,
+                        ),
+                      )).toList(),
+                      const SizedBox(height: 100), // Extra space at bottom
+                    ],
                   ),
           ],
         ),
@@ -281,7 +264,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to recording screen with project context
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -303,8 +285,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     Color secondaryTextColor,
     List<Color> gradientColors,
   ) {
-    return GestureDetector(
-      onTap: () {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: () {
           // Navigate to detail screen
           Navigator.push(
             context,
@@ -312,8 +296,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               builder: (context) => RecordingDetailScreen(recordingId: item.id),
             ),
           );
-      },
-      child: Container(
+        },
+        child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: surfaceColor,
@@ -579,21 +563,5 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         );
       }
     }
-  }
-
-  Widget _buildEmptyState(String title, String subtitle, Color color) {
-    return Center(
-      child: Column(
-        children: [
-          const SizedBox(height: 40),
-          Icon(Icons.mic_none_outlined, size: 64, color: color.withOpacity(0.5)),
-          const SizedBox(height: 16),
-          Text(title, style: TextStyle(fontSize: 18, color: color)),
-          const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(fontSize: 14, color: color.withOpacity(0.7))),
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
   }
 }
