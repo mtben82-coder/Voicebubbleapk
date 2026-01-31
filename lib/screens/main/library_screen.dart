@@ -289,11 +289,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           );
         },
         onImagePressed: () {
-          // TODO: Implement image creation
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Image creation coming soon!'),
-              backgroundColor: Color(0xFF10B981),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ImageCreationScreen(),
             ),
           );
         },
@@ -330,13 +329,33 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return GestureDetector(
       onTap: () {
         if (item.contentType == 'text') {
-          // Navigate to text editor for text documents
+          // Check if it's a quick note or full document
+          if (item.presetUsed == 'Quick Note') {
+            // Use simple text editor for notes
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TextCreationScreen(
+                  itemId: item.id,
+                  initialText: item.finalText,
+                  isQuickNote: true,
+                ),
+              ),
+            );
+          } else {
+            // Use rich text editor for full documents
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RecordingDetailScreen(recordingId: item.id)),
+            );
+          }
+        } else if (item.contentType == 'image') {
+          // Navigate to image editor for images
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TextCreationScreen(
+              builder: (context) => ImageCreationScreen(
                 itemId: item.id,
-                initialText: item.finalText,
               ),
             ),
           );

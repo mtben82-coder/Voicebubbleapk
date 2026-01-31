@@ -59,10 +59,12 @@ class _MultiOptionFabState extends State<MultiOptionFab>
   }
 
   void _onOptionPressed(VoidCallback? callback) {
-    _toggle(); // Close the menu
-    Future.delayed(const Duration(milliseconds: 100), () {
-      callback?.call();
-    });
+    if (_isExpanded) {
+      _toggle(); // Close the menu
+      Future.delayed(const Duration(milliseconds: 200), () {
+        callback?.call();
+      });
+    }
   }
 
   @override
@@ -74,25 +76,19 @@ class _MultiOptionFabState extends State<MultiOptionFab>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Backdrop to close menu
-        if (_isExpanded)
-          GestureDetector(
-            onTap: _toggle,
-            child: Container(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height,
-              color: Colors.transparent,
-            ),
-          ),
 
         // Options
         AnimatedBuilder(
           animation: _animation,
           builder: (context, child) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
+            return Transform.scale(
+              scale: _animation.value,
+              child: Opacity(
+                opacity: _animation.value,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
                 // Project option (if enabled)
                 if (widget.showProjectOption)
                   _buildOption(
@@ -139,8 +135,10 @@ class _MultiOptionFabState extends State<MultiOptionFab>
                   delay: widget.showProjectOption ? 0.4 : 0.3,
                 ),
 
-                const SizedBox(height: 16),
-              ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
             );
           },
         ),

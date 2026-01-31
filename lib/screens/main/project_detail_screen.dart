@@ -294,11 +294,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           );
         },
         onImagePressed: () {
-          // TODO: Implement image creation
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Image creation coming soon!'),
-              backgroundColor: Color(0xFF10B981),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImageCreationScreen(projectId: widget.projectId),
             ),
           );
         },
