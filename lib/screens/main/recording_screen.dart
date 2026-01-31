@@ -134,8 +134,19 @@ class _RecordingScreenState extends State<RecordingScreen>
   }
   
   Future<void> _initSpeech() async {
-    final available = await _speech.initialize();
-    if (available) {
+    try {
+      final available = await _speech.initialize();
+      print('Speech initialization: $available');
+      if (available) {
+        await _startRecording();
+      } else {
+        print('Speech recognition not available');
+        // Still start recording for audio-only mode
+        await _startRecording();
+      }
+    } catch (e) {
+      print('Error initializing speech: $e');
+      // Still start recording for audio-only mode
       await _startRecording();
     }
   }
@@ -158,23 +169,32 @@ class _RecordingScreenState extends State<RecordingScreen>
       }
 
       // Start live speech-to-text for recording (no display needed)
-      await _speech.listen(
-        onResult: (result) {
-          // We don't need to show the transcription anymore
-        },
-        listenMode: stt.ListenMode.dictation, // Continuous dictation mode
-        pauseFor: const Duration(seconds: 30), // Don't auto-stop
-        partialResults: true,
-        onSoundLevelChange: (level) {
-          // Update target sound level - the wave animation timer will smoothly animate toward this
-          // Sound levels typically range from -2 (silence) to 10 (loud)
-          // Normalize to 0.3 (minimum wave) to 1.0 (maximum wave) for better visual feedback
-          final normalizedLevel = ((level.clamp(-2, 10) + 2) / 12).clamp(0.3, 1.0);
-          _targetSoundLevel = normalizedLevel;
-        },
+      try {
+        if (_speech.isAvailable) {
+          await _speech.listen(
+            onResult: (result) {
+              // We don't need to show the transcription anymore
+              print('STT result: ${result.recognizedWords}');
+            },
+            listenMode: stt.ListenMode.dictation, // Continuous dictation mode
+            pauseFor: const Duration(seconds: 30), // Don't auto-stop
+            partialResults: true,
+            onSoundLevelChange: (level) {
+              // Update target sound level - the wave animation timer will smoothly animate toward this
+              // Sound levels typically range from -2 (silence) to 10 (loud)
+              // Normalize to 0.3 (minimum wave) to 1.0 (maximum wave) for better visual feedback
+              final normalizedLevel = ((level.clamp(-2, 10) + 2) / 12).clamp(0.3, 1.0);
+              _targetSoundLevel = normalizedLevel;
+            },
         cancelOnError: false,
         listenFor: const Duration(minutes: 5), // Max 5 minutes
       );
+        } else {
+          print('Speech recognition not available for listening');
+        }
+      } catch (speechError) {
+        print('Error starting speech recognition: $speechError');
+      }
 
       setState(() {
         _isRecording = true;
