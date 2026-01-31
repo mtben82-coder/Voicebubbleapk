@@ -144,7 +144,7 @@ class _TextCreationScreenState extends State<TextCreationScreen> {
             customTitle: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
             tags: _selectedTags,
           );
-          await appState.updateRecordingItem(updatedItem);
+          await appState.updateRecording(updatedItem);
         }
       } else {
         // Create new item
@@ -163,7 +163,7 @@ class _TextCreationScreenState extends State<TextCreationScreen> {
           contentType: 'text',
         );
 
-        await appState.addRecordingItem(newItem);
+        await appState.saveRecording(newItem);
       }
 
       setState(() {
