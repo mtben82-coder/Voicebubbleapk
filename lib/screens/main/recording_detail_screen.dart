@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +15,8 @@ import '../../widgets/rich_text_editor.dart';
 import '../../services/continue_service.dart';
 import '../../constants/presets.dart';
 import 'recording_screen.dart';
+import 'image_creation_screen.dart';
+import 'todo_creation_screen.dart';
 
 class RecordingDetailScreen extends StatefulWidget {
   final String recordingId;
@@ -225,14 +228,9 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
                   ),
                 ),
 
-                // Rich Text Editor (FULL SCREEN)
+                // Content based on type
                 Expanded(
-                  child: RichTextEditor(
-                    initialFormattedContent: item.formattedContent,
-                    initialPlainText: item.finalText,
-                    onSave: (plainText, deltaJson) => _saveContent(appState, item, plainText, deltaJson),
-                    readOnly: false,
-                  ),
+                  child: _buildContentEditor(item, appState),
                 ),
               ],
             );
@@ -305,6 +303,233 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       _isEditingTitle = false;
       _titleController.clear();
     });
+  }
+
+  Widget _buildContentEditor(RecordingItem item, AppStateProvider appState) {
+    switch (item.contentType) {
+      case 'image':
+        return _buildImageViewer(item);
+      case 'todo':
+        return _buildTodoViewer(item);
+      case 'text':
+      case 'voice':
+      default:
+        return RichTextEditor(
+          initialFormattedContent: item.formattedContent,
+          initialPlainText: item.finalText,
+          onSave: (plainText, deltaJson) => _saveContent(appState, item, plainText, deltaJson),
+          readOnly: false,
+        );
+    }
+  }
+
+  Widget _buildImageViewer(RecordingItem item) {
+    final imagePath = item.rawTranscript; // Image path stored in rawTranscript
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image display
+          if (imagePath.isNotEmpty && File(imagePath).existsSync())
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(imagePath),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.broken_image,
+                        size: 64,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Image not found',
+                        style: TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          
+          const SizedBox(height: 16),
+          
+          // Caption
+          if (item.finalText.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                item.finalText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          
+          const SizedBox(height: 16),
+          
+          // Edit button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ImageCreationScreen(itemId: item.id),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit Image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodoViewer(RecordingItem item) {
+    final todoLines = item.finalText.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Todo items
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Todo Items',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: todoLines.length,
+                      itemBuilder: (context, index) {
+                        final line = todoLines[index];
+                        final isCompleted = line.startsWith('☑');
+                        final text = line.replaceAll(RegExp(r'^[☐☑] '), '');
+                        
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+                                color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  text,
+                                  style: TextStyle(
+                                    color: isCompleted ? const Color(0xFF94A3B8) : Colors.white,
+                                    fontSize: 16,
+                                    decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Edit button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TodoCreationScreen(itemId: item.id),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit Todo List'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveContent(AppStateProvider appState, RecordingItem item, String plainText, String deltaJson) async {

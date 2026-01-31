@@ -10,13 +10,13 @@ class TodoItem {
   String id;
   String text;
   bool isCompleted;
-  
+
   TodoItem({
     required this.id,
     required this.text,
     this.isCompleted = false,
   });
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -24,7 +24,7 @@ class TodoItem {
       'isCompleted': isCompleted,
     };
   }
-  
+
   factory TodoItem.fromJson(Map<String, dynamic> json) {
     return TodoItem(
       id: json['id'],
@@ -64,18 +64,18 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
     _titleController = TextEditingController();
     _titleController.addListener(_onTextChanged);
     
-    // Add first todo item
-    _addTodoItem();
+    // Start with one empty todo item
+    _addTodoItem('');
     
     // Load existing item if editing
     if (widget.itemId != null) {
       _loadExistingItem();
     } else {
-      // Auto-focus title for new todos
+      // Auto-focus first todo item for new lists
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _titleController.text.isEmpty 
-          ? _titleController.selection = TextSelection.fromPosition(TextPosition(offset: 0))
-          : _todoFocusNodes.first.requestFocus();
+        if (_todoFocusNodes.isNotEmpty) {
+          _todoFocusNodes.first.requestFocus();
+        }
       });
     }
   }
@@ -88,14 +88,14 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
     }
   }
 
-  void _addTodoItem({String? text, bool isCompleted = false}) {
+  void _addTodoItem(String text, {bool isCompleted = false}) {
     final todoItem = TodoItem(
       id: const Uuid().v4(),
-      text: text ?? '',
+      text: text,
       isCompleted: isCompleted,
     );
     
-    final controller = TextEditingController(text: text ?? '');
+    final controller = TextEditingController(text: text);
     final focusNode = FocusNode();
     
     controller.addListener(_onTextChanged);
@@ -105,11 +105,6 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
       _todoControllers.add(controller);
       _todoFocusNodes.add(focusNode);
     });
-    
-    // Focus on the new item
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      focusNode.requestFocus();
-    });
   }
 
   void _removeTodoItem(int index) {
@@ -118,6 +113,7 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
     setState(() {
       _todoControllers[index].dispose();
       _todoFocusNodes[index].dispose();
+      
       _todoItems.removeAt(index);
       _todoControllers.removeAt(index);
       _todoFocusNodes.removeAt(index);
@@ -142,42 +138,42 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
         _selectedTags = List.from(item.tags);
       });
       
-      // Parse todo items from finalText (JSON format)
+      // Clear existing items
+      for (var controller in _todoControllers) {
+        controller.dispose();
+      }
+      for (var focusNode in _todoFocusNodes) {
+        focusNode.dispose();
+      }
+      _todoItems.clear();
+      _todoControllers.clear();
+      _todoFocusNodes.clear();
+      
+      // Parse todo items from finalText (stored as JSON)
       try {
         if (item.finalText.isNotEmpty) {
           final List<dynamic> todoData = [];
-          // Simple parsing - in real app you'd use proper JSON
-          final lines = item.finalText.split('\n');
-          for (String line in lines) {
-            if (line.trim().isNotEmpty) {
-              final isCompleted = line.startsWith('☑');
-              final text = line.replaceFirst(RegExp(r'^[☐☑]\s*'), '');
-              todoData.add({
-                'id': const Uuid().v4(),
-                'text': text,
-                'isCompleted': isCompleted,
-              });
+          // Try to parse as JSON, fallback to simple text
+          try {
+            final parsed = item.finalText.split('\n');
+            for (String line in parsed) {
+              if (line.trim().isNotEmpty) {
+                final isCompleted = line.startsWith('☑ ') || line.startsWith('[x] ');
+                final text = line.replaceAll(RegExp(r'^(\[[ x]\]|[☐☑]) '), '');
+                _addTodoItem(text, isCompleted: isCompleted);
+              }
             }
-          }
-          
-          // Clear existing items and add loaded ones
-          _todoItems.clear();
-          _todoControllers.forEach((c) => c.dispose());
-          _todoFocusNodes.forEach((f) => f.dispose());
-          _todoControllers.clear();
-          _todoFocusNodes.clear();
-          
-          for (var data in todoData) {
-            _addTodoItem(text: data['text'], isCompleted: data['isCompleted']);
-          }
-          
-          if (_todoItems.isEmpty) {
-            _addTodoItem();
+          } catch (e) {
+            // Fallback: treat as simple text
+            _addTodoItem(item.finalText);
           }
         }
       } catch (e) {
-        // If parsing fails, just add one empty item
-        _addTodoItem();
+        _addTodoItem('');
+      }
+      
+      if (_todoItems.isEmpty) {
+        _addTodoItem('');
       }
     }
   }
@@ -185,8 +181,12 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
   @override
   void dispose() {
     _titleController.dispose();
-    _todoControllers.forEach((controller) => controller.dispose());
-    _todoFocusNodes.forEach((focusNode) => focusNode.dispose());
+    for (var controller in _todoControllers) {
+      controller.dispose();
+    }
+    for (var focusNode in _todoFocusNodes) {
+      focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -219,28 +219,24 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
   }
 
   String _generateTodoText() {
-    final buffer = StringBuffer();
-    for (int i = 0; i < _todoItems.length; i++) {
-      final item = _todoItems[i];
-      final text = _todoControllers[i].text.trim();
-      if (text.isNotEmpty) {
-        final checkbox = item.isCompleted ? '☑' : '☐';
-        buffer.writeln('$checkbox $text');
-      }
-    }
-    return buffer.toString().trim();
+    return _todoItems.map((item) {
+      final checkbox = item.isCompleted ? '☑' : '☐';
+      return '$checkbox ${item.text}';
+    }).join('\n');
   }
 
-  Future<void> _saveTodo() async {
-    // Update todo items with current text
+  Future<void> _saveTodoList() async {
+    // Remove empty todo items
+    final nonEmptyTodos = <int>[];
     for (int i = 0; i < _todoItems.length; i++) {
-      _todoItems[i].text = _todoControllers[i].text.trim();
+      final text = _todoControllers[i].text.trim();
+      if (text.isNotEmpty) {
+        _todoItems[i].text = text;
+        nonEmptyTodos.add(i);
+      }
     }
-    
-    // Remove empty items
-    final nonEmptyItems = _todoItems.where((item) => item.text.isNotEmpty).toList();
-    
-    if (nonEmptyItems.isEmpty) {
+
+    if (nonEmptyTodos.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add at least one todo item'),
@@ -256,6 +252,12 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
 
     try {
       final appState = Provider.of<AppStateProvider>(context, listen: false);
+      
+      // Update text in remaining items
+      for (int i in nonEmptyTodos) {
+        _todoItems[i].text = _todoControllers[i].text.trim();
+      }
+      
       final todoText = _generateTodoText();
       
       if (widget.itemId != null) {
@@ -273,10 +275,10 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
         // Create new item
         final newItem = RecordingItem(
           id: const Uuid().v4(),
-          rawTranscript: todoText,
+          rawTranscript: '', // Empty for todo lists
           finalText: todoText,
           presetUsed: 'Todo List',
-          outcomes: ['task'], // Add to task outcomes for alarm/completion system
+          outcomes: [],
           projectId: widget.projectId,
           createdAt: DateTime.now(),
           editHistory: [],
@@ -284,7 +286,6 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
           tags: _selectedTags,
           customTitle: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
           contentType: 'todo',
-          isCompleted: false, // Initialize as not completed
         );
 
         await appState.saveRecording(newItem);
@@ -298,7 +299,7 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.itemId != null ? 'Todo updated' : 'Todo created'),
+            content: Text(widget.itemId != null ? 'Todo list updated' : 'Todo list created'),
             backgroundColor: const Color(0xFF10B981),
           ),
         );
@@ -361,7 +362,7 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.white),
           ),
           title: Text(
-            widget.itemId != null ? 'Edit Todo' : 'New Todo',
+            widget.itemId != null ? 'Edit Todo List' : 'New Todo List',
             style: const TextStyle(color: Colors.white, fontSize: 18),
           ),
           actions: [
@@ -375,7 +376,7 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
             ),
             // Save button
             TextButton(
-              onPressed: _isLoading ? null : _saveTodo,
+              onPressed: _isLoading ? null : _saveTodoList,
               child: _isLoading
                   ? const SizedBox(
                       width: 20,
@@ -448,7 +449,7 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: const InputDecoration(
-                      hintText: 'Todo title (optional)',
+                      hintText: 'Todo list title (optional)',
                       hintStyle: TextStyle(color: secondaryTextColor),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.all(16),
@@ -460,25 +461,21 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
                 const SizedBox(height: 16),
 
                 // Todo items list
-                Container(
-                  constraints: BoxConstraints(
-                    minHeight: 400,
-                    maxHeight: MediaQuery.of(context).size.height * 0.6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _todoItems.length,
-                          itemBuilder: (context, index) {
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: _todoItems.length,
+                            itemBuilder: (context, index) {
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.only(bottom: 12),
                                 child: Row(
                                   children: [
                                     // Checkbox
@@ -528,24 +525,27 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
                                           hintText: 'Add todo item...',
                                           hintStyle: TextStyle(color: secondaryTextColor),
                                           border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                          contentPadding: EdgeInsets.zero,
                                         ),
                                         textCapitalization: TextCapitalization.sentences,
                                         onSubmitted: (value) {
                                           if (value.trim().isNotEmpty && index == _todoItems.length - 1) {
-                                            _addTodoItem();
+                                            _addTodoItem('');
+                                            Future.delayed(const Duration(milliseconds: 100), () {
+                                              _todoFocusNodes.last.requestFocus();
+                                            });
                                           }
                                         },
                                       ),
                                     ),
                                     
-                                    // Delete button (only show if more than 1 item)
+                                    // Delete button
                                     if (_todoItems.length > 1)
                                       IconButton(
                                         onPressed: () => _removeTodoItem(index),
                                         icon: Icon(
                                           Icons.close,
-                                          color: secondaryTextColor,
+                                          color: secondaryTextColor.withOpacity(0.6),
                                           size: 18,
                                         ),
                                       ),
@@ -556,30 +556,42 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
                           ),
                         ),
                         
-                        // Add button
-                        const SizedBox(height: 8),
+                        // Add new todo button
                         GestureDetector(
-                          onTap: _addTodoItem,
+                          onTap: () {
+                            _addTodoItem('');
+                            Future.delayed(const Duration(milliseconds: 100), () {
+                              _todoFocusNodes.last.requestFocus();
+                            });
+                          },
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.add,
-                                color: primaryColor,
-                                size: 24,
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: secondaryTextColor, width: 2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Icon(
+                                  Icons.add,
+                                  color: secondaryTextColor,
+                                  size: 16,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 'Add item',
                                 style: TextStyle(
-                                  color: primaryColor,
+                                  color: secondaryTextColor,
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -590,7 +602,7 @@ class _TodoCreationScreenState extends State<TodoCreationScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${_todoItems.where((item) => item.isCompleted).length}/${_todoItems.length} completed',
+                      '${_todoItems.where((item) => item.isCompleted).length} of ${_todoItems.length} completed',
                       style: const TextStyle(
                         color: secondaryTextColor,
                         fontSize: 12,

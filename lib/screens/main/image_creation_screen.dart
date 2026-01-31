@@ -75,7 +75,10 @@ class _ImageCreationScreenState extends State<ImageCreationScreen> {
         _titleController.text = item.customTitle ?? '';
         _captionController.text = item.finalText;
         _selectedTags = List.from(item.tags);
-        // TODO: Load existing image path
+        _savedImagePath = item.rawTranscript; // Load existing image path
+        if (_savedImagePath?.isNotEmpty == true) {
+          _selectedImage = File(_savedImagePath!);
+        }
       });
     }
   }

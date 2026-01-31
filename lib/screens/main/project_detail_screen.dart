@@ -14,6 +14,7 @@ import 'recording_detail_screen.dart';
 import 'text_creation_screen.dart';
 import 'image_creation_screen.dart';
 import 'todo_creation_screen.dart';
+import 'todo_creation_screen.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
@@ -600,8 +601,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         return Icons.text_fields;
       case 'image':
         return Icons.image;
-      case 'todo':
-        return Icons.checklist;
       case 'voice':
       default:
         return Icons.mic;
@@ -612,10 +611,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     switch (contentType) {
       case 'text':
         return const Color(0xFFF59E0B);
-      case 'image':
-        return const Color(0xFF10B981);
       case 'todo':
         return const Color(0xFF8B5CF6);
+      case 'image':
+        return const Color(0xFF10B981);
       case 'voice':
       default:
         return const Color(0xFFEF4444);

@@ -14,7 +14,7 @@ class MultiOptionFab extends StatefulWidget {
     this.onTextPressed,
     this.onImagePressed,
     this.onProjectPressed,
-    this.onNotePressed,
+    this.onTodoPressed,
     this.showProjectOption = false,
   });
 
