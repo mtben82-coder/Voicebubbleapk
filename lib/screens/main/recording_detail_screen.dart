@@ -676,8 +676,19 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
             onSelect: (backgroundId) async {
               final updatedItem = item.copyWith(background: backgroundId);
               await appState.saveRecording(updatedItem);
-              Navigator.pop(context);
-              if (mounted) setState(() {});
+              if (mounted) {
+                Navigator.pop(context);
+                // Force rebuild to show new background
+                setState(() {});
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Background applied!'),
+                    backgroundColor: Color(0xFF10B981),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              }
             },
           ),
         );
