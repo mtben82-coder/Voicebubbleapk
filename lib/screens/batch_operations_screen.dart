@@ -420,7 +420,7 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
                   style: const TextStyle(color: Colors.white),
                 ),
                 subtitle: Text(
-                  '${project.recordingIds.length} items',
+                  '${project.itemIds.length} items',
                   style: const TextStyle(color: Color(0xFF94A3B8)),
                 ),
                 onTap: () => Navigator.pop(context, project.id),

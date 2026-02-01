@@ -194,7 +194,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               ),
                             ),
                           ),
-                          if (!_showProjects) ...[
+                          if (_viewMode == 0) ...[
                             const SizedBox(width: 12),
                             GestureDetector(
                               onTap: () async {
@@ -259,16 +259,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       const SizedBox(height: 12),
 
                       // Tag Filter Chips (moved up)
-                      if (!_showProjects)
+                      if (_viewMode == 0)
                         TagFilterChips(
                           selectedTagId: _selectedTagId,
                           onTagSelected: (tagId) => setState(() => _selectedTagId = tagId),
                         ),
-                      if (!_showProjects) const SizedBox(height: 16),
-                      if (_showProjects) const SizedBox(height: 8),
+                      if (_viewMode == 0) const SizedBox(height: 16),
+                      if (_viewMode == 1) const SizedBox(height: 8),
 
                       // Content based on mode
-                      if (_showProjects) ...[
+                      if (_viewMode == 1) ...[
                         // Projects list
                         if (projects.isEmpty)
                           _buildEmptyState('No projects yet', 'Create your first project', secondaryTextColor)
