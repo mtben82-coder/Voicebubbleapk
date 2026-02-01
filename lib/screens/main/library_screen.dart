@@ -21,6 +21,7 @@ import 'recording_screen.dart';
 import 'todo_creation_screen.dart';
 // ✨ NEW IMPORT ✨
 import '../batch_operations_screen.dart';
+import '../templates/template_selection_screen.dart';
 // ✨ END NEW IMPORT ✨
 
 class LibraryScreen extends StatefulWidget {
@@ -31,7 +32,8 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  bool _showProjects = false;
+  // View modes: 0 = Library, 1 = Projects, 2 = Templates
+  int _viewMode = 0;
   String _searchQuery = '';
   String? _selectedTagId;
 
@@ -67,7 +69,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               }).toList();
             }
 
-            if (_selectedTagId != null && !_showProjects) {
+            if (_selectedTagId != null && _viewMode == 0) {
               recordings = recordings.where((r) => r.tags.contains(_selectedTagId)).toList();
             }
 
@@ -97,7 +99,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             ],
                           ),
                           
-                          // Compact All/Projects control
+                          // Compact Library/Projects/Templates control
                           Container(
                             decoration: BoxDecoration(
                               color: surfaceColor,
@@ -107,30 +109,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Library button
                                 GestureDetector(
-                                  onTap: () => setState(() => _showProjects = false),
+                                  onTap: () => setState(() => _viewMode = 0),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: !_showProjects ? primaryColor : Colors.transparent,
+                                      color: _viewMode == 0 ? primaryColor : Colors.transparent,
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
-                                      'All',
+                                      'Library',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
-                                        color: !_showProjects ? textColor : secondaryTextColor,
+                                        color: _viewMode == 0 ? textColor : secondaryTextColor,
                                       ),
                                     ),
                                   ),
                                 ),
+                                // Projects button
                                 GestureDetector(
-                                  onTap: () => setState(() => _showProjects = true),
+                                  onTap: () => setState(() => _viewMode = 1),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: _showProjects ? primaryColor : Colors.transparent,
+                                      color: _viewMode == 1 ? primaryColor : Colors.transparent,
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -138,7 +142,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
-                                        color: _showProjects ? textColor : secondaryTextColor,
+                                        color: _viewMode == 1 ? textColor : secondaryTextColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Templates button
+                                GestureDetector(
+                                  onTap: () => setState(() => _viewMode = 2),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _viewMode == 2 ? primaryColor : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Templates',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: _viewMode == 2 ? textColor : secondaryTextColor,
                                       ),
                                     ),
                                   ),
@@ -296,8 +319,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
           },
         ),
       ),
-      floatingActionButton: MultiOptionFab(
-        showProjectOption: _showProjects,
+      floatingActionButton: _viewMode == 2 ? null : MultiOptionFab(
+        showProjectOption: _viewMode == 1,
         onVoicePressed: () {
           Navigator.push(
             context,
