@@ -376,7 +376,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
     final newTitle = _titleController.text.trim();
     if (newTitle.isNotEmpty) {
       final updatedItem = item.copyWith(customTitle: newTitle);
-      await appState.saveRecording(updatedItem);
+      await appState.updateRecording(updatedItem);
     }
     setState(() {
       _isEditingTitle = false;

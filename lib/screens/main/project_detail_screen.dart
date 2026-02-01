@@ -277,10 +277,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           );
         },
         onTextPressed: () {
+          // Document - leads to main Quill editor within project
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TextCreationScreen(projectId: widget.projectId),
+              builder: (context) => DocumentCreationScreen(projectId: widget.projectId),
             ),
           );
         },
