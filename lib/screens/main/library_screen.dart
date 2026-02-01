@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/recording_item.dart';
 import '../../models/tag.dart';
@@ -404,30 +407,77 @@ class _LibraryScreenState extends State<LibraryScreen> {
           }
         },
         onImagePressed: () async {
-          // Create empty image document and open in main editor
-          final appState = Provider.of<AppStateProvider>(context, listen: false);
-          final newItem = RecordingItem(
-            id: const Uuid().v4(),
-            rawTranscript: '', // Will store image path
-            finalText: '',
-            presetUsed: 'Image',
-            outcomes: [],
-            projectId: null,
-            createdAt: DateTime.now(),
-            editHistory: [],
-            presetId: 'image',
-            tags: [],
-            contentType: 'image',
-          );
-          await appState.saveRecording(newItem);
-          
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+          // Show image picker FIRST, then create document with image
+          final ImagePicker picker = ImagePicker();
+          final ImageSource? source = await showDialog<ImageSource>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: const Color(0xFF1A1A1A),
+              title: const Text('Add Image', style: TextStyle(color: Colors.white)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
+                    title: const Text('Gallery', style: TextStyle(color: Colors.white)),
+                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt, color: Color(0xFF3B82F6)),
+                    title: const Text('Camera', style: TextStyle(color: Colors.white)),
+                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                  ),
+                ],
               ),
+            ),
+          );
+          
+          if (source == null) return;
+          
+          try {
+            final XFile? imageFile = await picker.pickImage(source: source);
+            if (imageFile == null) return;
+            
+            // Save image permanently
+            final appDir = await getApplicationDocumentsDirectory();
+            final String fileName = '${const Uuid().v4()}.jpg';
+            final String permanentPath = '${appDir.path}/images/$fileName';
+            
+            await Directory('${appDir.path}/images').create(recursive: true);
+            await File(imageFile.path).copy(permanentPath);
+            
+            // Create image document with permanent image path
+            final appState = Provider.of<AppStateProvider>(context, listen: false);
+            final newItem = RecordingItem(
+              id: const Uuid().v4(),
+              rawTranscript: permanentPath, // Store image path
+              finalText: '',
+              presetUsed: 'Image',
+              outcomes: [],
+              projectId: null,
+              createdAt: DateTime.now(),
+              editHistory: [],
+              presetId: 'image',
+              tags: [],
+              contentType: 'image',
             );
+            
+            await appState.saveRecording(newItem);
+            
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error picking image: $e')),
+              );
+            }
           }
         },
         onProjectPressed: () {
