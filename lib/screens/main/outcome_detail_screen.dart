@@ -8,8 +8,6 @@ import '../../providers/app_state_provider.dart';
 import '../../widgets/reminder_button.dart';
 import '../../services/reminder_manager.dart';
 import 'recording_detail_screen.dart';
-import 'outcome_creation_screen.dart';
-import 'outcome_image_creation_screen.dart';
 
 class OutcomeDetailScreen extends StatefulWidget {
   final OutcomeType outcomeType;

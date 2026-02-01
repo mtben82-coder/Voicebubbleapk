@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/project.dart';
 import '../../models/recording_item.dart';
@@ -11,10 +12,7 @@ import '../../widgets/outcome_chip.dart';
 import '../../widgets/multi_option_fab.dart';
 import 'recording_screen.dart';
 import 'recording_detail_screen.dart';
-import 'text_creation_screen.dart';
-import 'image_creation_screen.dart';
 import 'todo_creation_screen.dart';
-import 'document_creation_screen.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
@@ -276,31 +274,113 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             ),
           );
         },
-        onTextPressed: () {
-          // Document - leads to main Quill editor within project
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DocumentCreationScreen(projectId: widget.projectId),
-            ),
+        onTextPressed: () async {
+          // Create empty text document within project
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '',
+            finalText: '',
+            presetUsed: 'Text Document',
+            outcomes: [],
+            projectId: widget.projectId,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'text_document',
+            tags: [],
+            contentType: 'text',
           );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
         },
-        onTodoPressed: () {
-          // Todo - leads to checklist page within project
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TodoCreationScreen(projectId: widget.projectId),
-            ),
+        onNotePressed: () async {
+          // Create empty quick note within project
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '',
+            finalText: '',
+            presetUsed: 'Quick Note',
+            outcomes: [],
+            projectId: widget.projectId,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'quick_note',
+            tags: [],
+            contentType: 'text',
           );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
         },
-        onImagePressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ImageCreationScreen(projectId: widget.projectId),
-            ),
+        onTodoPressed: () async {
+          // Create empty todo within project
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '',
+            finalText: '',
+            presetUsed: 'Todo List',
+            outcomes: [],
+            projectId: widget.projectId,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'todo_list',
+            tags: [],
+            contentType: 'todo',
           );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
+        },
+        onImagePressed: () async {
+          // Create empty image document within project
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '', // Will store image path
+            finalText: '',
+            presetUsed: 'Image',
+            outcomes: [],
+            projectId: widget.projectId,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'image',
+            tags: [],
+            contentType: 'image',
+          );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

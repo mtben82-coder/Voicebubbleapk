@@ -1,9 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 import '../services/refinement_service.dart';
+import '../models/outcome_type.dart';
+import './outcome_chip.dart';
 
 // ============================================================
 //        RICH TEXT EDITOR WIDGET — WITH AI SELECTION MENU
@@ -21,6 +28,23 @@ class RichTextEditor extends StatefulWidget {
   final String? initialPlainText;
   final Function(String plainText, String deltaJson) onSave;
   final bool readOnly;
+  
+  // Context-aware features
+  final bool showOutcomeChips;
+  final OutcomeType? initialOutcomeType;
+  final Function(OutcomeType)? onOutcomeChanged;
+  
+  final bool showReminderButton;
+  final DateTime? initialReminder;
+  final Function(DateTime?)? onReminderChanged;
+  
+  final bool showCompletionCheckbox;
+  final bool initialCompletion;
+  final Function(bool)? onCompletionChanged;
+  
+  final bool showImageSection;
+  final String? initialImagePath;
+  final Function(String?)? onImageChanged;
 
   const RichTextEditor({
     super.key,
@@ -28,6 +52,18 @@ class RichTextEditor extends StatefulWidget {
     this.initialPlainText,
     required this.onSave,
     this.readOnly = false,
+    this.showOutcomeChips = false,
+    this.initialOutcomeType,
+    this.onOutcomeChanged,
+    this.showReminderButton = false,
+    this.initialReminder,
+    this.onReminderChanged,
+    this.showCompletionCheckbox = false,
+    this.initialCompletion = false,
+    this.onCompletionChanged,
+    this.showImageSection = false,
+    this.initialImagePath,
+    this.onImageChanged,
   });
 
   @override
@@ -51,12 +87,26 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
   String _selectedText = '';
   int _selectionStart = 0;
   int _selectionEnd = 0;
+  
+  // Context-aware state
+  OutcomeType? _selectedOutcomeType;
+  DateTime? _reminderDateTime;
+  bool _isCompleted = false;
+  File? _selectedImage;
+  String? _imagePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _initializeController();
     _controller.addListener(_onControllerChanged);
+    
+    // Initialize context-aware state
+    _selectedOutcomeType = widget.initialOutcomeType;
+    _reminderDateTime = widget.initialReminder;
+    _isCompleted = widget.initialCompletion;
+    _imagePath = widget.initialImagePath;
     
     _saveIndicatorController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -218,6 +268,180 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     HapticFeedback.mediumImpact();
   }
 
+  // Context-aware helper methods
+  
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final imagesDir = Directory(path.join(appDir.path, 'images'));
+        
+        if (!await imagesDir.exists()) {
+          await imagesDir.create(recursive: true);
+        }
+        
+        final fileName = '${const Uuid().v4()}.jpg';
+        final savedImage = File(path.join(imagesDir.path, fileName));
+        await File(image.path).copy(savedImage.path);
+        
+        setState(() {
+          _selectedImage = savedImage;
+          _imagePath = savedImage.path;
+        });
+        
+        widget.onImageChanged?.call(savedImage.path);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
+  
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final imagesDir = Directory(path.join(appDir.path, 'images'));
+        
+        if (!await imagesDir.exists()) {
+          await imagesDir.create(recursive: true);
+        }
+        
+        final fileName = '${const Uuid().v4()}.jpg';
+        final savedImage = File(path.join(imagesDir.path, fileName));
+        await File(image.path).copy(savedImage.path);
+        
+        setState(() {
+          _selectedImage = savedImage;
+          _imagePath = savedImage.path;
+        });
+        
+        widget.onImageChanged?.call(savedImage.path);
+      }
+    } catch (e) {
+      debugPrint('Error taking photo: $e');
+    }
+  }
+  
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Color(0xFF10B981)),
+                title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF3B82F6)),
+                title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhoto();
+                },
+              ),
+              if (_imagePath != null)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Color(0xFFEF4444)),
+                  title: const Text('Remove Image', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _selectedImage = null;
+                      _imagePath = null;
+                    });
+                    widget.onImageChanged?.call(null);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  Future<void> _showReminderPicker() async {
+    final selectedDateTime = await showDatePicker(
+      context: context,
+      initialDate: _reminderDateTime ?? DateTime.now().add(const Duration(hours: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF3B82F6),
+              onPrimary: Colors.white,
+              surface: Color(0xFF1A1A1A),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selectedDateTime != null && mounted) {
+      final selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(
+          _reminderDateTime ?? DateTime.now().add(const Duration(hours: 1)),
+        ),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: Color(0xFF3B82F6),
+                onPrimary: Colors.white,
+                surface: Color(0xFF1A1A1A),
+                onSurface: Colors.white,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (selectedTime != null && mounted) {
+        final newReminder = DateTime(
+          selectedDateTime.year,
+          selectedDateTime.month,
+          selectedDateTime.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+        setState(() {
+          _reminderDateTime = newReminder;
+        });
+        widget.onReminderChanged?.call(newReminder);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const surfaceColor = Color(0xFF1A1A1A);
@@ -244,6 +468,217 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
           children: [
             Column(
               children: [
+                // Context-aware header sections
+                
+                // Outcome chips section (for outcomes tab)
+                if (widget.showOutcomeChips)
+                  Container(
+                    color: surfaceColor,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Outcome Type',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: OutcomeType.values.map((outcomeType) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: OutcomeChip(
+                                  outcomeType: outcomeType,
+                                  isSelected: _selectedOutcomeType == outcomeType,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedOutcomeType = outcomeType;
+                                    });
+                                    widget.onOutcomeChanged?.call(outcomeType);
+                                  },
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                // Reminder and completion controls (for outcomes/todos)
+                if (widget.showReminderButton || widget.showCompletionCheckbox)
+                  Container(
+                    color: surfaceColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        // Completion checkbox
+                        if (widget.showCompletionCheckbox)
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isCompleted = !_isCompleted;
+                              });
+                              widget.onCompletionChanged?.call(_isCompleted);
+                            },
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _isCompleted ? const Color(0xFF10B981) : Colors.transparent,
+                                border: Border.all(
+                                  color: const Color(0xFF10B981),
+                                  width: 2,
+                                ),
+                              ),
+                              child: _isCompleted
+                                  ? const Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        if (widget.showCompletionCheckbox)
+                          const SizedBox(width: 8),
+                        if (widget.showCompletionCheckbox)
+                          const Text(
+                            'Completed',
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        
+                        const Spacer(),
+                        
+                        // Reminder button
+                        if (widget.showReminderButton)
+                          GestureDetector(
+                            onTap: _showReminderPicker,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: _reminderDateTime != null 
+                                    ? const Color(0xFF3B82F6).withOpacity(0.2)
+                                    : const Color(0xFF2A2A2A),
+                                borderRadius: BorderRadius.circular(8),
+                                border: _reminderDateTime != null
+                                    ? Border.all(color: const Color(0xFF3B82F6))
+                                    : null,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _reminderDateTime != null ? Icons.alarm : Icons.alarm_add,
+                                    size: 16,
+                                    color: _reminderDateTime != null 
+                                        ? const Color(0xFF3B82F6)
+                                        : Colors.white.withOpacity(0.7),
+                                  ),
+                                  if (_reminderDateTime != null) ...[
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${_reminderDateTime!.day}/${_reminderDateTime!.month} ${_reminderDateTime!.hour.toString().padLeft(2, '0')}:${_reminderDateTime!.minute.toString().padLeft(2, '0')}',
+                                      style: const TextStyle(
+                                        color: Color(0xFF3B82F6),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _reminderDateTime = null;
+                                        });
+                                        widget.onReminderChanged?.call(null);
+                                      },
+                                      child: const Icon(
+                                        Icons.close,
+                                        size: 14,
+                                        color: Color(0xFF3B82F6),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                
+                // Image section (for image content types)
+                if (widget.showImageSection)
+                  Container(
+                    color: surfaceColor,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Image',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _showImageSourceDialog,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF3B82F6),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _imagePath != null ? Icons.edit : Icons.add_photo_alternate,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _imagePath != null ? 'Change' : 'Add',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_imagePath != null && File(_imagePath!).existsSync()) ...[
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(_imagePath!),
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                
                 // Toolbar
                 if (!widget.readOnly)
                   Container(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/outcome_type.dart';
 import '../../models/recording_item.dart';
@@ -7,9 +8,7 @@ import '../../widgets/outcome_card.dart';
 import '../../widgets/multi_option_fab.dart';
 import 'outcome_detail_screen.dart';
 import 'recording_screen.dart';
-import 'todo_creation_screen.dart';
-import 'outcome_creation_screen.dart';
-import 'outcome_image_creation_screen.dart';
+import 'recording_detail_screen.dart';
 
 class OutcomesScreen extends StatefulWidget {
   const OutcomesScreen({super.key});
@@ -195,34 +194,118 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
             ),
           );
         },
-        onTextPressed: () {
-          // Document - leads to outcome-specific document creation
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const OutcomeCreationScreen(contentType: 'text'),
-            ),
+        onTextPressed: () async {
+          // Create empty outcome text document - user must select outcome type in editor
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '',
+            finalText: '',
+            presetUsed: 'Outcome Document',
+            outcomes: [], // User will select in editor
+            projectId: null,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'outcome_document',
+            tags: [],
+            contentType: 'text',
+            hiddenInLibrary: true, // Show only in outcomes
           );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
         },
-        onTodoPressed: () {
-          // Todo - leads to outcome-specific todo creation
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const OutcomeCreationScreen(contentType: 'text'),
-            ),
+        onTodoPressed: () async {
+          // Create empty outcome todo - default to task type
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '',
+            finalText: '',
+            presetUsed: 'Outcome Task',
+            outcomes: [OutcomeType.task.toStorageString()], // Default to task
+            projectId: null,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'outcome_task',
+            tags: [],
+            contentType: 'todo',
+            hiddenInLibrary: true, // Show only in outcomes
           );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
         },
-        onImagePressed: () {
-          // Pictures - leads to outcome-specific image creation
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const OutcomeImageCreationScreen(),
-            ),
+        onImagePressed: () async {
+          // Create empty outcome image
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '', // Will store image path
+            finalText: '',
+            presetUsed: 'Outcome Image',
+            outcomes: [], // User will select in editor
+            projectId: null,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'outcome_image',
+            tags: [],
+            contentType: 'image',
+            hiddenInLibrary: true, // Show only in outcomes
           );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
         },
-        onNotePressed: null, // Remove note option
+        onNotePressed: () async {
+          // Create empty outcome note
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final newItem = RecordingItem(
+            id: const Uuid().v4(),
+            rawTranscript: '',
+            finalText: '',
+            presetUsed: 'Outcome Note',
+            outcomes: [OutcomeType.note.toStorageString()], // Default to note
+            projectId: null,
+            createdAt: DateTime.now(),
+            editHistory: [],
+            presetId: 'outcome_note',
+            tags: [],
+            contentType: 'text',
+            hiddenInLibrary: true, // Show only in outcomes
+          );
+          await appState.saveRecording(newItem);
+          
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+              ),
+            );
+          }
+        },
         onProjectPressed: null, // Hide project option in outcomes
       ),
     );
