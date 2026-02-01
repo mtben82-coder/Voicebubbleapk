@@ -67,6 +67,9 @@ class RecordingItem {
   
   @HiveField(20)
   String? background; // Background ID (e.g., 'color_lavender', 'gradient_sunset', 'mountain')
+  
+  @HiveField(21)
+  bool isPinned; // Whether the item is pinned to top
 
   RecordingItem({
     required this.id,
@@ -90,6 +93,7 @@ class RecordingItem {
     this.customTitle,
     this.contentType = 'voice', // Default to voice for backward compatibility
     this.background, // Optional background
+    this.isPinned = false, // Default to not pinned
   }) : continuedInIds = continuedInIds ?? [],
        tags = tags ?? [];
 
@@ -143,6 +147,7 @@ class RecordingItem {
     String? customTitle,
     String? contentType,
     String? background,
+    bool? isPinned,
     bool clearReminder = false, // Flag to explicitly clear reminder
   }) {
     return RecordingItem(
@@ -167,6 +172,7 @@ class RecordingItem {
       customTitle: customTitle ?? this.customTitle,
       contentType: contentType ?? this.contentType,
       background: background ?? this.background,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 }

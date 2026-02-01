@@ -398,12 +398,18 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       showOutcomeChips: item.outcomes.isNotEmpty,
       initialOutcomeType: item.outcomes.isNotEmpty ? OutcomeTypeExtension.fromString(item.outcomes.first) : null,
       onOutcomeChanged: (outcomeType) => _updateItemOutcome(appState, item, outcomeType),
-      showReminderButton: true, // Always available
+      // Reminder button ONLY for outcomes (hiddenInLibrary = true)
+      showReminderButton: item.hiddenInLibrary,
       initialReminder: item.reminderDateTime,
       onReminderChanged: (dateTime) => _updateItemReminder(appState, item, dateTime),
       showCompletionCheckbox: item.outcomes.isNotEmpty || item.contentType == 'todo',
       initialCompletion: item.isCompleted,
       onCompletionChanged: (completed) => _updateItemCompletion(appState, item, completed),
+      // Top toolbar (Google Keep style) for library items
+      showTopToolbar: !item.hiddenInLibrary, // Show for library, hide for outcomes
+      isPinned: item.isPinned ?? false,
+      onPinChanged: (pinned) => _updateItemPin(appState, item, pinned),
+      onVoiceNoteAdded: (path) => _handleVoiceNoteAdded(appState, item, path),
     );
   }
 
@@ -483,6 +489,24 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
     } catch (e) {
       debugPrint('❌ Error updating completion: $e');
     }
+  }
+  
+  Future<void> _updateItemPin(AppStateProvider appState, RecordingItem item, bool pinned) async {
+    try {
+      final updatedItem = item.copyWith(
+        isPinned: pinned,
+      );
+      await appState.updateRecording(updatedItem);
+      debugPrint('✅ Updated pin status for item: ${item.id}');
+    } catch (e) {
+      debugPrint('❌ Error updating pin: $e');
+    }
+  }
+  
+  Future<void> _handleVoiceNoteAdded(AppStateProvider appState, RecordingItem item, String voiceNotePath) async {
+    debugPrint('🎤 Voice note added at: $voiceNotePath');
+    // Voice note is already inserted into the document text by RichTextEditor
+    // Just log it here for reference
   }
 
   void _handleMenuAction(BuildContext context, AppStateProvider appState, RecordingItem item, String action) {

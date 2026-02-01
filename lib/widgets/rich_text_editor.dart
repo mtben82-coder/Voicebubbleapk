@@ -45,6 +45,12 @@ class RichTextEditor extends StatefulWidget {
   final bool showImageSection;
   final String? initialImagePath;
   final Function(String?)? onImageChanged;
+  
+  // Top toolbar actions (Google Keep style)
+  final bool showTopToolbar;
+  final bool isPinned;
+  final Function(bool)? onPinChanged;
+  final Function(String)? onVoiceNoteAdded;
 
   const RichTextEditor({
     super.key,
@@ -64,6 +70,10 @@ class RichTextEditor extends StatefulWidget {
     this.showImageSection = false,
     this.initialImagePath,
     this.onImageChanged,
+    this.showTopToolbar = true,
+    this.isPinned = false,
+    this.onPinChanged,
+    this.onVoiceNoteAdded,
   });
 
   @override
@@ -107,6 +117,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     _reminderDateTime = widget.initialReminder;
     _isCompleted = widget.initialCompletion;
     _imagePath = widget.initialImagePath;
+    _isPinned = widget.isPinned;
     
     _saveIndicatorController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -468,7 +479,65 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
           children: [
             Column(
               children: [
-                // Context-aware header sections
+                // Top toolbar (Google Keep style) - Row 1
+                if (widget.showTopToolbar && !widget.readOnly)
+                  Container(
+                    color: surfaceColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        // Pin button
+                        IconButton(
+                          icon: Icon(
+                            _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                            color: _isPinned ? const Color(0xFFF59E0B) : Colors.white70,
+                            size: 20,
+                          ),
+                          onPressed: _togglePin,
+                          tooltip: 'Pin',
+                        ),
+                        // Add image button
+                        IconButton(
+                          icon: const Icon(Icons.image_outlined, color: Colors.white70, size: 20),
+                          onPressed: _insertImageAtCursor,
+                          tooltip: 'Add image',
+                        ),
+                        // Take photo button
+                        IconButton(
+                          icon: const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 20),
+                          onPressed: _takePhotoAtCursor,
+                          tooltip: 'Take photo',
+                        ),
+                        // Voice note button
+                        IconButton(
+                          icon: Icon(
+                            _isRecordingVoiceNote ? Icons.stop_circle : Icons.mic_outlined,
+                            color: _isRecordingVoiceNote ? const Color(0xFFEF4444) : Colors.white70,
+                            size: 20,
+                          ),
+                          onPressed: _toggleVoiceNoteRecording,
+                          tooltip: _isRecordingVoiceNote ? 'Stop recording' : 'Record voice note',
+                        ),
+                        // Add checkbox button
+                        IconButton(
+                          icon: const Icon(Icons.check_box_outlined, color: Colors.white70, size: 20),
+                          onPressed: _insertCheckboxAtCursor,
+                          tooltip: 'Add checkbox',
+                        ),
+                        const Spacer(),
+                        // More options menu
+                        IconButton(
+                          icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
+                          onPressed: () {
+                            // TODO: Show more options menu
+                          },
+                          tooltip: 'More options',
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                // Context-aware header sections (for outcomes only)
                 
                 // Outcome chips section (for outcomes tab)
                 if (widget.showOutcomeChips)
@@ -679,7 +748,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                     ),
                   ),
                 
-                // Toolbar
+                // Quill formatting toolbar (Row 2) - scrollable
                 if (!widget.readOnly)
                   Container(
                     color: surfaceColor,
@@ -716,7 +785,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                     ),
                   ),
 
-                // Editor
+                // Editor content (Row 3+)
                 Expanded(
                   child: Container(
                     color: Colors.black,
@@ -912,4 +981,113 @@ class _AIMenuSheetState extends State<_AIMenuSheet> {
       ),
     );
   }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOP TOOLBAR HELPER METHODS (Google Keep style)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Future<void> _insertImageAtCursor() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        // Save image permanently
+        final appDir = await getApplicationDocumentsDirectory();
+        final String fileName = '${const Uuid().v4()}.jpg';
+        final String permanentPath = '${appDir.path}/images/$fileName';
+        
+        await Directory('${appDir.path}/images').create(recursive: true);
+        await File(image.path).copy(permanentPath);
+        
+        // Insert image reference at cursor position
+        final index = _controller.selection.baseOffset;
+        _controller.document.insert(index, '\n[Image: $permanentPath]\n');
+        _controller.updateSelection(
+          TextSelection.collapsed(offset: index + permanentPath.length + 12),
+          ChangeSource.local,
+        );
+      }
+    } catch (e) {
+      // Silent fail
+    }
+  }
+  
+  Future<void> _takePhotoAtCursor() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        // Save image permanently
+        final appDir = await getApplicationDocumentsDirectory();
+        final String fileName = '${const Uuid().v4()}.jpg';
+        final String permanentPath = '${appDir.path}/images/$fileName';
+        
+        await Directory('${appDir.path}/images').create(recursive: true);
+        await File(image.path).copy(permanentPath);
+        
+        // Insert image reference at cursor position
+        final index = _controller.selection.baseOffset;
+        _controller.document.insert(index, '\n[Image: $permanentPath]\n');
+        _controller.updateSelection(
+          TextSelection.collapsed(offset: index + permanentPath.length + 12),
+          ChangeSource.local,
+        );
+      }
+    } catch (e) {
+      // Silent fail
+    }
+  }
+  
+  Future<void> _toggleVoiceNoteRecording() async {
+    if (_isRecordingVoiceNote) {
+      // Stop recording
+      final path = await _audioRecorder.stop();
+      if (path != null && mounted) {
+        // Insert voice note reference at cursor
+        final index = _controller.selection.baseOffset;
+        _controller.document.insert(index, '\n🎤 [Voice Note: $path]\n');
+        _controller.updateSelection(
+          TextSelection.collapsed(offset: index + path.length + 18),
+          ChangeSource.local,
+        );
+        widget.onVoiceNoteAdded?.call(path);
+      }
+      setState(() {
+        _isRecordingVoiceNote = false;
+        _currentRecordingPath = null;
+      });
+    } else {
+      // Start recording
+      if (await _audioRecorder.hasPermission()) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final String fileName = '${const Uuid().v4()}.m4a';
+        final String recordPath = '${appDir.path}/voice_notes/$fileName';
+        
+        await Directory('${appDir.path}/voice_notes').create(recursive: true);
+        
+        await _audioRecorder.start(const RecordConfig(), path: recordPath);
+        setState(() {
+          _isRecordingVoiceNote = true;
+          _currentRecordingPath = recordPath;
+        });
+      }
+    }
+  }
+  
+  void _insertCheckboxAtCursor() {
+    final index = _controller.selection.baseOffset;
+    // Use Quill's built-in checkbox attribute
+    _controller.document.insert(index, '\n');
+    _controller.formatText(index, 1, const quill.Attribute.unchecked);
+    _controller.updateSelection(
+      TextSelection.collapsed(offset: index + 1),
+      ChangeSource.local,
+    );
+  }
+  
+  void _togglePin() {
+    setState(() {
+      _isPinned = !_isPinned;
+    });
+    widget.onPinChanged?.call(_isPinned);
+  }
 }
+

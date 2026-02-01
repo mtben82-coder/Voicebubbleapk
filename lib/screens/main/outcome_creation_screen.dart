@@ -1,3 +1,24 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// ⚠️⚠️⚠️ CRITICAL WARNING: DO NOT MODIFY THIS FILE ⚠️⚠️⚠️
+// ═══════════════════════════════════════════════════════════════════════════════
+// 
+// This is the DEDICATED OUTCOMES CREATION SCREEN with its OWN SPECIFIC UI
+// 
+// OUTCOMES HAS DIFFERENT FEATURES THAN LIBRARY:
+// - Outcome type chips (Message, Content, Task, Idea, Note)
+// - Reminder picker for setting alarms
+// - Completion checkbox for tasks
+// - hiddenInLibrary: true (only shows in outcomes tab)
+// 
+// ⛔ DO NOT:
+// - Consolidate this with RichTextEditor
+// - Remove any features from this screen
+// - Touch this file unless specifically asked by the user
+// - Apply library changes to outcomes
+// 
+// 🔒 OUTCOMES IS COMPLETELY SEPARATE FROM LIBRARY
+// ═══════════════════════════════════════════════════════════════════════════════
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
