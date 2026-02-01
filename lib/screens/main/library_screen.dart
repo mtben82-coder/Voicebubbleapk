@@ -850,7 +850,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  template.title,
+                  template.name,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -912,7 +912,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              template.title,
+              template.name,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
