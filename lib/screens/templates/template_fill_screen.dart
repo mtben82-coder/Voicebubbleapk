@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'template_models.dart';
-import '../../services/speech_service.dart';
 // import '../services/ai_service.dart'; // Your AI service for generating output
 
 class TemplateFillScreen extends StatefulWidget {
