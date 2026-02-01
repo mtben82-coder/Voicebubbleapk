@@ -284,17 +284,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             ),
           );
         },
-        onTodoPressed: () {
-          // Create todo list within project
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TodoCreationScreen(
-                projectId: widget.projectId,
-              ),
-            ),
-          );
-        },
+        onTodoPressed: null, // Hide todo option in projects
         onImagePressed: () {
           Navigator.push(
             context,

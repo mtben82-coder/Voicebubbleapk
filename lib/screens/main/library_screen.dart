@@ -281,15 +281,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           );
         },
-        onTodoPressed: () {
-          // Create todo list
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TodoCreationScreen(),
-            ),
-          );
-        },
+        onTodoPressed: null, // Hide todo option in library
         onImagePressed: () {
           Navigator.push(
             context,

@@ -8,6 +8,8 @@ import '../../widgets/multi_option_fab.dart';
 import 'outcome_detail_screen.dart';
 import 'recording_screen.dart';
 import 'todo_creation_screen.dart';
+import 'outcome_creation_screen.dart';
+import 'outcome_image_creation_screen.dart';
 
 class OutcomesScreen extends StatefulWidget {
   const OutcomesScreen({super.key});
@@ -193,16 +195,38 @@ class _OutcomesScreenState extends State<OutcomesScreen> {
             ),
           );
         },
+        onTextPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const OutcomeCreationScreen(contentType: 'text'),
+            ),
+          );
+        },
+        onNotePressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const OutcomeCreationScreen(contentType: 'text'),
+            ),
+          );
+        },
+        onImagePressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const OutcomeImageCreationScreen(),
+            ),
+          );
+        },
         onTodoPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const TodoCreationScreen(),
+              builder: (context) => const OutcomeCreationScreen(contentType: 'text'),
             ),
           );
         },
-        onTextPressed: null, // Hide text option in outcomes
-        onImagePressed: null, // Hide image option in outcomes
         onProjectPressed: null, // Hide project option in outcomes
       ),
     );

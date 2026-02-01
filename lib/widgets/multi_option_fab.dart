@@ -69,22 +69,16 @@ class _MultiOptionFabState extends State<MultiOptionFab>
 
   double _getDelay(int index) {
     // Calculate delay based on visible options
-    final visibleOptions = [
-      widget.onImagePressed,
-      widget.onTodoPressed, 
-      widget.onTextPressed,
-      widget.onVoicePressed,
-    ].where((callback) => callback != null).length;
-    
-    int visibleIndex = 0;
     final callbacks = [
       widget.onImagePressed,
       widget.onTodoPressed,
+      widget.onNotePressed,
       widget.onTextPressed, 
       widget.onVoicePressed,
     ];
     
-    for (int i = 0; i <= index; i++) {
+    int visibleIndex = 0;
+    for (int i = 0; i <= index && i < callbacks.length; i++) {
       if (callbacks[i] != null) {
         if (i == index) break;
         visibleIndex++;
@@ -128,40 +122,54 @@ class _MultiOptionFabState extends State<MultiOptionFab>
                   ),
 
                 // Image option
-                _buildOption(
-                  icon: Icons.image_outlined,
-                  label: 'Image',
-                  color: const Color(0xFF10B981),
-                  onPressed: () => _onOptionPressed(widget.onImagePressed),
-                  delay: widget.showProjectOption ? 0.1 : 0.0,
-                ),
+                if (widget.onImagePressed != null)
+                  _buildOption(
+                    icon: Icons.image_outlined,
+                    label: 'Image',
+                    color: const Color(0xFF10B981),
+                    onPressed: () => _onOptionPressed(widget.onImagePressed),
+                    delay: _getDelay(0),
+                  ),
 
                 // Todo option
-                _buildOption(
-                  icon: Icons.checklist,
-                  label: 'Todo',
-                  color: const Color(0xFF8B5CF6),
-                  onPressed: () => _onOptionPressed(widget.onTodoPressed),
-                  delay: widget.showProjectOption ? 0.2 : 0.1,
-                ),
+                if (widget.onTodoPressed != null)
+                  _buildOption(
+                    icon: Icons.checklist,
+                    label: 'Todo',
+                    color: const Color(0xFF8B5CF6),
+                    onPressed: () => _onOptionPressed(widget.onTodoPressed),
+                    delay: _getDelay(1),
+                  ),
+
+                // Note option (quick text document)
+                if (widget.onNotePressed != null)
+                  _buildOption(
+                    icon: Icons.note_add_outlined,
+                    label: 'Note',
+                    color: const Color(0xFF8B5CF6),
+                    onPressed: () => _onOptionPressed(widget.onNotePressed),
+                    delay: _getDelay(2),
+                  ),
 
                 // Text option (full document)
-                _buildOption(
-                  icon: Icons.article_outlined,
-                  label: 'Document',
-                  color: const Color(0xFFF59E0B),
-                  onPressed: () => _onOptionPressed(widget.onTextPressed),
-                  delay: widget.showProjectOption ? 0.3 : 0.2,
-                ),
+                if (widget.onTextPressed != null)
+                  _buildOption(
+                    icon: Icons.article_outlined,
+                    label: 'Document',
+                    color: const Color(0xFFF59E0B),
+                    onPressed: () => _onOptionPressed(widget.onTextPressed),
+                    delay: _getDelay(3),
+                  ),
 
                 // Voice option
-                _buildOption(
-                  icon: Icons.mic_outlined,
-                  label: 'Voice',
-                  color: const Color(0xFFEF4444),
-                  onPressed: () => _onOptionPressed(widget.onVoicePressed),
-                  delay: widget.showProjectOption ? 0.4 : 0.3,
-                ),
+                if (widget.onVoicePressed != null)
+                  _buildOption(
+                    icon: Icons.mic_outlined,
+                    label: 'Voice',
+                    color: const Color(0xFFEF4444),
+                    onPressed: () => _onOptionPressed(widget.onVoicePressed),
+                    delay: _getDelay(4),
+                  ),
 
                     const SizedBox(height: 16),
                   ],
