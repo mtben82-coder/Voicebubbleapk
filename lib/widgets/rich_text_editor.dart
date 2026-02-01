@@ -569,6 +569,64 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     );
   }
 
+  void _showAddContentMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.image_outlined, color: Color(0xFF10B981)),
+                title: const Text('Add Image from Gallery', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _insertImageAtCursor();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF3B82F6)),
+                title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhotoAtCursor();
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  _isRecordingVoiceNote ? Icons.stop_circle : Icons.mic_outlined,
+                  color: _isRecordingVoiceNote ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                ),
+                title: Text(
+                  _isRecordingVoiceNote ? 'Stop Voice Recording' : 'Record Voice Note',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _toggleVoiceNoteRecording();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.check_box_outlined, color: Color(0xFF8B5CF6)),
+                title: const Text('Add Checkbox', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _insertCheckboxAtCursor();
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const surfaceColor = Color(0xFF1A1A1A);
@@ -612,36 +670,14 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                           onPressed: _togglePin,
                           tooltip: 'Pin',
                         ),
-                        // Add image button
+                        // Single "+" button to add content
                         IconButton(
-                          icon: const Icon(Icons.image_outlined, color: Colors.white70, size: 20),
-                          onPressed: _insertImageAtCursor,
-                          tooltip: 'Add image',
-                        ),
-                        // Take photo button
-                        IconButton(
-                          icon: const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 20),
-                          onPressed: _takePhotoAtCursor,
-                          tooltip: 'Take photo',
-                        ),
-                        // Voice note button
-                        IconButton(
-                          icon: Icon(
-                            _isRecordingVoiceNote ? Icons.stop_circle : Icons.mic_outlined,
-                            color: _isRecordingVoiceNote ? const Color(0xFFEF4444) : Colors.white70,
-                            size: 20,
-                          ),
-                          onPressed: _toggleVoiceNoteRecording,
-                          tooltip: _isRecordingVoiceNote ? 'Stop recording' : 'Record voice note',
-                        ),
-                        // Add checkbox button
-                        IconButton(
-                          icon: const Icon(Icons.check_box_outlined, color: Colors.white70, size: 20),
-                          onPressed: _insertCheckboxAtCursor,
-                          tooltip: 'Add checkbox',
+                          icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 20),
+                          onPressed: _showAddContentMenu,
+                          tooltip: 'Add content',
                         ),
                         const Spacer(),
-                        // More options menu
+                        // More options menu (existing)
                         IconButton(
                           icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
                           onPressed: () {
