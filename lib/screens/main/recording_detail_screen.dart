@@ -66,7 +66,8 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       body: SafeArea(
         child: Consumer<AppStateProvider>(
           builder: (context, appState, _) {
-            final item = appState.recordingItems.firstWhere(
+            // Search in ALL items, not just recordingItems (which filters out outcome items)
+            final item = appState.allRecordingItems.firstWhere(
               (r) => r.id == widget.recordingId,
               orElse: () => throw Exception('Recording not found'),
             );

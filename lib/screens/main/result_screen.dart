@@ -1135,6 +1135,11 @@ class _ResultScreenState extends State<ResultScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _copyToClipboard,
+        backgroundColor: const Color(0xFF3B82F6),
+        child: const Icon(Icons.content_copy, color: Colors.white),
+      ),
     );
   }
 }

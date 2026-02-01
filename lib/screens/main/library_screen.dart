@@ -281,8 +281,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   );
                                 },
                               )),
+                      ] else if (_viewMode == 2) ...[
+                        // Templates view - show the full template UI
+                        _buildTemplatesView(surfaceColor, textColor, secondaryTextColor),
                       ] else ...[
-                        // Recordings grid
+                        // Library - Recordings grid
                         if (recordings.isEmpty)
                           _buildEmptyState('No recordings yet', 'Your recordings will appear here', secondaryTextColor)
                         else
