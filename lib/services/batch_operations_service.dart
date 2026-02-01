@@ -1,5 +1,6 @@
 import '../models/recording_item.dart';
 import '../providers/app_state_provider.dart';
+import '../services/project_service.dart';
 
 enum BatchOperationType {
   delete,
@@ -29,10 +30,8 @@ class BatchOperationsService {
   ) async {
     for (var note in notes) {
       if (!note.tags.contains(tagId)) {
-        final updatedNote = note.copyWith(
-          tags: [...note.tags, tagId],
-        );
-        await appState.saveRecording(updatedNote);
+        // FIX: Use the existing working method from AppStateProvider
+        await appState.addTagToRecording(note.id, tagId);
       }
     }
   }
@@ -45,9 +44,7 @@ class BatchOperationsService {
   ) async {
     for (var note in notes) {
       if (note.tags.contains(tagId)) {
-        final updatedTags = note.tags.where((t) => t != tagId).toList();
-        final updatedNote = note.copyWith(tags: updatedTags);
-        await appState.saveRecording(updatedNote);
+        await appState.removeTagFromRecording(note.id, tagId);
       }
     }
   }
@@ -56,11 +53,11 @@ class BatchOperationsService {
   Future<void> moveNotesToProject(
     List<RecordingItem> notes,
     String projectId,
-    AppStateProvider appState,
+    ProjectService projectService,
   ) async {
     for (var note in notes) {
-      final updatedNote = note.copyWith(projectId: projectId);
-      await appState.saveRecording(updatedNote);
+      // FIX: Use the existing project service method that works
+      await projectService.addItemToProject(projectId, note.id);
     }
   }
 

@@ -293,18 +293,18 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
       // Save current version before restoring
       await _versionService.saveVersion(widget.note, 'Before restore');
       
-      // Update note with restored content
+      // Update note with restored content (FIX: Use updateRecording not saveRecording)
       final updatedNote = widget.note.copyWith(
         finalText: version.content,
         formattedContent: version.formattedContent,
       );
       
-      await appState.saveRecording(updatedNote);
-      
-      // Reload versions
-      await _loadVersions();
+      await appState.updateRecording(updatedNote);
       
       if (mounted) {
+        // Navigate back to note screen to force rebuild
+        Navigator.pop(context);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Version restored successfully'),

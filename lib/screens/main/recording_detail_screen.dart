@@ -529,11 +529,10 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
             currentBackground: item.background ?? 'color_white',
             onSelect: (backgroundId) async {
               final updatedItem = item.copyWith(background: backgroundId);
-              await appState.saveRecording(updatedItem);
+              await appState.updateRecording(updatedItem); // FIX: Use updateRecording instead of saveRecording
+              Navigator.pop(context);
               if (mounted) {
-                Navigator.pop(context);
-                // Force rebuild to show new background
-                setState(() {});
+                setState(() {}); // Force rebuild to show new background
                 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

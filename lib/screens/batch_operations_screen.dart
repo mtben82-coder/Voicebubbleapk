@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/recording_item.dart';
+import '../models/project.dart';
 import '../services/batch_operations_service.dart';
 import '../providers/app_state_provider.dart';
+import '../services/export_service.dart';
+import '../services/project_service.dart';
 
 class BatchOperationsScreen extends StatefulWidget {
   final List<RecordingItem> allNotes;
@@ -21,6 +24,8 @@ class BatchOperationsScreen extends StatefulWidget {
 class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
   final Set<String> _selectedIds = {};
   final _batchService = BatchOperationsService();
+  final _exportService = ExportService();
+  final _projectService = ProjectService();
 
   bool get _hasSelection => _selectedIds.isNotEmpty;
   bool get _allSelected => _selectedIds.length == widget.allNotes.length;
@@ -82,8 +87,9 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: GestureDetector(
+                  child: InkWell(
                     onTap: () => _toggleSelection(note.id),
+                    borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -172,27 +178,39 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
               ),
               child: SafeArea(
                 top: false,
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _ActionButton(
-                      icon: Icons.delete,
-                      label: 'Delete',
-                      color: const Color(0xFFEF4444),
-                      onTap: _showDeleteConfirmation,
-                    ),
-                    const SizedBox(width: 12),
-                    _ActionButton(
-                      icon: Icons.local_offer,
-                      label: 'Tag',
-                      color: primaryColor,
-                      onTap: _showTagOptions,
-                    ),
-                    const SizedBox(width: 12),
-                    _ActionButton(
-                      icon: Icons.download,
-                      label: 'Export',
-                      color: const Color(0xFF10B981),
-                      onTap: _exportSelected,
+                    Row(
+                      children: [
+                        _ActionButton(
+                          icon: Icons.delete,
+                          label: 'Delete',
+                          color: const Color(0xFFEF4444),
+                          onTap: _showDeleteConfirmation,
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          icon: Icons.local_offer,
+                          label: 'Tag',
+                          color: primaryColor,
+                          onTap: _showTagSelection,
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          icon: Icons.folder,
+                          label: 'Project',
+                          color: const Color(0xFF8B5CF6),
+                          onTap: _showProjectSelection,
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          icon: Icons.download,
+                          label: 'Export',
+                          color: const Color(0xFF10B981),
+                          onTap: _showExportOptions,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -229,6 +247,7 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
     return firstLine.length > 50 ? '${firstLine.substring(0, 47)}...' : firstLine;
   }
 
+  // DELETE
   void _showDeleteConfirmation() {
     showDialog(
       context: context,
@@ -285,33 +304,302 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
     }
   }
 
-  void _showTagOptions() {
-    // Show tag selection - simplified for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Add tags to ${_selectedIds.length} notes'),
-        backgroundColor: const Color(0xFF3B82F6),
-      ),
-    );
-  }
+  // TAG SELECTION
+  void _showTagSelection() async {
+    final appState = context.read<AppStateProvider>();
+    final availableTags = appState.tags;
 
-  Future<void> _exportSelected() async {
-    if (_selectedNotes.length == 1) {
-      // Single note - use existing export dialog
+    if (availableTags.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Use the export option in the note menu'),
-          backgroundColor: Color(0xFF3B82F6),
+          content: Text('No tags available. Create tags first in Library.'),
+          backgroundColor: Color(0xFFF97316),
         ),
       );
-    } else {
-      // Multiple notes - export as text with all content
+      return;
+    }
+
+    final selectedTagId = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        title: const Text(
+          'Add Tag to Notes',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: availableTags.length,
+            itemBuilder: (context, index) {
+              final tag = availableTags[index];
+              return ListTile(
+                leading: const Icon(Icons.local_offer, color: Color(0xFF3B82F6)),
+                title: Text(
+                  tag.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                onTap: () => Navigator.pop(context, tag.id),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF94A3B8)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedTagId != null) {
+      // Show loading
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Adding tag to ${_selectedNotes.length} notes...'),
+            backgroundColor: const Color(0xFF3B82F6),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      final appState = context.read<AppStateProvider>();
+      await _batchService.addTagToNotes(_selectedNotes, selectedTagId, appState);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tag added to ${_selectedNotes.length} notes!'),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+        setState(() => _selectedIds.clear());
+      }
+    }
+  }
+
+  // PROJECT SELECTION
+  void _showProjectSelection() async {
+    final projects = await _projectService.getAllProjects();
+
+    if (projects.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No projects available. Create a project first.'),
+          backgroundColor: Color(0xFFF97316),
+        ),
+      );
+      return;
+    }
+
+    final selectedProjectId = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        title: const Text(
+          'Add to Project',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: projects.length,
+            itemBuilder: (context, index) {
+              final project = projects[index];
+              return ListTile(
+                leading: const Icon(Icons.folder, color: Color(0xFF8B5CF6)),
+                title: Text(
+                  project.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                subtitle: Text(
+                  '${project.recordingIds.length} items',
+                  style: const TextStyle(color: Color(0xFF94A3B8)),
+                ),
+                onTap: () => Navigator.pop(context, project.id),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF94A3B8)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedProjectId != null) {
+      // Show loading
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Adding ${_selectedNotes.length} notes to project...'),
+            backgroundColor: const Color(0xFF3B82F6),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // FIX: Use projectService directly
+      await _batchService.moveNotesToProject(_selectedNotes, selectedProjectId, _projectService);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_selectedNotes.length} notes added to project!'),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+        setState(() => _selectedIds.clear());
+      }
+    }
+  }
+
+  // EXPORT OPTIONS
+  void _showExportOptions() async {
+    final format = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        title: const Text(
+          'Export Format',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFEF4444)),
+              title: const Text('PDF', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Professional document', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+              onTap: () => Navigator.pop(context, 'pdf'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.code, color: Color(0xFF3B82F6)),
+              title: const Text('Markdown', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Plain text with formatting', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+              onTap: () => Navigator.pop(context, 'markdown'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.language, color: Color(0xFFF97316)),
+              title: const Text('HTML', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Web page format', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+              onTap: () => Navigator.pop(context, 'html'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.text_fields, color: Color(0xFF10B981)),
+              title: const Text('Plain Text', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Simple .txt file', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+              onTap: () => Navigator.pop(context, 'text'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF94A3B8)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (format != null) {
+      await _exportMultipleNotes(format);
+    }
+  }
+
+  Future<void> _exportMultipleNotes(String format) async {
+    // Show loading
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Exporting ${_selectedNotes.length} notes...'),
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text('Exporting ${_selectedNotes.length} notes as ${format.toUpperCase()}...'),
+            ],
+          ),
           backgroundColor: const Color(0xFF3B82F6),
+          duration: const Duration(seconds: 30),
         ),
       );
+    }
+
+    try {
+      // Export each note
+      for (var i = 0; i < _selectedNotes.length; i++) {
+        final note = _selectedNotes[i];
+        
+        late final file;
+        switch (format) {
+          case 'pdf':
+            file = await _exportService.exportAsPdf(note);
+            break;
+          case 'markdown':
+            file = await _exportService.exportAsMarkdown(note);
+            break;
+          case 'html':
+            file = await _exportService.exportAsHtml(note);
+            break;
+          case 'text':
+            file = await _exportService.exportAsText(note);
+            break;
+        }
+        
+        // Share each file
+        await _exportService.shareFile(file);
+        
+        // Small delay between exports to avoid overwhelming the share dialog
+        if (i < _selectedNotes.length - 1) {
+          await Future.delayed(const Duration(milliseconds: 800));
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully exported ${_selectedNotes.length} notes!'),
+            backgroundColor: const Color(0xFF10B981),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        setState(() => _selectedIds.clear());
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 }
@@ -332,8 +620,9 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
