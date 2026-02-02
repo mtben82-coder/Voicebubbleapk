@@ -5,6 +5,180 @@
 import 'package:flutter/material.dart';
 import '../constants/background_assets.dart';
 
+// ════════════════════════════════════════════════════════════════════════════
+// BACKGROUND PICKER DIALOG (for use in dialogs/showDialog)
+// ════════════════════════════════════════════════════════════════════════════
+
+class BackgroundPickerDialog extends StatelessWidget {
+  final String currentBackground;
+  final Function(String) onSelect;
+
+  const BackgroundPickerDialog({
+    super.key,
+    required this.currentBackground,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 500, maxWidth: 400),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Choose Background',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white54),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Options grid
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // None option
+                    _buildOption(
+                      context,
+                      id: 'none',
+                      name: 'None',
+                      color: const Color(0xFF1E1E1E),
+                      icon: Icons.block,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Papers section
+                    const Text(
+                      'Paper Types',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: BackgroundAssets.allPapers.map((paper) {
+                        return _buildOption(
+                          context,
+                          id: paper.id,
+                          name: paper.name,
+                          color: paper.fallbackColor ?? const Color(0xFFF5F5F5),
+                          icon: Icons.description,
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Images section
+                    const Text(
+                      'Background Images',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: BackgroundAssets.allBackgrounds.map((bg) {
+                        return _buildOption(
+                          context,
+                          id: bg.id,
+                          name: bg.name,
+                          color: bg.fallbackColor ?? const Color(0xFF2196F3),
+                          icon: Icons.image,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOption(
+    BuildContext context, {
+    required String id,
+    required String name,
+    required Color color,
+    required IconData icon,
+  }) {
+    final isSelected = currentBackground == id;
+    return GestureDetector(
+      onTap: () => onSelect(id),
+      child: Container(
+        width: 80,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2A2A),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF3B82F6) : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, color: Colors.white70, size: 20),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              name,
+              style: const TextStyle(color: Colors.white, fontSize: 10),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: Color(0xFF3B82F6), size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BACKGROUND PICKER BOTTOM SHEET (for use in showModalBottomSheet)
+// ════════════════════════════════════════════════════════════════════════════
+
 class BackgroundPicker extends StatelessWidget {
   final String? currentBackgroundId;
   final Function(String?) onBackgroundSelected;
