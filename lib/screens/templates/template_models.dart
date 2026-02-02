@@ -116,6 +116,7 @@ class AppTemplate {
   final String aiSystemPrompt;  // Master prompt for final generation
   final String? targetApp;      // e.g., "Google Sheets", "LinkedIn"
   final int estimatedMinutes;
+  final List<dynamic>? interviewFlow;  // Interview questions (InterviewQuestion list)
 
   const AppTemplate({
     required this.id,
@@ -132,6 +133,7 @@ class AppTemplate {
     this.availableExports = const [ExportFormat.text],
     this.targetApp,
     this.estimatedMinutes = 3,
+    this.interviewFlow,  // Optional voice interview questions
   });
 
   int get sectionCount => sections.length;

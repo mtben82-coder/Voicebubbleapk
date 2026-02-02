@@ -10,9 +10,10 @@ import 'terms_screen.dart';
 import 'privacy_screen.dart';
 import 'help_screen.dart';
 // ✨ NEW IMPORTS ✨
-import '../analytics_dashboard.dart';
-import '../templates_gallery.dart';
-import '../main/recording_detail_screen.dart';
+// COMMENTED OUT - Templates moved to Library tab only
+// import '../analytics_dashboard.dart';
+// import '../templates_gallery.dart';
+// import '../main/recording_detail_screen.dart';
 // ✨ END NEW IMPORTS ✨
 
 class SettingsScreen extends StatelessWidget {
@@ -164,7 +165,8 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   
-                  // ✨ FEATURES SECTION ✨
+                  // ✨ FEATURES SECTION COMMENTED OUT - Templates moved to Library tab ✨
+                  /*
                   _buildSectionHeader('FEATURES', secondaryTextColor),
                   const SizedBox(height: 12),
                   Container(
@@ -220,6 +222,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  */
                   // ✨ END FEATURES SECTION ✨
                   
                   // About Section

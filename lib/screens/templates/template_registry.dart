@@ -5,21 +5,34 @@
 // This file exports ALL templates and provides helper functions
 // for accessing them throughout the app.
 //
+// NOW WITH 12 CORE VOICEBUBBLE TEMPLATES! 🎤
+//
 // ============================================================
 
 import 'template_models.dart';
+import 'templates_voicebubble_core.dart';
+
+// ============================================================
+// COMMENTED OUT - OLD 55 TEMPLATES
+// ============================================================
+/*
 import 'templates_life_professional.dart';
 import 'templates_legal_emotional.dart';
 import 'templates_productivity.dart';
 import 'templates_social_ecommerce.dart';
 import 'templates_health_learning_personal.dart';
 import 'templates_bonus.dart';
+*/
 
 // ============================================================
-// ALL TEMPLATES
+// ALL TEMPLATES (12 CORE TEMPLATES)
 // ============================================================
 
-/// Complete list of all templates
+/// Complete list of all templates - NOW WITH VOICE-FIRST FLOWS!
+final List<AppTemplate> allTemplates = voicebubbleCoreTemplates;
+
+// OLD 55 TEMPLATES - COMMENTED OUT
+/*
 final List<AppTemplate> allTemplates = [
   // 🚀 Life-Changing (5)
   resumeTemplate,
@@ -98,6 +111,7 @@ final List<AppTemplate> allTemplates = [
   decisionMatrixTemplate,
   habitTrackerSetupTemplate,
 ];
+*/
 
 // ============================================================
 // TEMPLATE ACCESS HELPERS
@@ -147,13 +161,14 @@ List<AppTemplate> searchTemplates(String query) {
 
 /// Get featured templates for homepage
 List<AppTemplate> getFeaturedTemplates() {
+  // Return our most popular voice-first templates
   return [
-    resumeTemplate,
-    meetingNotesTemplate,
-    linkedInPostTemplate,
-    weddingSpeechTemplate,
-    expenseTrackerTemplate,
-    flashcardTemplate,
+    meetingNotesVoiceTemplate,
+    dailyJournalVoiceTemplate,
+    todoListVoiceTemplate,
+    groceryListVoiceTemplate,
+    goalPlannerVoiceTemplate,
+    quickNotesVoiceTemplate,
   ];
 }
 

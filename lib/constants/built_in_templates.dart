@@ -1,7 +1,11 @@
 import '../models/template.dart';
 
 class BuiltInTemplates {
-  // PRODUCTIVITY TEMPLATES
+  // ============================================================
+  // 🎯 ACTIVE TEMPLATES (12 TOTAL - MATCHING VISUAL TEMPLATES)
+  // ============================================================
+
+  // TEMPLATE 1: MEETING NOTES ✅
   static const Template meetingNotes = Template(
     id: 'meeting_notes',
     name: 'Meeting Notes',
@@ -11,152 +15,401 @@ class BuiltInTemplates {
     content: '''# Meeting Notes
 
 **Date:** [Date]
-**Attendees:** [Names]
-**Agenda:** [Topic]
+**Page:** [Page]
+**Meeting Information:** [Topic/Purpose]
 
-## Key Points
+## Attendees
 - 
 
-## Decisions Made
+## Priorities
 - 
 
 ## Action Items
 - [ ] 
 - [ ] 
 
-## Next Steps
+## Notes
 ''',
     backgroundId: 'color_sky',
   );
 
+  // TEMPLATE 2: DAILY JOURNAL ✅
   static const Template dailyJournal = Template(
     id: 'daily_journal',
     name: 'Daily Journal',
-    description: 'Reflect on your day and plan tomorrow',
+    description: 'Reflect on your day with gratitude and goals',
     category: TemplateCategory.personal,
     icon: '📔',
-    content: '''# Daily Journal - [Date]
+    content: '''# Daily Journal
 
-## Today's Highlights
-- 
+**Date:** [Date]
 
-## Grateful For
-1. 
-2. 
-3. 
+## Daily Gratitude
+[What I'm grateful for today]
 
-## Challenges Faced
-- 
-
-## Tomorrow's Focus
-- 
+## Daily Goals
 - 
 - 
 
-## Mood: 😊
+## Daily Challenge
+[Challenge I'm facing]
+
+## Daily Affirmation
+[Positive intention]
+
+## Notes
 ''',
     backgroundId: 'gradient_peach',
   );
 
-  static const Template projectPlan = Template(
-    id: 'project_plan',
-    name: 'Project Plan',
-    description: 'Plan and organize project milestones',
-    category: TemplateCategory.productivity,
-    icon: '📊',
-    content: '''# Project Plan: [Project Name]
+  // TEMPLATE 3: GRATITUDE JOURNAL ✅
+  static const Template gratitudeJournal = Template(
+    id: 'gratitude_journal',
+    name: 'Gratitude Journal',
+    description: 'Evening reflection and gratitude practice',
+    category: TemplateCategory.personal,
+    icon: '🙏',
+    content: '''# Gratitude Journal - Evening Log
 
-## Overview
-[Brief description]
+**Date:** [Date]
 
-## Goals
-- 
-- 
+## The Best Part of the Day Was
+[Your favorite moment]
 
-## Timeline
-- **Phase 1:** [Start - End]
-- **Phase 2:** [Start - End]
-- **Phase 3:** [Start - End]
-
-## Resources Needed
-- 
-- 
-
-## Success Metrics
-- 
-- 
-
-## Risks & Mitigation
-- 
-''',
-    backgroundId: 'color_blue',
-  );
-
-  static const Template weeklyReview = Template(
-    id: 'weekly_review',
-    name: 'Weekly Review',
-    description: 'Reflect on the week and plan ahead',
-    category: TemplateCategory.productivity,
-    icon: '📅',
-    content: '''# Weekly Review - Week of [Date]
-
-## Wins This Week
-- 
-- 
-- 
-
-## Lessons Learned
-- 
-
-## Goals Achieved
-- [ ] 
-- [ ] 
-
-## Next Week's Priorities
+## 3 Good Things That Happened Today
 1. 
 2. 
 3. 
 
-## Areas to Improve
+## People I'm Grateful For
 - 
+- 
+- 
+
+## 3 Things I'm Grateful For Today
+1. 
+2. 
+3. 
+
+## Tomorrow, I Look Forward To
+[What excites you about tomorrow]
 ''',
     backgroundId: 'gradient_lavender',
   );
 
+  // TEMPLATE 4: PROJECT PLANNER ✅
+  static const Template projectPlan = Template(
+    id: 'project_plan',
+    name: 'Project Planner',
+    description: 'Plan and organize project milestones',
+    category: TemplateCategory.productivity,
+    icon: '📊',
+    content: '''# Project Planner
+
+**Project Name:** [Name]
+**Date:** [Date]
+**Client:** [Client Name]
+
+## Strategy
+- 
+- 
+- 
+
+## To Do List
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+
+## Subject/Topics
+- [ ] 
+- [ ] 
+- [ ] 
+
+## Goals
+- 
+- 
+- 
+
+## Notes
+[Additional project notes]
+''',
+    backgroundId: 'color_blue',
+  );
+
+  // TEMPLATE 5: WEEKLY REFLECTION ✅
+  static const Template weeklyReview = Template(
+    id: 'weekly_review',
+    name: 'Weekly Reflection',
+    description: 'Reflect on the week and plan ahead',
+    category: TemplateCategory.productivity,
+    icon: '📅',
+    content: '''# Weekly Reflection
+
+**Week:** [Week of Date]
+**Overview:** [Brief summary]
+
+## My Favorite Moments
+- 
+- 
+- 
+
+## I'm Most Grateful For
+- 
+- 
+- 
+
+## Key Accomplishment
+[Your biggest win this week]
+
+## I Plan To Do More
+- 
+
+## I Plan To Do Less
+- 
+
+## I'll Take Care Of Myself By
+- 
+
+## I'm So Excited For
+[What you're looking forward to]
+''',
+    backgroundId: 'gradient_lavender',
+  );
+
+  // TEMPLATE 6: GROCERY LIST ✅
   static const Template groceryList = Template(
     id: 'grocery_list',
     name: 'Grocery List',
-    description: 'Organize your shopping needs',
+    description: 'Organize your shopping needs by category',
     category: TemplateCategory.personal,
     icon: '🛒',
     content: '''# Grocery List
 
-## Produce
+**Week of:** [Date]
+
+## Dairy
+- [ ] 
 - [ ] 
 - [ ] 
 
-## Dairy & Eggs
+## Meat & Seafood
 - [ ] 
-- [ ] 
-
-## Meat & Protein
 - [ ] 
 - [ ] 
 
-## Pantry Staples
+## Fruits & Veggies
 - [ ] 
-- [ ] 
-
-## Snacks & Beverages
 - [ ] 
 - [ ] 
 
-## Other
+## Frozen
+- [ ] 
+- [ ] 
+- [ ] 
+
+## Drinks
+- [ ] 
+- [ ] 
+
+## Others
+- [ ] 
 - [ ] 
 ''',
     backgroundId: 'color_mint',
   );
 
+  // TEMPLATE 7: RECIPE ✅
+  static const Template recipeTemplate = Template(
+    id: 'recipe',
+    name: 'Recipe',
+    description: 'Save your favorite recipes',
+    category: TemplateCategory.personal,
+    icon: '🍳',
+    content: '''# Recipe
+
+**Title:** [Recipe Name]
+**Prep Time:** [X minutes]
+**Cook Time:** [X minutes]
+**Servings:** [X]
+
+## Ingredients
+- 
+- 
+- 
+
+## Directions
+1. 
+2. 
+3. 
+4. 
+
+## Notes
+[Tips and variations]
+''',
+    backgroundId: 'color_peach',
+  );
+
+  // TEMPLATE 8: HABIT TRACKER ✅
+  static const Template habitTracker = Template(
+    id: 'habit_tracker',
+    name: 'Habit Tracker',
+    description: 'Track daily habits and build consistency',
+    category: TemplateCategory.health,
+    icon: '✅',
+    content: '''# Habit Tracker
+
+**Week of:** [Date Range]
+
+## Habits to Track
+| Habit | Mon | Tue | Wed | Thu | Fri | Sat | Sun |
+|-------|-----|-----|-----|-----|-----|-----|-----|
+| [Habit 1] | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| [Habit 2] | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| [Habit 3] | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| [Habit 4] | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| [Habit 5] | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+## Notes
+[Weekly reflection on habits]
+''',
+    backgroundId: 'gradient_mint',
+  );
+
+  // TEMPLATE 9: EXPENSE TRACKER ✅
+  static const Template expenseTracker = Template(
+    id: 'expense_tracker',
+    name: 'Expense Tracker',
+    description: 'Track your monthly expenses',
+    category: TemplateCategory.productivity,
+    icon: '💰',
+    content: '''# Expense Tracker
+
+**Month of:** [Month Year]
+
+| Date | Description | Category | Amount |
+|------|-------------|----------|--------|
+| [MM/DD] | [Item] | [Category] | \$[Amount] |
+| [MM/DD] | [Item] | [Category] | \$[Amount] |
+| [MM/DD] | [Item] | [Category] | \$[Amount] |
+| [MM/DD] | [Item] | [Category] | \$[Amount] |
+| [MM/DD] | [Item] | [Category] | \$[Amount] |
+
+## Total
+**\$[Sum of all expenses]**
+
+## Notes
+[Spending insights]
+''',
+    backgroundId: 'color_mint',
+  );
+
+  // TEMPLATE 10: GOAL PLANNER ✅
+  static const Template goalPlanner = Template(
+    id: 'goal_planner',
+    name: 'Goal Planner',
+    description: 'Set and track your goals with action steps',
+    category: TemplateCategory.productivity,
+    icon: '🎯',
+    content: '''# Goal Planner
+
+**Created:** [Date]
+**To Achieve By:** [Target Date]
+**Achieved:** ☐
+
+## Goal
+[Your specific goal]
+
+## Action Steps
+1. 
+2. 
+3. 
+4. 
+5. 
+
+## Motivation
+[Why this goal matters to you]
+
+## Strategy
+[How you'll approach this]
+
+## Progress Tracker
+[Track your progress weekly]
+
+## Reward
+[What you'll reward yourself with]
+''',
+    backgroundId: 'gradient_ocean',
+  );
+
+  // TEMPLATE 11: TO DO LIST ✅
+  static const Template todoList = Template(
+    id: 'todo_list',
+    name: 'To Do List',
+    description: 'Organize daily tasks and priorities',
+    category: TemplateCategory.productivity,
+    icon: '✔️',
+    content: '''# To Do List
+
+**Date:** [Date]
+
+## To Do
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+
+## Priorities
+1. 
+2. 
+3. 
+
+## Notes
+[Additional reminders]
+
+## Reminder
+[Important thing to remember]
+
+## Tomorrow
+[Tasks for tomorrow]
+''',
+    backgroundId: 'gradient_pink',
+  );
+
+  // TEMPLATE 12: QUICK NOTES ✅
+  static const Template quickNotes = Template(
+    id: 'quick_notes',
+    name: 'Quick Notes',
+    description: 'Capture thoughts and ideas quickly',
+    category: TemplateCategory.personal,
+    icon: '📌',
+    content: '''# Notes
+
+## Main Notes
+[Your main thoughts and notes here]
+
+---
+
+## Quick Ideas
+💡 [Idea 1]
+
+💡 [Idea 2]
+
+💡 [Idea 3]
+''',
+    backgroundId: 'color_white',
+  );
+
+  // ============================================================
+  // 📦 COMMENTED OUT - NOT MATCHING VISUAL TEMPLATES
+  // ============================================================
+  
+  /*
   static const Template workoutLog = Template(
     id: 'workout_log',
     name: 'Workout Log',
@@ -194,37 +447,6 @@ class BuiltInTemplates {
 - Form Check: 
 ''',
     backgroundId: 'gradient_neon',
-  );
-
-  static const Template recipeTemplate = Template(
-    id: 'recipe',
-    name: 'Recipe',
-    description: 'Save your favorite recipes',
-    category: TemplateCategory.personal,
-    icon: '🍳',
-    content: '''# [Recipe Name]
-
-**Prep Time:** [X minutes]
-**Cook Time:** [X minutes]
-**Servings:** [X]
-
-## Ingredients
-- 
-- 
-- 
-
-## Instructions
-1. 
-2. 
-3. 
-4. 
-
-## Tips & Notes
-- 
-
-## Rating: ⭐⭐⭐⭐⭐
-''',
-    backgroundId: 'color_peach',
   );
 
   static const Template travelPlanner = Template(
@@ -490,41 +712,6 @@ Best,
     backgroundId: 'space',
   );
 
-  static const Template habitTracker = Template(
-    id: 'habit_tracker',
-    name: 'Habit Tracker',
-    description: 'Track daily habits and build consistency',
-    category: TemplateCategory.health,
-    icon: '✅',
-    content: '''# Habit Tracker - [Month]
-
-## Daily Habits
-- [ ] Drink 8 glasses of water
-- [ ] Exercise 30 min
-- [ ] Read 20 pages
-- [ ] Meditate 10 min
-- [ ] Journal
-- [ ] [Custom habit]
-
-## Weekly Goals
-- [ ] 
-- [ ] 
-- [ ] 
-
-## Monthly Target
-[What do you want to achieve?]
-
-## Progress Notes
-Week 1: 
-Week 2: 
-Week 3: 
-Week 4: 
-
-## Streak: 🔥 [X] days
-''',
-    backgroundId: 'gradient_mint',
-  );
-
   static const Template moodTracker = Template(
     id: 'mood_tracker',
     name: 'Mood Tracker',
@@ -746,29 +933,25 @@ Week 4:
 ''',
     backgroundId: 'gradient_pink',
   );
+  */
 
-  // All templates list
+  // ============================================================
+  // ALL TEMPLATES LIST (ACTIVE ONLY)
+  // ============================================================
+  
   static const List<Template> all = [
     meetingNotes,
     dailyJournal,
+    gratitudeJournal,
     projectPlan,
     weeklyReview,
     groceryList,
-    workoutLog,
     recipeTemplate,
-    travelPlanner,
-    bookNotes,
-    brainstorm,
-    businessPlan,
-    pitchDeck,
-    prospectOutreach,
-    dreamLog,
     habitTracker,
-    moodTracker,
-    blogOutline,
-    problemSolving,
-    oneOnOneAgenda,
-    eventPlanning,
+    expenseTracker,
+    goalPlanner,
+    todoList,
+    quickNotes,
   ];
 
   // Get templates by category
