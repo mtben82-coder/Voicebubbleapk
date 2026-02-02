@@ -57,6 +57,7 @@ dependencies:
   share_plus: ^7.2.1
   file_picker: ^8.0.0+1
   image_picker: ^1.0.7
+  just_audio: ^0.9.36
   
   # Notifications
   flutter_local_notifications: ^18.0.1

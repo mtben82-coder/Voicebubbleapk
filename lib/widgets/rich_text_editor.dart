@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'package:record/record.dart';
+import 'package:just_audio/just_audio.dart';
 import '../services/refinement_service.dart';
 import '../models/outcome_type.dart';
 import '../constants/background_assets.dart';
@@ -150,94 +151,154 @@ class _PlayableAudioWidget extends StatefulWidget {
 
 class _PlayableAudioWidgetState extends State<_PlayableAudioWidget> {
   bool _isPlaying = false;
-  // TODO: Add actual audio player (audioplayers package)
-  // For now, just toggle state
+  late final AudioPlayer _audioPlayer;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
 
-  void _togglePlayback() {
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
-    
-    // TODO: Implement actual audio playback
-    // For now, just show toast or debug message
-    if (_isPlaying) {
-      debugPrint('🎵 Playing: ${widget.audioPath}');
-      // Auto-stop after simulated duration
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _isPlaying) {
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await _audioPlayer.setFilePath(widget.audioPath);
+      _audioPlayer.durationStream.listen((duration) {
+        if (mounted && duration != null) {
           setState(() {
-            _isPlaying = false;
+            _duration = duration;
           });
         }
       });
-    } else {
-      debugPrint('⏸️ Paused: ${widget.audioPath}');
+      _audioPlayer.positionStream.listen((position) {
+        if (mounted) {
+          setState(() {
+            _position = position;
+          });
+        }
+      });
+      _audioPlayer.playerStateStream.listen((state) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = state.playing;
+          });
+          // Auto-reset when finished
+          if (state.processingState == ProcessingState.completed) {
+            _audioPlayer.seek(Duration.zero);
+            _audioPlayer.pause();
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Error loading audio: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _togglePlayback() async {
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        await _audioPlayer.play();
+      }
+    } catch (e) {
+      debugPrint('❌ Error toggling playback: $e');
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: GestureDetector(
-        onTap: _togglePlayback,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isPlaying 
-                  ? const Color(0xFFF59E0B) 
-                  : Colors.white.withOpacity(0.1),
-              width: _isPlaying ? 2 : 1,
-            ),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _isPlaying 
+                ? const Color(0xFFF59E0B) 
+                : Colors.white.withOpacity(0.1),
+            width: _isPlaying ? 2 : 1,
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: const Color(0xFFF59E0B),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _isPlaying ? 'Playing...' : 'Voice Note',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: _togglePlayback,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withOpacity(0.2),
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      widget.audioPath.split('/').last,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Icon(
+                      _isPlaying ? Icons.pause : Icons.play_arrow,
+                      color: const Color(0xFFF59E0B),
+                      size: 20,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isPlaying ? 'Playing...' : 'Voice Note',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.mic,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
+                ],
               ),
-              Icon(
-                Icons.more_vert,
-                color: Colors.white54,
-                size: 20,
+            ),
+            if (_duration.inSeconds > 0) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: _duration.inSeconds > 0 ? _position.inSeconds / _duration.inSeconds : 0,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+                  minHeight: 4,
+                ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );
