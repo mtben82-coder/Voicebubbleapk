@@ -328,8 +328,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
           },
         ),
       ),
-      floatingActionButton: _viewMode == 2 ? null : MultiOptionFab(
-        showProjectOption: _viewMode == 1,
+      floatingActionButton: _viewMode == 2 
+          ? null  // Templates tab - no FAB
+          : _viewMode == 1
+              ? FloatingActionButton(
+                  // Projects tab - ONLY add project button (simple FAB)
+                  onPressed: () => _showCreateProjectDialog(context),
+                  backgroundColor: const Color(0xFF3B82F6),
+                  child: const Icon(Icons.create_new_folder, color: Colors.white),
+                )
+              : MultiOptionFab(
+                  // Library tab - multi-option (voice, text, note, todo, image)
+                  showProjectOption: false,
         onVoicePressed: () {
           Navigator.push(
             context,
