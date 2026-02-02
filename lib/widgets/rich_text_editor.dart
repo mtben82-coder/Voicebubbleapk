@@ -669,17 +669,23 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
       );
     }
 
-    // For image backgrounds
-    return Opacity(
-      opacity: 0.15, // 15% opacity for readability
-      child: Image.asset(
-        background.assetPath!,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          // Fallback if image fails to load
-          return Container(color: background.fallbackColor);
-        },
-      ),
+    // For image backgrounds - show at higher opacity with dark overlay for readability
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          background.assetPath!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback if image fails to load
+            return Container(color: background.fallbackColor);
+          },
+        ),
+        // Dark overlay for text readability
+        Container(
+          color: Colors.black.withOpacity(0.65), // 65% black overlay so image is 35% visible
+        ),
+      ],
     );
   }
 
@@ -1010,7 +1016,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                       // Content layer (scrollable)
                       SingleChildScrollView(
                         child: Container(
-                          // Transparent so background shows through
+                          // ALWAYS transparent when background exists, so background shows through cleanly
                           color: widget.backgroundId == null ? const Color(0xFF1E1E1E) : Colors.transparent,
                           padding: const EdgeInsets.all(16),
                           constraints: BoxConstraints(
@@ -1032,13 +1038,24 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                                     readOnly: widget.readOnly,
                                     customStyles: quill.DefaultStyles(
                                       paragraph: quill.DefaultTextBlockStyle(
-                                        const TextStyle(color: Colors.white, fontSize: 16, height: 1.6),
+                                        TextStyle(
+                                          color: widget.backgroundId != null && BackgroundAssets.findById(widget.backgroundId!)?.isPaper == true
+                                              ? Colors.black // Black text on paper
+                                              : Colors.white, // White text on dark/images
+                                          fontSize: 16,
+                                          height: 1.6,
+                                        ),
                                         const quill.VerticalSpacing(0, 0),
                                         const quill.VerticalSpacing(0, 0),
                                         null,
                                       ),
                                       placeHolder: quill.DefaultTextBlockStyle(
-                                        TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 16),
+                                        TextStyle(
+                                          color: widget.backgroundId != null && BackgroundAssets.findById(widget.backgroundId!)?.isPaper == true
+                                              ? Colors.black.withOpacity(0.3) // Black placeholder on paper
+                                              : Colors.white.withOpacity(0.3), // White placeholder on dark/images
+                                          fontSize: 16,
+                                        ),
                                         const quill.VerticalSpacing(0, 0),
                                         const quill.VerticalSpacing(0, 0),
                                         null,
