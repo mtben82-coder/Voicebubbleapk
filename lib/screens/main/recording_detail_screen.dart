@@ -325,14 +325,14 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
             orElse: () => throw Exception('Recording not found'),
           );
           
-          return FloatingActionButton(
+          return FloatingActionButton.small(
             onPressed: () => _handleContinue(context, appState, item),
             backgroundColor: primaryColor,
             tooltip: 'Continue with AI',
             child: const Icon(
-              Icons.add_circle_outline,
+              Icons.mic,
               color: Colors.white,
-              size: 24,
+              size: 20,
             ),
           );
         },
