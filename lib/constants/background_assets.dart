@@ -22,49 +22,49 @@ class BackgroundAssets {
   BackgroundAssets._();
 
   // ════════════════════════════════════════════════════════════════════════════
-  // PAPER TYPES (PDF-based)
+  // PAPER TYPES (NOW JPG - NO MORE PDFs!)
   // ════════════════════════════════════════════════════════════════════════════
 
   static const List<BackgroundAsset> allPapers = [
-    // Plain white paper (no PDF)
+    // Plain white paper
     BackgroundAsset(
       id: 'paper_plain',
       name: 'Plain White',
-      assetPath: null,
+      assetPath: 'assets/backgrounds/plain_paper.jpg',
       isPaper: true,
       fallbackColor: Color(0xFFFFFFFF), // Pure white
     ),
-    // Grid paper - light grey grid lines look
+    // Grid paper
     BackgroundAsset(
       id: 'paper_grid',
       name: 'Grid Paper',
-      assetPath: 'assets/backgrounds/grid_paper.pdf',
+      assetPath: 'assets/backgrounds/grid_paper.jpg',
       isPaper: true,
-      fallbackColor: Color(0xFFF0F4F8), // Light blue-grey like graph paper
+      fallbackColor: Color(0xFFF0F4F8), // Light blue-grey
     ),
-    // Dotted paper - subtle dots pattern
+    // Dotted paper
     BackgroundAsset(
       id: 'paper_dotted',
       name: 'Dotted Paper',
-      assetPath: 'assets/backgrounds/dotted_paper.pdf',
+      assetPath: 'assets/backgrounds/dotted_paper.jpg',
       isPaper: true,
       fallbackColor: Color(0xFFFAF8F3), // Warm off-white
     ),
-    // Grey notebook - lined notebook look
+    // Lined notebook
     BackgroundAsset(
       id: 'paper_grey_notebook',
       name: 'Lined Notebook',
-      assetPath: 'assets/backgrounds/Grey White Minimal Note Book Papers Planner_20260201_233338_0000.pdf',
+      assetPath: 'assets/backgrounds/lined_paper.jpg',
       isPaper: true,
-      fallbackColor: Color(0xFFE5E7EB), // Light grey like notebook paper
+      fallbackColor: Color(0xFFE5E7EB), // Light grey
     ),
-    // Vintage scrapbook - aged paper look
+    // Vintage paper
     BackgroundAsset(
       id: 'paper_vintage',
       name: 'Vintage Paper',
-      assetPath: 'assets/backgrounds/Beige Brown Simple Vintage Scrapbook Paper Page Border A4 Document_20260201_233753_0000.pdf',
+      assetPath: 'assets/backgrounds/vintage_paper.jpg',
       isPaper: true,
-      fallbackColor: Color(0xFFF5E6D3), // Beige/tan vintage color
+      fallbackColor: Color(0xFFF5E6D3), // Beige/tan
     ),
   ];
 

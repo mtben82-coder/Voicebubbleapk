@@ -965,10 +965,23 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
       return Container(color: const Color(0xFF1E1E1E));
     }
 
-    // For paper types (PDFs) - show FULL BRIGHT paper color (no overlay!)
+    // For paper types - NOW SHOW AS IMAGES! (not solid colors)
     if (background.isPaper) {
-      return Container(
-        color: background.fallbackColor ?? const Color(0xFFF5F5F5),
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            background.assetPath!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(color: background.fallbackColor);
+            },
+          ),
+          // Very light overlay for text readability
+          Container(
+            color: Colors.black.withOpacity(0.10), // Only 10% overlay - paper shows through!
+          ),
+        ],
       );
     }
 
