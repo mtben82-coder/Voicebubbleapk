@@ -457,6 +457,11 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
 
   @override
   void dispose() {
+    // Save before disposing if there are unsaved changes
+    if (_hasUnsavedChanges) {
+      _saveContent();
+    }
+    
     _saveTimer?.cancel();
     _selectionTimer?.cancel();
     _controller.removeListener(_onControllerChanged);
@@ -485,9 +490,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     _selectionTimer?.cancel();
     _selectionTimer = Timer(const Duration(milliseconds: 200), _checkSelection);
 
-    // Auto-save with debounce
-    _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 500), _saveContent);
+    // NO AUTO-SAVE TIMER! Will save on dispose instead
   }
 
   void _checkSelection() {
