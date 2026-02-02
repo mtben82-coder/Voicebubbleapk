@@ -82,6 +82,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
             if (_selectedTagId != null && _viewMode == 0) {
               recordings = recordings.where((r) => r.tags.contains(_selectedTagId)).toList();
             }
+            
+            // Sort pinned items to the top!
+            recordings.sort((a, b) {
+              // Pinned items come first
+              if (a.isPinned == true && b.isPinned != true) return -1;
+              if (a.isPinned != true && b.isPinned == true) return 1;
+              // Otherwise sort by date (newest first)
+              return b.createdAt.compareTo(a.createdAt);
+            });
 
             return CustomScrollView(
               slivers: [
@@ -522,138 +531,150 @@ class _LibraryScreenState extends State<LibraryScreen> {
           MaterialPageRoute(builder: (context) => RecordingDetailScreen(recordingId: item.id)),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.1),
-            width: 1,
-          ),
-          // Show background image if selected
-          image: item.background != null && !_isBackgroundPaper(item.background!)
-              ? DecorationImage(
-                  image: AssetImage(_getBackgroundAssetPath(item.background!)),
-                  fit: BoxFit.cover,
-                  opacity: 0.3, // 30% opacity - brighter than before!
-                  // NO ColorFilter - let image show naturally
-                )
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row with content type indicator and date
-            Row(
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+              // Show background image if selected
+              image: item.background != null && !_isBackgroundPaper(item.background!)
+                  ? DecorationImage(
+                      image: AssetImage(_getBackgroundAssetPath(item.background!)),
+                      fit: BoxFit.cover,
+                      opacity: 0.3, // 30% opacity - brighter than before!
+                      // NO ColorFilter - let image show naturally
+                    )
+                  : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Content type indicator - PUSHED LEFT (removed mainAxisAlignment)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: contentTypeColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        contentTypeIcon,
-                        size: 12,
-                        color: contentTypeColor,
+                // Header row with content type indicator and date
+                Row(
+                  children: [
+                    // Content type indicator - PUSHED LEFT (removed mainAxisAlignment)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: contentTypeColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        item.contentType.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: contentTypeColor,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            contentTypeIcon,
+                            size: 12,
+                            color: contentTypeColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            item.contentType.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: contentTypeColor,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                // Pin indicator (if pinned)
-                if (item.isPinned == true)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Icon(
-                      Icons.push_pin,
-                      size: 16,
-                      color: const Color(0xFFF59E0B),
                     ),
-                  ),
-                // Date/time
+                    const Spacer(),
+                    // Date/time (pin removed from here!)
+                    Text(
+                      item.formattedDate,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // Title (custom title if available, otherwise first line of content)
                 Text(
-                  item.formattedDate,
+                  item.customTitle?.isNotEmpty == true 
+                      ? item.customTitle! 
+                      : item.finalText.split('\n').first,
                   style: TextStyle(
-                    fontSize: 11,
-                    color: secondaryTextColor,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                
+                // Preview text (show content, but skip first line if we used it as title and no custom title)
+                Text(
+                  item.customTitle?.isNotEmpty == true 
+                      ? item.finalText
+                      : _getPreviewText(item.finalText),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: secondaryTextColor,
+                    height: 1.4,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                
+                const Spacer(),
+                
+                // Tags at bottom as colored text
+                Consumer<AppStateProvider>(
+                  builder: (context, appState, _) {
+                    final tags = appState.tags;
+                    final itemTags = item.tags
+                        .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
+                        .where((t) => t != null)
+                        .cast<Tag>()
+                        .toList();
+                    
+                    if (itemTags.isEmpty) return const SizedBox(height: 8);
+                    
+                    return Text(
+                      itemTags.map((tag) => tag.name).join(', '),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(itemTags.first.color),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            
-            // Title (custom title if available, otherwise first line of content)
-            Text(
-              item.customTitle?.isNotEmpty == true 
-                  ? item.customTitle! 
-                  : item.finalText.split('\n').first,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: textColor,
+          ),
+          // Pin indicator at BOTTOM RIGHT (if pinned)
+          if (item.isPinned == true)
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.push_pin,
+                  size: 16,
+                  color: Colors.white,
+                ),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
-            
-            // Preview text (show content, but skip first line if we used it as title and no custom title)
-            Text(
-              item.customTitle?.isNotEmpty == true 
-                  ? item.finalText
-                  : _getPreviewText(item.finalText),
-              style: TextStyle(
-                fontSize: 14,
-                color: secondaryTextColor,
-                height: 1.4,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            
-            const Spacer(),
-            
-            // Tags at bottom as colored text
-            Consumer<AppStateProvider>(
-              builder: (context, appState, _) {
-                final tags = appState.tags;
-                final itemTags = item.tags
-                    .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
-                    .where((t) => t != null)
-                    .cast<Tag>()
-                    .toList();
-                
-                if (itemTags.isEmpty) return const SizedBox(height: 8);
-                
-                return Text(
-                  itemTags.map((tag) => tag.name).join(', '),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(itemTags.first.color),
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                );
-              },
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
