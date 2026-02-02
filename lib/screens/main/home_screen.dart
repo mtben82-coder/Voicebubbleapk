@@ -317,15 +317,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Logo and VoiceBubble text (BIGGER LOGO)
-                  Row(
+                  // VoiceBubble text with tagline (NO LOGO)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.asset(
-                        'assets/app_logo.png',
-                        width: 48, // Increased from 32
-                        height: 48, // Increased from 32
-                      ),
-                      const SizedBox(width: 12),
                       Text(
                         'VoiceBubble',
                         style: TextStyle(
@@ -334,9 +329,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           color: const Color(0xFF3B82F6),
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Speak, AI Writes, Done',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: secondaryTextColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
-                  // Settings Button (moved left, more accessible)
+                  // Settings Button
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     child: IconButton(
@@ -355,58 +359,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ),
             
-            // Activate Voice Bubble Button (under settings)
-            if (Platform.isAndroid)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: () async {
-                        await _toggleOverlay();
-                        await Future.delayed(const Duration(milliseconds: 500));
-                        await _checkOverlayStatus();
-                      },
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _overlayEnabled ? const Color(0xFF10B981) : surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _overlayEnabled ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
-                            width: 2,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.bubble_chart,
-                              color: _overlayEnabled ? Colors.white : const Color(0xFF3B82F6),
-                              size: 20,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Activate\nVoice\nBubble',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w600,
-                                color: _overlayEnabled ? Colors.white : const Color(0xFF3B82F6),
-                                height: 1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            
             // Add spacing before main content
             const SizedBox(height: 32),
             
@@ -415,10 +367,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                    // Language Selector and Record Button
-                    const SizedBox(height: 20),
-                    
                     // Record Button
+                    const SizedBox(height: 40),
                     GestureDetector(
                       onTap: () {
                         context.read<AppStateProvider>().reset();
@@ -471,71 +421,98 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         color: secondaryTextColor,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 80),
                     
-                    // Language Selector Button
+                    // Language Selector with Plus Button
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
                       child: Consumer<AppStateProvider>(
                         builder: (context, appState, _) {
                           final language = appState.selectedLanguage;
                           final primaryColor = const Color(0xFF3B82F6);
-                          return GestureDetector(
-                            onTap: () async {
-                              await showDialog(
-                                context: context,
-                                builder: (context) => const LanguageSelectorPopup(),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: surfaceColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: primaryColor.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    language.flagEmoji,
-                                    style: const TextStyle(fontSize: 32),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                          return Row(
+                            children: [
+                              // Language Selector (left)
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    await showDialog(
+                                      context: context,
+                                      builder: (context) => const LanguageSelectorPopup(),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: surfaceColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: primaryColor.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
                                       children: [
                                         Text(
-                                          'Output Language',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: secondaryTextColor,
-                                            fontWeight: FontWeight.w500,
+                                          language.flagEmoji,
+                                          style: const TextStyle(fontSize: 32),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Output Language',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: secondaryTextColor,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                language.name,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: textColor,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          language.name,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: textColor,
-                                          ),
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: secondaryTextColor,
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 16,
-                                    color: secondaryTextColor,
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              // Plus Button (right) - shows menu with Upload Audio and Activate Bubble
+                              GestureDetector(
+                                onTap: () {
+                                  _showOptionsMenu(context, surfaceColor, textColor);
+                                },
+                                child: Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF3B82F6),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
@@ -552,23 +529,107 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
-      // Floating Upload Audio Button (bottom left)
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Tooltip(
-          message: 'Upload Audio',
-          child: FloatingActionButton(
-            onPressed: _pickAudioFile,
-            backgroundColor: const Color(0xFF10B981),
-            child: const Icon(
-              Icons.upload_file,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-        ),
+    );
+  }
+  
+  void _showOptionsMenu(BuildContext context, Color surfaceColor, Color textColor) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 16),
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Upload Audio File option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.upload_file, color: Color(0xFF10B981)),
+                ),
+                title: Text(
+                  'Upload Audio File',
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Text(
+                  'Transcribe an existing audio file',
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.6),
+                    fontSize: 13,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAudioFile();
+                },
+              ),
+              const Divider(height: 1),
+              // Activate Voice Bubble option (Android only)
+              if (Platform.isAndroid)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (_overlayEnabled ? const Color(0xFF10B981) : const Color(0xFF3B82F6)).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.bubble_chart,
+                      color: _overlayEnabled ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
+                    ),
+                  ),
+                  title: Text(
+                    _overlayEnabled ? 'Deactivate Voice Bubble' : 'Activate Voice Bubble',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    _overlayEnabled ? 'Turn off floating bubble' : 'Enable floating voice bubble',
+                    style: TextStyle(
+                      color: textColor.withOpacity(0.6),
+                      fontSize: 13,
+                    ),
+                  ),
+                  trailing: _overlayEnabled 
+                    ? const Icon(Icons.check_circle, color: Color(0xFF10B981))
+                    : null,
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _toggleOverlay();
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    await _checkOverlayStatus();
+                  },
+                ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
   
