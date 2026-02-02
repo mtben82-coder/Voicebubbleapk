@@ -34,31 +34,86 @@ class CustomImageEmbedBuilder extends quill.EmbedBuilder {
     TextStyle textStyle,
   ) {
     final imageUrl = node.value.data as String;
+    return _ResizableImage(imageUrl: imageUrl);
+  }
+}
+
+/// Resizable image widget
+class _ResizableImage extends StatefulWidget {
+  final String imageUrl;
+
+  const _ResizableImage({required this.imageUrl});
+
+  @override
+  State<_ResizableImage> createState() => _ResizableImageState();
+}
+
+class _ResizableImageState extends State<_ResizableImage> {
+  double _height = 200;
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Image.file(
-        File(imageUrl),
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+                _height = _isExpanded ? 400 : 200;
+              });
+            },
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                File(widget.imageUrl),
+                height: _height,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: _height,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.broken_image, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Image not found: ${widget.imageUrl.split('/').last}',
+                            style: const TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.broken_image, color: Colors.red),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Image not found: ${imageUrl.split('/').last}',
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                _isExpanded ? Icons.unfold_less : Icons.unfold_more,
+                color: Colors.white54,
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _isExpanded ? 'Tap to minimize' : 'Tap to expand',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -79,45 +134,110 @@ class CustomAudioEmbedBuilder extends quill.EmbedBuilder {
     TextStyle textStyle,
   ) {
     final audioPath = node.value.data as String;
+    return _PlayableAudioWidget(audioPath: audioPath);
+  }
+}
+
+/// Playable audio widget with play/pause functionality
+class _PlayableAudioWidget extends StatefulWidget {
+  final String audioPath;
+
+  const _PlayableAudioWidget({required this.audioPath});
+
+  @override
+  State<_PlayableAudioWidget> createState() => _PlayableAudioWidgetState();
+}
+
+class _PlayableAudioWidgetState extends State<_PlayableAudioWidget> {
+  bool _isPlaying = false;
+  // TODO: Add actual audio player (audioplayers package)
+  // For now, just toggle state
+
+  void _togglePlayback() {
+    setState(() {
+      _isPlaying = !_isPlaying;
+    });
+    
+    // TODO: Implement actual audio playback
+    // For now, just show toast or debug message
+    if (_isPlaying) {
+      debugPrint('🎵 Playing: ${widget.audioPath}');
+      // Auto-stop after simulated duration
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted && _isPlaying) {
+          setState(() {
+            _isPlaying = false;
+          });
+        }
+      });
+    } else {
+      debugPrint('⏸️ Paused: ${widget.audioPath}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.play_arrow, color: Color(0xFFF59E0B), size: 20),
+      child: GestureDetector(
+        onTap: _togglePlayback,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isPlaying 
+                  ? const Color(0xFFF59E0B) 
+                  : Colors.white.withOpacity(0.1),
+              width: _isPlaying ? 2 : 1,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Voice Note',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    audioPath.split('/').last,
-                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: const Color(0xFFF59E0B),
+                  size: 20,
+                ),
               ),
-            ),
-            const Icon(Icons.more_vert, color: Colors.white54, size: 20),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isPlaying ? 'Playing...' : 'Voice Note',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      widget.audioPath.split('/').last,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 11,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.more_vert,
+                color: Colors.white54,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -836,45 +956,40 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
           children: [
             Column(
               children: [
-                // Top toolbar (Google Keep style) - Row 1
-                if (widget.showTopToolbar && !widget.readOnly)
+                // Quill formatting toolbar (Row 1) - AT TOP for maximum space
+                if (!widget.readOnly)
                   Container(
                     color: surfaceColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      children: [
-                        // Pin button
-                        IconButton(
-                          icon: Icon(
-                            _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                            color: _isPinned ? const Color(0xFFF59E0B) : Colors.white70,
-                            size: 20,
-                          ),
-                          onPressed: _togglePin,
-                          tooltip: 'Pin',
-                        ),
-                        // Single "+" button to add content
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 20),
-                          onPressed: _showAddContentMenu,
-                          tooltip: 'Add content',
-                        ),
-                        const Spacer(),
-                        // Background button
-                        IconButton(
-                          icon: const Icon(Icons.palette_outlined, color: Colors.white70, size: 20),
-                          onPressed: _showBackgroundPicker,
-                          tooltip: 'Change background',
-                        ),
-                        // More options menu (existing)
-                        IconButton(
-                          icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
-                          onPressed: () {
-                            // TODO: Show more options menu
-                          },
-                          tooltip: 'More options',
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: quill.QuillSimpleToolbar(
+                      configurations: quill.QuillSimpleToolbarConfigurations(
+                        controller: _controller,
+                        multiRowsDisplay: false,
+                        showBoldButton: true,
+                        showItalicButton: true,
+                        showUnderLineButton: true,
+                        showStrikeThrough: false,
+                        showColorButton: false,
+                        showBackgroundColorButton: false,
+                        showListNumbers: true,
+                        showListBullets: true,
+                        showListCheck: true,
+                        showCodeBlock: false,
+                        showQuote: false,
+                        showIndent: false,
+                        showLink: false,
+                        showUndo: true,
+                        showRedo: true,
+                        showDirection: false,
+                        showSearchButton: false,
+                        showSubscript: false,
+                        showSuperscript: false,
+                        showSmallButton: false,
+                        showInlineCode: false,
+                        showClearFormat: false,
+                        showHeaderStyle: true,
+                        showAlignmentButtons: false,
+                      ),
                     ),
                   ),
                 
@@ -1087,44 +1202,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                     ),
                   ),
                 
-                // Quill formatting toolbar (Row 2) - FIXED, scrollable horizontally
-                if (!widget.readOnly)
-                  Container(
-                    color: surfaceColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: quill.QuillSimpleToolbar(
-                      configurations: quill.QuillSimpleToolbarConfigurations(
-                        controller: _controller,
-                        multiRowsDisplay: false,
-                        showBoldButton: true,
-                        showItalicButton: true,
-                        showUnderLineButton: true,
-                        showStrikeThrough: false,
-                        showColorButton: false,
-                        showBackgroundColorButton: false,
-                        showListNumbers: true,
-                        showListBullets: true,
-                        showListCheck: true,
-                        showCodeBlock: false,
-                        showQuote: false,
-                        showIndent: false,
-                        showLink: false,
-                        showUndo: true,
-                        showRedo: true,
-                        showDirection: false,
-                        showSearchButton: false,
-                        showSubscript: false,
-                        showSuperscript: false,
-                        showSmallButton: false,
-                        showInlineCode: false,
-                        showClearFormat: false,
-                        showHeaderStyle: true,
-                        showAlignmentButtons: false,
-                      ),
-                    ),
-                  ),
-
-                // Scrollable content area with background (title + editor)
+                // Outcome chips section (for outcomes tab) - FIXED
                 Expanded(
                   child: Stack(
                     children: [
@@ -1197,19 +1275,67 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                   ),
                 ),
 
-                // Status bar
+                // Status bar with action buttons at bottom left
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   decoration: BoxDecoration(
                     color: surfaceColor,
                     border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
                   ),
                   child: Row(
                     children: [
-                      Text(
-                        '$_wordCount words • $_characterCount characters',
-                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
-                      ),
+                      // Action buttons at BOTTOM LEFT (if showTopToolbar)
+                      if (widget.showTopToolbar && !widget.readOnly) ...[
+                        // Pin button
+                        IconButton(
+                          icon: Icon(
+                            _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                            color: _isPinned ? const Color(0xFFF59E0B) : Colors.white70,
+                            size: 20,
+                          ),
+                          onPressed: _togglePin,
+                          tooltip: 'Pin',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 12),
+                        // Single "+" button to add content
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 20),
+                          onPressed: _showAddContentMenu,
+                          tooltip: 'Add content',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 12),
+                        // Background button
+                        IconButton(
+                          icon: const Icon(Icons.palette_outlined, color: Colors.white70, size: 20),
+                          onPressed: _showBackgroundPicker,
+                          tooltip: 'Change background',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 12),
+                        // More options menu
+                        IconButton(
+                          icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
+                          onPressed: () {
+                            // TODO: Show more options menu
+                          },
+                          tooltip: 'More options',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                      
+                      // Word/character count and status at BOTTOM RIGHT
+                      if (!widget.showTopToolbar || widget.readOnly)
+                        Text(
+                          '$_wordCount words • $_characterCount characters',
+                          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                        ),
                       const Spacer(),
                       if (_hasUnsavedChanges)
                         const Row(
