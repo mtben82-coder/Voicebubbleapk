@@ -548,6 +548,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   children: [
                     // Content type indicator - PUSHED LEFT (removed mainAxisAlignment)
                     Container(
+                      margin: const EdgeInsets.only(left: 4), // Push slightly right from edge
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: contentTypeColor.withOpacity(0.2),

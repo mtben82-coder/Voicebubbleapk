@@ -439,6 +439,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   children: [
                     // Content type indicator
                     Container(
+                      margin: const EdgeInsets.only(left: 4), // Push slightly right from edge
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: contentTypeColor.withOpacity(0.2),
@@ -492,73 +493,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 ),
                 const SizedBox(height: 8),
                 
-                // Preview text
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    item.formattedDate,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: secondaryTextColor,
-                    ),
+                // Preview text (show content, but skip first line if we used it as title and no custom title)
+                Text(
+                  item.customTitle?.isNotEmpty == true 
+                      ? item.finalText
+                      : _getPreviewText(item.finalText),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: secondaryTextColor,
+                    height: 1.4,
                   ),
-                  Row(
-                    children: [
-                      // Remove from project
-                      InkWell(
-                        onTap: () => _removeItemFromProject(item.id),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.remove_circle_outline,
-                            size: 18,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                      ),
-                      // Copy
-                      InkWell(
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: item.finalText));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Copied to clipboard'),
-                              backgroundColor: Color(0xFF10B981),
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.copy,
-                            size: 18,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                      ),
-                      // Share
-                      InkWell(
-                        onTap: () {
-                          Share.share(item.finalText);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.share,
-                            size: 18,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),

@@ -586,33 +586,62 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
                   
                   const SizedBox(height: 16),
 
-                  // Content field with height constraint for scrollability
+                  // ══════════════════════════════════════════
+                  // QUILL TOOLBAR (Between title and content)
+                  // ══════════════════════════════════════════
+                  Container(
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: quill.QuillToolbar.simple(
+                      configurations: quill.QuillSimpleToolbarConfigurations(
+                        controller: _quillController,
+                        showBoldButton: true,
+                        showItalicButton: true,
+                        showUnderLineButton: true,
+                        showStrikeThrough: true,
+                        showColorButton: true,
+                        showBackgroundColorButton: true,
+                        showListNumbers: true,
+                        showListBullets: true,
+                        showListCheck: true,
+                        showCodeBlock: true,
+                        showQuote: true,
+                        showIndent: true,
+                        showLink: true,
+                        showUndo: true,
+                        showRedo: true,
+                        multiRowsDisplay: false,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+
+                  // Content field with Quill editor
                   Container(
                     height: MediaQuery.of(context).size.height * 0.5, // Half screen minimum
                     decoration: BoxDecoration(
                       color: surfaceColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: TextField(
-                      controller: _contentController,
-                      focusNode: _contentFocusNode,
-                      style: const TextStyle(
-                        color: textColor,
-                        fontSize: 16,
-                        height: 1.5,
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        scaffoldBackgroundColor: Colors.transparent,
+                        canvasColor: Colors.transparent,
                       ),
-                      decoration: InputDecoration(
-                        hintText: _selectedOutcomeType != null 
-                            ? 'Write your ${_selectedOutcomeType!.displayName.toLowerCase()}...'
-                            : 'Start writing...',
-                        hintStyle: const TextStyle(color: secondaryTextColor),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(16),
+                      child: quill.QuillEditor.basic(
+                        configurations: quill.QuillEditorConfigurations(
+                          controller: _quillController,
+                          padding: const EdgeInsets.all(16),
+                          placeholder: _selectedOutcomeType != null 
+                              ? 'Write your ${_selectedOutcomeType!.displayName.toLowerCase()}...'
+                              : 'Start writing...',
+                          scrollPhysics: const ClampingScrollPhysics(),
+                        ),
                       ),
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      textCapitalization: TextCapitalization.sentences,
                     ),
                   ),
 
