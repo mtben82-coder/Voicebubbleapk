@@ -78,15 +78,15 @@ class BackgroundPickerDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 12,
+                      runSpacing: 12,
                       children: BackgroundAssets.allPapers.map((paper) {
-                        return _buildOption(
+                        return _buildImagePreviewOption(
                           context,
                           id: paper.id,
                           name: paper.name,
-                          color: paper.fallbackColor ?? const Color(0xFFF5F5F5),
-                          icon: Icons.description,
+                          assetPath: paper.assetPath!,
+                          isPaper: true,
                         );
                       }).toList(),
                     ),
@@ -103,15 +103,15 @@ class BackgroundPickerDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 12,
+                      runSpacing: 12,
                       children: BackgroundAssets.allBackgrounds.map((bg) {
-                        return _buildOption(
+                        return _buildImagePreviewOption(
                           context,
                           id: bg.id,
                           name: bg.name,
-                          color: bg.fallbackColor ?? const Color(0xFF2196F3),
-                          icon: Icons.image,
+                          assetPath: bg.assetPath!,
+                          isPaper: false,
                         );
                       }).toList(),
                     ),
@@ -170,6 +170,72 @@ class BackgroundPickerDialog extends StatelessWidget {
               const Icon(Icons.check_circle, color: Color(0xFF3B82F6), size: 14),
           ],
         ),
+      ),
+    );
+  }
+
+  // NEW: Google Keep style - actual image preview in circles
+  Widget _buildImagePreviewOption(
+    BuildContext context, {
+    required String id,
+    required String name,
+    required String assetPath,
+    required bool isPaper,
+  }) {
+    final isSelected = currentBackground == id;
+    return GestureDetector(
+      onTap: () => onSelect(id),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? const Color(0xFF3B82F6) : Colors.white24,
+                width: isSelected ? 3 : 2,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF3B82F6).withOpacity(0.4),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      )
+                    ]
+                  : null,
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade800,
+                    child: const Icon(Icons.broken_image, color: Colors.white54),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 70,
+            child: Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -377,6 +443,75 @@ class BackgroundPicker extends StatelessWidget {
               const Icon(Icons.check_circle, color: Color(0xFF3B82F6), size: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  // Google Keep style - circular image previews
+  Widget _buildImagePreviewOption(
+    BuildContext context, {
+    required String id,
+    required String name,
+    required String assetPath,
+    required Color textColor,
+  }) {
+    final isSelected = currentBackgroundId == id;
+    return GestureDetector(
+      onTap: () {
+        onBackgroundSelected(id);
+        Navigator.pop(context);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? const Color(0xFF3B82F6) : Colors.white24,
+                width: isSelected ? 3 : 2,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF3B82F6).withOpacity(0.4),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      )
+                    ]
+                  : null,
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade800,
+                    child: const Icon(Icons.broken_image, color: Colors.white54),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: 80,
+            child: Text(
+              name,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
