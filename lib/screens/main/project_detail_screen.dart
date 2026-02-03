@@ -311,8 +311,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         onNotePressed: () async {
           // Create empty quick note within project
           final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final itemId = const Uuid().v4();
           final newItem = RecordingItem(
-            id: const Uuid().v4(),
+            id: itemId,
             rawTranscript: '',
             finalText: '',
             presetUsed: 'Quick Note',
@@ -325,6 +326,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             contentType: 'text',
           );
           await appState.saveRecording(newItem);
+          await appState.addItemToProject(widget.projectId, itemId); // Add to project
           
           if (mounted) {
             Navigator.push(
@@ -338,8 +340,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         onTodoPressed: () async {
           // Create empty todo within project
           final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final itemId = const Uuid().v4();
           final newItem = RecordingItem(
-            id: const Uuid().v4(),
+            id: itemId,
             rawTranscript: '',
             finalText: '',
             presetUsed: 'Todo List',
@@ -352,6 +355,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             contentType: 'todo',
           );
           await appState.saveRecording(newItem);
+          await appState.addItemToProject(widget.projectId, itemId); // Add to project
           
           if (mounted) {
             Navigator.push(

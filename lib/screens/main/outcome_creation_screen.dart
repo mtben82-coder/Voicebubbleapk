@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'dart:convert';
 import '../../providers/app_state_provider.dart';
 import '../../models/recording_item.dart';
 import '../../models/outcome_type.dart';
@@ -218,8 +219,9 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
       return;
     }
 
-    final plainText = _contentController.text.trim();
-    if (plainText.isEmpty) {
+    final plainText = _quillController.document.toPlainText().trim();
+    // Fixed: Better empty check - Quill can have just newlines
+    if (plainText.isEmpty || plainText.replaceAll('\n', '').isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add some content'),
@@ -242,6 +244,7 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
         if (existingItem != null) {
           final updatedItem = existingItem.copyWith(
             finalText: plainText,
+            formattedContent: jsonEncode(_quillController.document.toDelta().toJson()),
             customTitle: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
             tags: _selectedTags,
             outcomes: [_selectedOutcomeType!.toStorageString()],
@@ -256,6 +259,7 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
           id: const Uuid().v4(),
           rawTranscript: widget.contentType == 'voice' ? '' : plainText,
           finalText: plainText,
+          formattedContent: jsonEncode(_quillController.document.toDelta().toJson()),
           presetUsed: '${_selectedOutcomeType!.displayName} (${widget.contentType})',
           outcomes: [_selectedOutcomeType!.toStorageString()],
           projectId: null, // Outcomes don't belong to projects
