@@ -23,6 +23,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _isLoading = true;
   bool _isPurchasing = false;
   String? _errorMessage;
+  bool _isYearlySelected = false; // Track selected plan
 
   @override
   void initState() {
@@ -46,8 +47,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
     });
 
     try {
-      final success = await _subscriptionService
-          .purchaseSubscription(SubscriptionService.monthlyProductId);
+      // Use selected product ID (monthly or yearly)
+      final productId = _isYearlySelected
+          ? SubscriptionService.yearlyProductId
+          : SubscriptionService.monthlyProductId;
+      
+      final success = await _subscriptionService.purchaseSubscription(productId);
 
       if (!success) {
         if (!mounted) return;
@@ -110,7 +115,21 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     final monthly = _subscriptionService.monthlyProduct;
-    final price = monthly?.price ?? "\$4.99";
+    final yearly = _subscriptionService.yearlyProduct;
+    final monthlyPrice = monthly?.price ?? "\$4.99";
+    final yearlyPrice = yearly?.price ?? "\$49.99";
+    
+    // Calculate savings percentage if both prices available
+    String savingsText = "Save 17%";
+    if (monthly != null && yearly != null) {
+      final monthlyRaw = monthly.rawPrice;
+      final yearlyRaw = yearly.rawPrice;
+      if (monthlyRaw > 0) {
+        final yearlyEquivalent = monthlyRaw * 12;
+        final savings = ((yearlyEquivalent - yearlyRaw) / yearlyEquivalent * 100).round();
+        savingsText = "Save $savings%";
+      }
+    }
 
     return Scaffold(
       backgroundColor: Colors.black.withOpacity(0.70),
@@ -172,54 +191,133 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
-                // PRICE
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.35)),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Monthly Plan',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        price,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Free for 1 day, cancel anytime',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 26),
-
-                // FEATURES
+                // FEATURES (MOVED ABOVE PRICING)
                 _feature(Icons.timer_rounded, '90 mins speech-to-text'),
                 _feature(Icons.auto_awesome_rounded, 'Premium rewrite quality'),
                 _feature(Icons.palette_rounded, 'Unlimited custom presets'),
-                _feature(Icons.cloud_sync_rounded, 'Cloud sync'),
+                _feature(Icons.highlight_rounded, 'Highlight text and choose AI preset'),
                 _feature(Icons.workspace_premium_rounded, 'Priority support'),
+                const SizedBox(height: 24),
+
+                // TWO PRICE BOXES SIDE BY SIDE
+                Row(
+                  children: [
+                    // MONTHLY BOX
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isYearlySelected = false),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: !_isYearlySelected 
+                                ? Colors.white.withOpacity(0.3)
+                                : Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: !_isYearlySelected 
+                                  ? Colors.white 
+                                  : Colors.white.withOpacity(0.3),
+                              width: !_isYearlySelected ? 2.5 : 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Monthly',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                monthlyPrice,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'per month',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // YEARLY BOX
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isYearlySelected = true),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: _isYearlySelected 
+                                ? Colors.white.withOpacity(0.3)
+                                : Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _isYearlySelected 
+                                  ? Colors.white 
+                                  : Colors.white.withOpacity(0.3),
+                              width: _isYearlySelected ? 2.5 : 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Yearly',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                yearlyPrice,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                savingsText,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.greenAccent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                
+                // Free trial text
+                Text(
+                  'Free for 1 day, cancel anytime',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
                 const SizedBox(height: 18),
 
                 // ERROR
