@@ -276,17 +276,6 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
                               ],
                             ),
                           ),
-                          // ✨ BACKGROUND MENU ITEM ✨
-                          PopupMenuItem(
-                            value: 'background',
-                            child: Row(
-                              children: [
-                                Icon(Icons.image, color: textColor, size: 18),
-                                const SizedBox(width: 12),
-                                Text('Change Background', style: TextStyle(color: textColor)),
-                              ],
-                            ),
-                          ),
                           // ✨ END NEW MENU ITEMS ✨
                           const PopupMenuDivider(),
                           PopupMenuItem(
@@ -547,31 +536,6 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         showDialog(
           context: context,
           builder: (_) => ExportDialog(note: item),
-        );
-        break;
-      // ✨ BACKGROUND HANDLER ✨
-      case 'background':
-        showDialog(
-          context: context,
-          builder: (_) => BackgroundPickerDialog(
-            currentBackground: item.background ?? 'color_white',
-            onSelect: (backgroundId) async {
-              final updatedItem = item.copyWith(background: backgroundId);
-              await appState.updateRecording(updatedItem); // FIX: Use updateRecording instead of saveRecording
-              Navigator.pop(context);
-              if (mounted) {
-                setState(() {}); // Force rebuild to show new background
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Background applied!'),
-                    backgroundColor: Color(0xFF10B981),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
-              }
-            },
-          ),
         );
         break;
       // ✨ END NEW HANDLERS ✨

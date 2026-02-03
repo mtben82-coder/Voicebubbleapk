@@ -28,6 +28,8 @@ import 'recording_screen.dart';
 // ✨ NEW IMPORT ✨
 import '../batch_operations_screen.dart';
 import '../templates/template_selection_screen.dart';
+import '../templates/elite_interview_screen.dart';
+import '../templates/elite_interview_system.dart';
 // ✨ END NEW IMPORT ✨
 
 class LibraryScreen extends StatefulWidget {
@@ -738,72 +740,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   // Build templates view (embedded template selection)
   Widget _buildTemplatesView(Color surfaceColor, Color textColor, Color secondaryTextColor) {
-    // Get filtered templates
-    List<AppTemplate> filteredTemplates;
-    if (_templateSearchQuery.isNotEmpty) {
-      filteredTemplates = searchTemplates(_templateSearchQuery);
-    } else if (_selectedTemplateCategory != null) {
-      filteredTemplates = getTemplatesByCategory(_selectedTemplateCategory!);
-    } else {
-      filteredTemplates = allTemplates;
-    }
+    // Get all templates (no filtering)
+    final filteredTemplates = allTemplates;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Category pills
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildTemplateCategoryPill(null, 'All', Icons.apps, surfaceColor, textColor, secondaryTextColor),
-              ...TemplateCategory.values.map((cat) => 
-                _buildTemplateCategoryPill(cat, cat.displayName, cat.icon, surfaceColor, textColor, secondaryTextColor)
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        
-        // Featured section (when no filter)
-        if (_selectedTemplateCategory == null && _templateSearchQuery.isEmpty) ...[
-          Row(
-            children: [
-              Icon(Icons.star, color: const Color(0xFFF59E0B), size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Featured',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 140,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: getFeaturedTemplates().length,
-              itemBuilder: (context, index) {
-                final template = getFeaturedTemplates()[index];
-                return _buildFeaturedTemplateCard(template, surfaceColor, textColor, secondaryTextColor);
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'All Templates',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
+        // Removed category pills - just show templates
         
         // Templates grid
         GridView.builder(
@@ -936,12 +879,37 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildTemplateCard(AppTemplate template, Color surfaceColor, Color textColor, Color secondaryTextColor) {
+    // Use consistent color for all cards
+    const cardColor = Color(0xFF3B82F6); // Blue for all templates
+    
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TemplateFillScreen(template: template)),
-        );
+        // Launch EliteInterviewScreen if template has interview flow
+        if (template.interviewFlow != null && template.interviewFlow!.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EliteInterviewScreen(
+                template: template,
+                questions: template.interviewFlow!.cast<InterviewQuestion>(),
+                onComplete: (answers) async {
+                  // TODO: Process answers with AI and create RecordingItem
+                  // For now, just go back
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Template completed! (AI processing coming soon)')),
+                  );
+                },
+              ),
+            ),
+          );
+        } else {
+          // Fallback to old fill screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TemplateFillScreen(template: template)),
+          );
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -959,20 +927,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: template.category.color.withOpacity(0.15),
+                    color: cardColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(template.category.icon, color: template.category.color, size: 18),
+                  child: Icon(template.icon, color: cardColor, size: 18),
                 ),
-                if (template.isPro)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text('PRO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white)),
-                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -984,18 +943,27 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              template.description,
+              template.tagline,
               style: TextStyle(fontSize: 11, color: secondaryTextColor),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
             const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: template.category.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
+            Row(
+              children: [
+                Icon(Icons.mic, size: 12, color: cardColor),
+                const SizedBox(width: 4),
+                Text(
+                  '${template.interviewFlow?.length ?? 0} questions',
+                  style: TextStyle(fontSize: 10, color: cardColor, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
               child: Text(
                 template.category.displayName,
                 style: TextStyle(fontSize: 10, color: template.category.color, fontWeight: FontWeight.w600),
