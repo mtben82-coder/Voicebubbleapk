@@ -156,11 +156,44 @@ class _EditableResultBoxState extends State<EditableResultBox> {
                 ),
         ),
         
+        // Small copy icon at bottom-right
+        if (!widget.isLoading)
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: _controller.text));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Copied to clipboard'),
+                        backgroundColor: Color(0xFF10B981),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(
+                    Icons.content_copy,
+                    size: 18,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        
         // Floating button when text selected
         if (_hasSelection)
           Positioned(
             right: 12,
-            bottom: 12,
+            bottom: 52, // Moved up to avoid overlap with copy icon
             child: FloatingActionButton.small(
               onPressed: _showAIDialog,
               backgroundColor: const Color(0xFF8B5CF6),

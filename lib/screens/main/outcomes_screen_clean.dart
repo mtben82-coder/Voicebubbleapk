@@ -329,21 +329,24 @@ class _OutcomesScreenCleanState extends State<OutcomesScreenClean> {
                   ),
                 ),
                 
-                // Alarm icon - ALWAYS SHOW
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isOverdue 
-                        ? const Color(0xFFEF4444).withOpacity(0.15)
-                        : (hasReminder ? color.withOpacity(0.15) : const Color(0xFF374151).withOpacity(0.15)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.alarm,
-                    size: 18,
-                    color: isOverdue 
-                        ? const Color(0xFFEF4444) 
-                        : (hasReminder ? color : const Color(0xFF6B7280)),
+                // Alarm icon - ALWAYS SHOW - NOW CLICKABLE
+                GestureDetector(
+                  onTap: () => _showReminderPicker(item),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isOverdue 
+                          ? const Color(0xFFEF4444).withOpacity(0.15)
+                          : (hasReminder ? color.withOpacity(0.15) : const Color(0xFF374151).withOpacity(0.15)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.alarm,
+                      size: 18,
+                      color: isOverdue 
+                          ? const Color(0xFFEF4444) 
+                          : (hasReminder ? color : const Color(0xFF6B7280)),
+                    ),
                   ),
                 ),
               ],
@@ -352,6 +355,81 @@ class _OutcomesScreenCleanState extends State<OutcomesScreenClean> {
         ),
       ),
     );
+  }
+
+  // ══════════════════════════════════════════
+  // SHOW REMINDER PICKER
+  // ══════════════════════════════════════════
+  Future<void> _showReminderPicker(RecordingItem item) async {
+    final selectedDateTime = await showDatePicker(
+      context: context,
+      initialDate: item.reminderDateTime ?? DateTime.now().add(const Duration(hours: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF3B82F6),
+              onPrimary: Colors.white,
+              surface: Color(0xFF1A1A1A),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selectedDateTime != null) {
+      final selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(
+          item.reminderDateTime ?? DateTime.now().add(const Duration(hours: 1)),
+        ),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: Color(0xFF3B82F6),
+                onPrimary: Colors.white,
+                surface: Color(0xFF1A1A1A),
+                onSurface: Colors.white,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (selectedTime != null) {
+        final newReminder = DateTime(
+          selectedDateTime.year,
+          selectedDateTime.month,
+          selectedDateTime.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+        
+        // Update the item with new reminder
+        final appState = Provider.of<AppStateProvider>(context, listen: false);
+        final updatedItem = item.copyWith(reminderDateTime: newReminder);
+        await appState.updateRecording(updatedItem);
+        
+        // Schedule reminder notification
+        await ReminderManager().scheduleReminder(updatedItem);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Reminder set for ${newReminder.day}/${newReminder.month} at ${newReminder.hour.toString().padLeft(2, '0')}:${newReminder.minute.toString().padLeft(2, '0')}'),
+              backgroundColor: const Color(0xFF10B981),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    }
   }
 
   // ══════════════════════════════════════════
