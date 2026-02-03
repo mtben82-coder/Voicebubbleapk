@@ -476,11 +476,11 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
       
       // Auto-add 3 checkboxes for TODO content type
       if (widget.contentType == 'todo') {
-        doc.insert(0, '\n');
+        // Insert text first, then format as checkboxes
+        doc.insert(0, '\n\n\n');
+        // Format each line as unchecked
         doc.format(0, 1, quill.Attribute.unchecked);
-        doc.insert(1, '\n');
         doc.format(1, 1, quill.Attribute.unchecked);
-        doc.insert(2, '\n');
         doc.format(2, 1, quill.Attribute.unchecked);
       }
     }
