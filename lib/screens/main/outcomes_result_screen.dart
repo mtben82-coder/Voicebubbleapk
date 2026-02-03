@@ -109,6 +109,7 @@ class _OutcomesResultScreenState extends State<OutcomesResultScreen> {
           editHistory: [outcome.text],
           continuedFromId: continueContext?.singleItemId,
           contentType: 'voice',
+          hiddenInLibrary: true, // CRITICAL: Mark as outcome so it shows in outcomes tab!
         );
 
         await appState.saveRecording(item);
