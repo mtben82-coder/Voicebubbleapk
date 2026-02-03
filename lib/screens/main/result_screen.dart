@@ -335,6 +335,7 @@ class _ResultScreenState extends State<ResultScreen> {
           presetId: appState.selectedPreset?.id ?? '',
           continuedFromId: continueContext?.singleItemId,
           contentType: 'voice',
+          hiddenInLibrary: _selectedOutcomes.isNotEmpty,  // Hide from Library if outcomes selected
         );
 
         debugPrint('💾 Created NEW item: ${item.id}');
