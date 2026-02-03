@@ -42,7 +42,7 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  // View modes: 0 = Library, 1 = Projects, 2 = Templates
+  // View modes: 0 = Library, 1 = Projects
   int _viewMode = 0;
   String _searchQuery = '';
   String? _selectedTagId;
@@ -110,76 +110,54 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: const EdgeInsets.all(3),
-                        child: Row(
-                          children: [
-                            // Library button - takes 1/3 width
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _viewMode = 0),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: _viewMode == 0 ? primaryColor : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'Library',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _viewMode == 0 ? textColor : secondaryTextColor,
+                        child:                           Row(
+                            children: [
+                              // Library button - takes 1/2 width
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _viewMode = 0),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: _viewMode == 0 ? primaryColor : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Library',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: _viewMode == 0 ? textColor : secondaryTextColor,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            // Projects button - takes 1/3 width
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _viewMode = 1),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: _viewMode == 1 ? primaryColor : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'Projects',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _viewMode == 1 ? textColor : secondaryTextColor,
+                              // Projects button - takes 1/2 width
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _viewMode = 1),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: _viewMode == 1 ? primaryColor : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Projects',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: _viewMode == 1 ? textColor : secondaryTextColor,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            // Templates button - takes 1/3 width
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _viewMode = 2),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: _viewMode == 2 ? primaryColor : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'Templates',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _viewMode == 2 ? textColor : secondaryTextColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
                       ),
                       const SizedBox(height: 16),
 
@@ -295,9 +273,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   );
                                 },
                               )),
-                      ] else if (_viewMode == 2) ...[
-                        // Templates view - show the full template UI
-                        _buildTemplatesView(surfaceColor, textColor, secondaryTextColor),
                       ] else ...[
                         // Library - Recordings grid
                         if (recordings.isEmpty)
@@ -332,9 +307,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           },
         ),
       ),
-      floatingActionButton: _viewMode == 2 
-          ? null  // Templates tab - no FAB
-          : _viewMode == 1
+      floatingActionButton: _viewMode == 1
               ? FloatingActionButton(
                   // Projects tab - ONLY add project button (simple FAB)
                   onPressed: () => _showCreateProjectDialog(context),
