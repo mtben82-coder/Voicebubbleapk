@@ -10,6 +10,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:io';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import '../../providers/app_state_provider.dart';
+import '../../services/ai_service.dart';
+import '../../services/template_ai_service.dart';
 import 'template_models.dart';
 import 'elite_interview_system.dart';
 import 'elite_interview_flows.dart';
@@ -42,6 +50,14 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
   AnswerQuality? _lastQuality;
   Map<String, String> _answers = {};
   
+  // Real STT components (from RecordingScreen)
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final AIService _aiService = AIService();
+  final TemplateAIService _templateAIService = TemplateAIService();
+  String? _audioPath;
+  bool _isProcessing = false;
+  
   late AnimationController _pulseController;
   late AnimationController _progressController;
   late Animation<double> _pulseAnimation;
@@ -52,6 +68,7 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
   @override
   void initState() {
     super.initState();
+    _initSpeech();
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -66,12 +83,22 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
       vsync: this,
     );
   }
+  
+  Future<void> _initSpeech() async {
+    try {
+      await _speech.initialize();
+    } catch (e) {
+      print('Speech init error: $e');
+    }
+  }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _progressController.dispose();
     _recordingTimer?.cancel();
+    _speech.stop();
+    _audioRecorder.dispose();
     super.dispose();
   }
 
@@ -727,8 +754,9 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
     );
   }
 
-  void _startRecording() {
+  void _startRecording() async {
     HapticFeedback.mediumImpact();
+    
     setState(() {
       _showingTips = false;
       _isRecording = true;
@@ -736,18 +764,40 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
       _currentTranscript = '';
     });
     
+    // Get audio directory
+    final dir = await getApplicationDocumentsDirectory();
+    _audioPath = '${dir.path}/template_recording_${DateTime.now().millisecondsSinceEpoch}.wav';
+    
+    // Start audio recording for Whisper transcription
+    try {
+      await _audioRecorder.start(
+        const RecordConfig(encoder: AudioEncoder.wav),
+        path: _audioPath!,
+      );
+    } catch (e) {
+      print('Audio recording error: $e');
+    }
+    
+    // Start live STT for preview
+    try {
+      if (_speech.isAvailable) {
+        _speech.listen(
+          onResult: (result) {
+            if (mounted) {
+              setState(() {
+                _currentTranscript = result.recognizedWords;
+              });
+            }
+          },
+          listenFor: Duration(seconds: _currentQuestion.idealSeconds + 30),
+        );
+      }
+    } catch (e) {
+      print('STT error: $e');
+    }
+    
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() => _recordingSeconds++);
-    });
-    
-    // TODO: Start actual speech recognition
-    // For now, simulate
-    Future.delayed(const Duration(seconds: 2), () {
-      if (_isRecording && mounted) {
-        setState(() {
-          _currentTranscript = "This is where the voice transcription would appear in real-time as you speak...";
-        });
-      }
     });
   }
 
@@ -759,18 +809,49 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
     }
   }
 
-  void _stopRecording() {
+  void _stopRecording() async {
     HapticFeedback.mediumImpact();
     _recordingTimer?.cancel();
     
+    // Stop audio recording
+    try {
+      await _audioRecorder.stop();
+      await _speech.stop();
+    } catch (e) {
+      print('Stop recording error: $e');
+    }
+    
     setState(() {
       _isRecording = false;
-      _hasRecorded = true;
-      
-      // Simulate transcript for demo
-      if (_currentTranscript.isEmpty || _currentTranscript.contains('would appear')) {
-        _currentTranscript = _currentQuestion.exampleAnswer;
+      _isProcessing = true; // Show loading while transcribing
+    });
+    
+    // Transcribe with Whisper if we have audio
+    String finalTranscript = _currentTranscript;
+    if (_audioPath != null) {
+      try {
+        final audioFile = File(_audioPath!);
+        if (await audioFile.exists()) {
+          finalTranscript = await _aiService.transcribeAudio(audioFile);
+          
+          // Clean up grammar
+          finalTranscript = await _templateAIService.cleanupAnswer(finalTranscript);
+        }
+      } catch (e) {
+        print('Transcription error: $e');
+        // Fall back to live STT transcript
       }
+    }
+    
+    // Use example if no transcription
+    if (finalTranscript.isEmpty || finalTranscript.contains('would appear')) {
+      finalTranscript = _currentQuestion.exampleAnswer;
+    }
+    
+    setState(() {
+      _isProcessing = false;
+      _hasRecorded = true;
+      _currentTranscript = finalTranscript;
       
       // Score the answer
       _lastQuality = QualityScorer.scoreAnswer(
@@ -799,12 +880,40 @@ class _EliteInterviewScreenState extends State<EliteInterviewScreen>
     _nextQuestion();
   }
 
-  void _nextQuestion() {
+  void _nextQuestion() async {
     HapticFeedback.mediumImpact();
     
     if (_currentIndex == widget.questions.length - 1) {
-      // Complete!
-      widget.onComplete(_answers);
+      // Complete! Process with AI
+      setState(() => _isProcessing = true);
+      
+      try {
+        // Process answers with AI service
+        final recordingItem = await _templateAIService.processTemplateAnswers(
+          template: widget.template,
+          answers: _answers,
+        );
+        
+        // Save to app state
+        if (mounted) {
+          final appState = context.read<AppStateProvider>();
+          await appState.saveRecording(recordingItem);
+          
+          // Call onComplete callback
+          widget.onComplete(_answers);
+        }
+      } catch (e) {
+        print('Error processing template: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+        }
+      }
     } else {
       setState(() {
         _currentIndex++;

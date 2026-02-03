@@ -405,12 +405,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
           }
         },
         onTodoPressed: () async {
-          // Create empty todo and open in main editor
+          // Create todo with pre-populated checkboxes
           final appState = Provider.of<AppStateProvider>(context, listen: false);
+          
+          // Create initial Delta with 3 empty todo checkboxes
+          final initialDelta = {
+            "ops": [
+              {"insert": ""},
+              {"insert": "\n", "attributes": {"list": "checked"}},
+              {"insert": "\n", "attributes": {"list": "checked"}},
+              {"insert": "\n", "attributes": {"list": "checked"}},
+            ]
+          };
+          
           final newItem = RecordingItem(
             id: const Uuid().v4(),
             rawTranscript: '',
-            finalText: '',
+            finalText: jsonEncode(initialDelta),
             presetUsed: 'Todo List',
             outcomes: [],
             projectId: null,
@@ -893,12 +904,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 template: template,
                 questions: template.interviewFlow!.cast<InterviewQuestion>(),
                 onComplete: (answers) async {
-                  // TODO: Process answers with AI and create RecordingItem
-                  // For now, just go back
+                  // Pop back to library
                   Navigator.pop(context);
+                  
+                  // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Template completed! (AI processing coming soon)')),
+                    SnackBar(
+                      content: Text('${template.name} created successfully!'),
+                      backgroundColor: const Color(0xFF10B981),
+                      duration: const Duration(seconds: 2),
+                    ),
                   );
+                  
+                  // Refresh the library to show new item
+                  setState(() {});
                 },
               ),
             ),

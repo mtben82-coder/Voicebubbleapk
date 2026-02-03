@@ -392,7 +392,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       showReminderButton: item.hiddenInLibrary,
       initialReminder: item.reminderDateTime,
       onReminderChanged: (dateTime) => _updateItemReminder(appState, item, dateTime),
-      showCompletionCheckbox: item.outcomes.isNotEmpty || item.contentType == 'todo',
+      showCompletionCheckbox: item.outcomes.isNotEmpty && item.hiddenInLibrary, // ONLY for outcomes, NOT library todos
       initialCompletion: item.isCompleted,
       onCompletionChanged: (completed) => _updateItemCompletion(appState, item, completed),
       // Top toolbar (Google Keep style) for library items
