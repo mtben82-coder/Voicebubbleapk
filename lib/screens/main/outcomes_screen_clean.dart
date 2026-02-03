@@ -178,40 +178,8 @@ class _OutcomesScreenCleanState extends State<OutcomesScreenClean> {
           },
         ),
       ),
-      floatingActionButton: MultiOptionFab(
-        onVoicePressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RecordingScreen()),
-          );
-        },
-        onTextPressed: () async {
-          final appState = Provider.of<AppStateProvider>(context, listen: false);
-          final newItem = RecordingItem(
-            id: const Uuid().v4(),
-            rawTranscript: '',
-            finalText: '',
-            presetUsed: 'Outcome Document',
-            outcomes: [],
-            projectId: null,
-            createdAt: DateTime.now(),
-            editHistory: [],
-            presetId: 'outcome_document',
-            tags: [],
-            contentType: 'text',
-            hiddenInLibrary: true,
-          );
-          await appState.saveRecording(newItem);
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
-              ),
-            );
-          }
-        },
-        onTodoPressed: () {
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -219,41 +187,8 @@ class _OutcomesScreenCleanState extends State<OutcomesScreenClean> {
             ),
           );
         },
-        onImagePressed: () async {
-          final appState = Provider.of<AppStateProvider>(context, listen: false);
-          final newItem = RecordingItem(
-            id: const Uuid().v4(),
-            rawTranscript: '',
-            finalText: '',
-            presetUsed: 'Outcome Image',
-            outcomes: [],
-            projectId: null,
-            createdAt: DateTime.now(),
-            editHistory: [],
-            presetId: 'outcome_image',
-            tags: [],
-            contentType: 'image',
-            hiddenInLibrary: true,
-          );
-          await appState.saveRecording(newItem);
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
-              ),
-            );
-          }
-        },
-        onNotePressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const OutcomeCreationScreen(contentType: 'note'),
-            ),
-          );
-        },
-        onProjectPressed: null,
+        backgroundColor: const Color(0xFF10B981),
+        child: const Icon(Icons.check_box, color: Colors.white),
       ),
     );
   }

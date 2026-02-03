@@ -346,237 +346,243 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: backgroundColor,
-        appBar: AppBar(
-          backgroundColor: backgroundColor,
-          elevation: 0,
-          leading: IconButton(
-            onPressed: () async {
-              if (await _onWillPop()) {
-                Navigator.pop(context);
-              }
-            },
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-          ),
-          title: Text(
-            widget.itemId != null ? 'Edit Outcome' : 'Create Outcome',
-            style: const TextStyle(color: Colors.white, fontSize: 18),
-          ),
-          actions: [
-            // Tag button
-            IconButton(
-              onPressed: _showTagSelectionDialog,
-              icon: Icon(
-                Icons.label_outline,
-                color: _selectedTags.isNotEmpty ? primaryColor : secondaryTextColor,
+        body: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Scrollable even when empty
+          slivers: [
+            // Collapsible app bar (header disappears on scroll)
+            SliverAppBar(
+              backgroundColor: backgroundColor,
+              pinned: false,
+              floating: true,
+              snap: true,
+              leading: IconButton(
+                onPressed: () async {
+                  if (await _onWillPop()) {
+                    Navigator.pop(context);
+                  }
+                },
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
               ),
-            ),
-            // Reminder button
-            IconButton(
-              onPressed: _showReminderPicker,
-              icon: Icon(
-                _reminderDateTime != null ? Icons.alarm : Icons.alarm_add,
-                color: _reminderDateTime != null ? primaryColor : secondaryTextColor,
+              title: Text(
+                widget.itemId != null ? 'Edit Outcome' : 'Create Outcome',
+                style: const TextStyle(color: Colors.white, fontSize: 18),
               ),
-            ),
-            // Save button
-            TextButton(
-              onPressed: _isLoading ? null : _saveOutcome,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                      ),
-                    )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Outcome Type Selection (Required)
-                Text(
-                  'Select Outcome Type *',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
+              actions: [
+                // Tag button
+                IconButton(
+                  onPressed: _showTagSelectionDialog,
+                  icon: Icon(
+                    Icons.label_outline,
+                    color: _selectedTags.isNotEmpty ? primaryColor : secondaryTextColor,
                   ),
                 ),
-                const SizedBox(height: 12),
-                
-                // Outcome Type Chips
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: OutcomeType.values.map((outcomeType) {
-                    return OutcomeChip(
-                      outcomeType: outcomeType,
-                      isSelected: _selectedOutcomeType == outcomeType,
-                      onTap: () {
-                        setState(() {
-                          _selectedOutcomeType = outcomeType;
-                          _hasUnsavedChanges = true;
-                        });
-                      },
-                    );
-                  }).toList(),
+                // Reminder button
+                IconButton(
+                  onPressed: _showReminderPicker,
+                  icon: Icon(
+                    _reminderDateTime != null ? Icons.alarm : Icons.alarm_add,
+                    color: _reminderDateTime != null ? primaryColor : secondaryTextColor,
+                  ),
                 ),
-                
-                const SizedBox(height: 24),
-
-                // Tags display
-                if (_selectedTags.isNotEmpty)
-                  Consumer<AppStateProvider>(
-                    builder: (context, appState, _) {
-                      final tags = appState.tags;
-                      final selectedTagObjects = _selectedTags
-                          .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
-                          .where((t) => t != null)
-                          .toList();
-
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: selectedTagObjects.map((tag) {
-                            return TagChip(
-                              tag: tag!,
-                              isSelected: true,
-                              onTap: () {
-                                setState(() {
-                                  _selectedTags.remove(tag.id);
-                                  _hasUnsavedChanges = true;
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    },
-                  ),
-
-                // Reminder display
-                if (_reminderDateTime != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: primaryColor.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.alarm, color: primaryColor, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Reminder: ${_reminderDateTime!.day}/${_reminderDateTime!.month}/${_reminderDateTime!.year} at ${_reminderDateTime!.hour.toString().padLeft(2, '0')}:${_reminderDateTime!.minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(color: primaryColor, fontSize: 12),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _reminderDateTime = null;
-                              _hasUnsavedChanges = true;
-                            });
-                          },
-                          child: Icon(Icons.close, color: primaryColor, size: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Completion checkbox
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isCompleted = !_isCompleted;
-                          _hasUnsavedChanges = true;
-                        });
-                      },
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _isCompleted ? primaryColor : Colors.transparent,
-                          border: Border.all(
+                // Save button
+                TextButton(
+                  onPressed: _isLoading ? null : _saveOutcome,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                          ),
+                        )
+                      : const Text(
+                          'Save',
+                          style: TextStyle(
                             color: primaryColor,
-                            width: 2,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: _isCompleted
-                            ? const Icon(
-                                Icons.check,
-                                size: 16,
-                                color: Colors.white,
-                              )
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Mark as completed',
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
                 ),
-
-                const SizedBox(height: 16),
-
-                // Title field
-                Container(
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _titleController,
-                    focusNode: _titleFocusNode,
-                    style: const TextStyle(
-                      color: textColor,
-                      fontSize: 18,
+                const SizedBox(width: 8),
+              ],
+            ),
+            
+            // Scrollable content
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // Outcome Type Selection (Required)
+                  Text(
+                    'Select Outcome Type *',
+                    style: TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      color: textColor,
                     ),
-                    decoration: InputDecoration(
-                      hintText: _selectedOutcomeType != null 
-                          ? '${_selectedOutcomeType!.displayName} title (optional)'
-                          : 'Title (optional)',
-                      hintStyle: const TextStyle(color: secondaryTextColor),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.all(16),
-                    ),
-                    textCapitalization: TextCapitalization.sentences,
                   ),
-                ),
-                
-                const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  
+                  // Outcome Type Chips
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: OutcomeType.values.map((outcomeType) {
+                      return OutcomeChip(
+                        outcomeType: outcomeType,
+                        isSelected: _selectedOutcomeType == outcomeType,
+                        onTap: () {
+                          setState(() {
+                            _selectedOutcomeType = outcomeType;
+                            _hasUnsavedChanges = true;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  
+                  const SizedBox(height: 24),
 
-                // Content field
-                Expanded(
-                  child: Container(
+                  // Tags display
+                  if (_selectedTags.isNotEmpty)
+                    Consumer<AppStateProvider>(
+                      builder: (context, appState, _) {
+                        final tags = appState.tags;
+                        final selectedTagObjects = _selectedTags
+                            .map((tagId) => tags.where((t) => t.id == tagId).firstOrNull)
+                            .where((t) => t != null)
+                            .toList();
+
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: selectedTagObjects.map((tag) {
+                              return TagChip(
+                                tag: tag!,
+                                isSelected: true,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedTags.remove(tag.id);
+                                    _hasUnsavedChanges = true;
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  // Reminder display
+                  if (_reminderDateTime != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: primaryColor.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.alarm, color: primaryColor, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Reminder: ${_reminderDateTime!.day}/${_reminderDateTime!.month}/${_reminderDateTime!.year} at ${_reminderDateTime!.hour.toString().padLeft(2, '0')}:${_reminderDateTime!.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(color: primaryColor, fontSize: 12),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _reminderDateTime = null;
+                                _hasUnsavedChanges = true;
+                              });
+                            },
+                            child: Icon(Icons.close, color: primaryColor, size: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Completion checkbox
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isCompleted = !_isCompleted;
+                            _hasUnsavedChanges = true;
+                          });
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _isCompleted ? primaryColor : Colors.transparent,
+                            border: Border.all(
+                              color: primaryColor,
+                              width: 2,
+                            ),
+                          ),
+                          child: _isCompleted
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 16,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Mark as completed',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Title field
+                  Container(
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: _titleController,
+                      focusNode: _titleFocusNode,
+                      style: const TextStyle(
+                        color: textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: _selectedOutcomeType != null 
+                            ? '${_selectedOutcomeType!.displayName} title (optional)'
+                            : 'Title (optional)',
+                        hintStyle: const TextStyle(color: secondaryTextColor),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(16),
+                      ),
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+
+                  // Content field with height constraint for scrollability
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.5, // Half screen minimum
                     decoration: BoxDecoration(
                       color: surfaceColor,
                       borderRadius: BorderRadius.circular(12),
@@ -603,34 +609,37 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
                       textCapitalization: TextCapitalization.sentences,
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Status row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${_contentController.text.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length} words',
-                      style: const TextStyle(
-                        color: secondaryTextColor,
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (_hasUnsavedChanges)
-                      const Text(
-                        'Unsaved changes',
-                        style: TextStyle(
-                          color: Color(0xFFF59E0B),
+                  // Status row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${_contentController.text.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length} words',
+                        style: const TextStyle(
+                          color: secondaryTextColor,
                           fontSize: 12,
                         ),
                       ),
-                  ],
-                ),
-              ],
+                      if (_hasUnsavedChanges)
+                        const Text(
+                          'Unsaved changes',
+                          style: TextStyle(
+                            color: Color(0xFFF59E0B),
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                  
+                  // Extra space at bottom for scrolling
+                  const SizedBox(height: 200),
+                ]),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
