@@ -58,13 +58,17 @@ class TemplateAIService {
       // Create RecordingItem
       return RecordingItem(
         id: const Uuid().v4(),
-        timestamp: DateTime.now(),
+        rawTranscript: _createRawText(answers),
         finalText: _createRawText(answers),
         formattedContent: finalMarkdown,
-        duration: const Duration(minutes: 2), // Approximate
+        presetUsed: 'Template: ${template.name}',
+        presetId: 'template_${template.id}',
+        outcomes: [],
+        createdAt: DateTime.now(),
+        editHistory: [],
         tags: [],
         projectId: null,
-        sourceLanguage: 'en',
+        contentType: 'template',
       );
     } catch (e) {
       print('Template processing error: $e');
@@ -90,13 +94,17 @@ class TemplateAIService {
     
     return RecordingItem(
       id: const Uuid().v4(),
-      timestamp: DateTime.now(),
+      rawTranscript: _createRawText(answers),
       finalText: _createRawText(answers),
       formattedContent: buffer.toString(),
-      duration: const Duration(minutes: 2),
+      presetUsed: 'Template: ${template.name}',
+      presetId: 'template_${template.id}',
+      outcomes: [],
+      createdAt: DateTime.now(),
+      editHistory: [],
       tags: [],
       projectId: null,
-      sourceLanguage: 'en',
+      contentType: 'template',
     );
   }
   
