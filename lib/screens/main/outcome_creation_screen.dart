@@ -50,6 +50,7 @@ class OutcomeCreationScreen extends StatefulWidget {
 
 class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
   late TextEditingController _titleController;
+  late TextEditingController _contentController;
   late quill.QuillController _quillController;
   final FocusNode _titleFocusNode = FocusNode();
   final FocusNode _contentFocusNode = FocusNode();
@@ -66,7 +67,8 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
     super.initState();
     _titleController = TextEditingController();
     _contentController = TextEditingController(text: widget.initialText ?? '');
-    
+    _quillController = quill.QuillController.basic();
+
     // Add listeners to track changes
     _titleController.addListener(_onTextChanged);
     _contentController.addListener(_onTextChanged);
@@ -97,8 +99,8 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
     if (item != null) {
       setState(() {
         _titleController.text = item.customTitle ?? '';
-        // Load Quill document
-        _quillController.document = quill.Document()..insert(0, item.finalText);
+        // Load content
+        _contentController.text = item.finalText;
         _selectedTags = List.from(item.tags);
         _reminderDateTime = item.reminderDateTime;
         _isCompleted = item.isCompleted;
@@ -113,6 +115,7 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
   @override
   void dispose() {
     _titleController.dispose();
+    _contentController.dispose();
     _quillController.dispose();
     _titleFocusNode.dispose();
     _contentFocusNode.dispose();
@@ -215,7 +218,7 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
       return;
     }
 
-    final plainText = _quillController.document.toPlainText().trim();
+    final plainText = _contentController.text.trim();
     if (plainText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -620,7 +623,7 @@ class _OutcomeCreationScreenState extends State<OutcomeCreationScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${_quillController.document.toPlainText().trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length} words',
+                        '${_contentController.text.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length} words',
                         style: const TextStyle(
                           color: secondaryTextColor,
                           fontSize: 12,
