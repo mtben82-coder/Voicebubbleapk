@@ -587,15 +587,25 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     if (_selectedText.isEmpty) return;
     HapticFeedback.mediumImpact();
     
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _AIMenuSheet(
-        selectedText: _selectedText,
-        onResult: (newText) {
-          Navigator.pop(ctx);
-          _replaceSelection(newText);
-        },
+      barrierColor: Colors.transparent, // No dark overlay
+      builder: (ctx) => Align(
+        alignment: Alignment.bottomRight,
+        child: Container(
+          margin: const EdgeInsets.only(right: 16, bottom: 120), // Position in bottom-right
+          width: MediaQuery.of(context).size.width * 0.4, // 40% of screen width
+          child: Material(
+            color: Colors.transparent,
+            child: _AIMenuSheet(
+              selectedText: _selectedText,
+              onResult: (newText) {
+                Navigator.pop(ctx);
+                _replaceSelection(newText);
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1610,41 +1620,46 @@ class _AIMenuSheetState extends State<_AIMenuSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(8), // Reduced from 16
+      padding: const EdgeInsets.all(12), // Reduced from 16
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12), // Slightly smaller radius
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
+          // Header - smaller
           const Row(
             children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF8B5CF6), size: 20),
-              SizedBox(width: 8),
-              Text('AI Actions', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+              Icon(Icons.auto_awesome, color: Color(0xFF8B5CF6), size: 16), // Smaller icon
+              SizedBox(width: 6),
+              Text('AI Actions', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)), // Smaller text
             ],
           ),
-          const SizedBox(height: 16),
-          // Magic button - full width
+          const SizedBox(height: 12), // Reduced spacing
+          // Magic button - full width but smaller
           _btn('magic', '✨ Magic', Icons.auto_awesome, const Color(0xFF8B5CF6)),
-          const SizedBox(height: 8),
-          // Buttons
+          const SizedBox(height: 6), // Reduced spacing
+          // Buttons in grid - 2x2 layout for compactness
           Row(children: [
             _btn('shorten', 'Shorten', Icons.compress, const Color(0xFFF59E0B)),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             _btn('expand', 'Expand', Icons.expand, const Color(0xFF3B82F6)),
           ]),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Row(children: [
-            _btn('pro', 'Professional', Icons.work, const Color(0xFF0891B2)),
-            const SizedBox(width: 8),
-            _btn('casual', 'Casual', Icons.mood, const Color(0xFF10B981)),
+            _btn('pro', 'Pro', Icons.work, const Color(0xFF0891B2)), // Shorter label
+            const SizedBox(width: 6),
+            _btn('grammar', 'Grammar', Icons.check, const Color(0xFFEC4899)), // Shorter label
           ]),
-          const SizedBox(height: 8),
-          _btn('grammar', 'Fix Grammar', Icons.check, const Color(0xFFEC4899)),
         ],
       ),
     );
@@ -1656,20 +1671,20 @@ class _AIMenuSheetState extends State<_AIMenuSheet> {
       child: GestureDetector(
         onTap: () => _run(id),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 8), // Reduced from 12
           decoration: BoxDecoration(
             color: isActive ? color.withOpacity(0.2) : const Color(0xFF2A2A2A),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6), // Smaller radius
           ),
-          child: Row(
+          child: Column( // Changed to column for more compact layout
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (isActive)
-                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: color))
+                SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: color))
               else
-                Icon(icon, size: 16, color: color),
-              const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                Icon(icon, size: 14, color: color), // Smaller icon
+              const SizedBox(height: 4), // Small gap
+              Text(label, style: const TextStyle(color: Colors.white, fontSize: 11)), // Smaller text
             ],
           ),
         ),
