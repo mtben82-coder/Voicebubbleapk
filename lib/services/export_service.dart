@@ -23,6 +23,17 @@ class ExportService {
     final fileName = _sanitizeFileName(note.customTitle ?? 'note');
     final file = File('${directory.path}/$fileName.md');
     
+    // Get text content - prefer finalText, fallback to formattedContent conversion
+    String textContent = note.finalText;
+    if (textContent.isEmpty && note.formattedContent != null) {
+      // TODO: Convert Quill Delta to plain text if needed
+      textContent = note.formattedContent!;
+    }
+    
+    if (textContent.isEmpty) {
+      textContent = 'No content available';
+    }
+    
     final markdown = '''# ${note.customTitle ?? 'Untitled'}
 
 Created: ${note.formattedDate}
@@ -30,7 +41,7 @@ ${note.tags.isNotEmpty ? 'Tags: ${note.tags.join(', ')}' : ''}
 
 ---
 
-${note.finalText}
+$textContent
 ''';
     
     await file.writeAsString(markdown);
@@ -115,6 +126,13 @@ ${note.finalText}
   Future<File> exportAsPdf(RecordingItem note) async {
     final pdf = pw.Document();
     
+    // Get text content - prefer finalText, fallback to formattedContent conversion
+    String textContent = note.finalText;
+    if (textContent.isEmpty && note.formattedContent != null) {
+      // TODO: Convert Quill Delta to plain text if needed
+      textContent = note.formattedContent!;
+    }
+    
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -161,7 +179,7 @@ ${note.finalText}
             
             // Content
             pw.Text(
-              note.finalText,
+              textContent.isEmpty ? 'No content available' : textContent,
               style: const pw.TextStyle(
                 fontSize: 12,
                 lineSpacing: 1.5,

@@ -634,6 +634,9 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
       for (var i = 0; i < _selectedNotes.length; i++) {
         final note = _selectedNotes[i];
         
+        // Debug: Check if note has content
+        debugPrint('🔍 Exporting note ${i+1}: finalText="${note.finalText}", formattedContent="${note.formattedContent}"');
+        
         late final file;
         switch (format) {
           case 'pdf':

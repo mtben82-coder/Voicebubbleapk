@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../models/recording_item.dart';
 import '../services/export_service.dart';
 
@@ -120,6 +121,9 @@ class ExportDialog extends StatelessWidget {
     final exportService = ExportService();
     
     try {
+      // Debug: Check note content
+      debugPrint('🔍 Exporting note: finalText="${note.finalText}", formattedContent="${note.formattedContent}"');
+      
       // Show loading
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
