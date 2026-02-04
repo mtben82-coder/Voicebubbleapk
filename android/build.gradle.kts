@@ -29,7 +29,7 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Force all subprojects to use consistent Kotlin JVM target
+// Force all subprojects to use consistent JVM target for both Java and Kotlin
 subprojects {
     project.plugins.whenPluginAdded {
         if (this is org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin) {
@@ -38,6 +38,14 @@ subprojects {
                     jvmTarget = "11"
                 }
             }
+        }
+    }
+
+    // Also set Java compiler target for all subprojects
+    project.afterEvaluate {
+        tasks.withType<JavaCompile>().configureEach {
+            sourceCompatibility = JavaVersion.VERSION_11.toString()
+            targetCompatibility = JavaVersion.VERSION_11.toString()
         }
     }
 }
