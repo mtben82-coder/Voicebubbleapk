@@ -6,9 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/app_state_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/subscription_service.dart';
-import 'services/storage_service.dart'; // ADD THIS
+import 'services/storage_service.dart';
 import 'services/reminder_manager.dart';
 import 'services/analytics_service.dart';
+import 'services/share_handler_service.dart';
 import 'screens/main/main_navigation.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
@@ -16,6 +17,7 @@ import 'screens/onboarding/onboarding_three_new.dart';
 import 'screens/onboarding/permissions_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/paywall/paywall_screen.dart';
+import 'screens/import/import_content_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,12 +41,47 @@ void main() async {
   // Initialize In-App Purchase system
   await SubscriptionService().initialize();
   debugPrint('✅ Subscription service initialized');
-  
+
+  // Initialize share handler for receiving shared files from other apps
+  ShareHandlerService().initialize();
+  debugPrint('✅ Share handler initialized');
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _setupShareListener();
+  }
+
+  void _setupShareListener() {
+    // Listen for files shared from other apps
+    ShareHandlerService().pendingShares.listen((content) {
+      debugPrint('Received shared content: ${content.type.name}');
+
+      // Wait for app to be ready, then navigate
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (_navigatorKey.currentState != null) {
+          _navigatorKey.currentState!.push(
+            MaterialPageRoute(
+              builder: (_) => ImportContentScreen(content: content),
+            ),
+          );
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +100,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
           return MaterialApp(
+            navigatorKey: _navigatorKey,
             title: 'VoiceBubble',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
