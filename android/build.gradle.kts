@@ -41,9 +41,9 @@ subprojects {
         }
     }
 
-    // Also set Java compiler target for all subprojects
-    project.afterEvaluate {
-        tasks.withType<JavaCompile>().configureEach {
+    // Set Java compiler target for all subprojects when Java plugin is applied
+    project.plugins.withType<JavaPlugin> {
+        project.tasks.withType<JavaCompile>().configureEach {
             sourceCompatibility = JavaVersion.VERSION_11.toString()
             targetCompatibility = JavaVersion.VERSION_11.toString()
         }
