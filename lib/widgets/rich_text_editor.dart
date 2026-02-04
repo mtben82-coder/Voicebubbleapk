@@ -1444,53 +1444,50 @@ class RichTextEditorState extends State<RichTextEditor> with TickerProviderState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                height: MediaQuery.of(context).size.height - 250,
-                                // ORIGINAL THEME - NO FORCED WHITE TEXT
-                                child: Theme(
-                                  data: ThemeData.dark().copyWith(
-                                    scaffoldBackgroundColor: Colors.transparent,
-                                    canvasColor: Colors.transparent,
-                                    cardColor: Colors.transparent,
-                                  ),
-                                  child: quill.QuillEditor.basic(
-                                    focusNode: _focusNode,
-                                    configurations: quill.QuillEditorConfigurations(
-                                      controller: _controller,
-                                      padding: EdgeInsets.zero,
-                                      autoFocus: !widget.readOnly,
-                                      expands: false,
-                                      placeholder: 'Start typing...',
-                                      readOnly: widget.readOnly,
-                                      scrollPhysics: const ClampingScrollPhysics(),
-                                      embedBuilders: [
-                                        CustomImageEmbedBuilder(),
-                                        CustomAudioEmbedBuilder(),
-                                      ],
-                                      customStyles: quill.DefaultStyles(
-                                        paragraph: quill.DefaultTextBlockStyle(
-                                          TextStyle(
-                                            color: widget.backgroundId != null && BackgroundAssets.findById(widget.backgroundId!)?.isPaper == true
-                                                ? Colors.black // Black text on paper
-                                                : Colors.white, // White text on dark/images
-                                            fontSize: 16,
-                                            height: 1.6,
-                                          ),
-                                          const quill.VerticalSpacing(0, 0),
-                                          const quill.VerticalSpacing(0, 0),
-                                          null,
+                              // Let QuillEditor expand naturally - no fixed height SizedBox
+                              Theme(
+                                data: ThemeData.dark().copyWith(
+                                  scaffoldBackgroundColor: Colors.transparent,
+                                  canvasColor: Colors.transparent,
+                                  cardColor: Colors.transparent,
+                                ),
+                                child: quill.QuillEditor.basic(
+                                  focusNode: _focusNode,
+                                  configurations: quill.QuillEditorConfigurations(
+                                    controller: _controller,
+                                    padding: EdgeInsets.zero,
+                                    autoFocus: !widget.readOnly,
+                                    expands: false,
+                                    placeholder: 'Start typing...',
+                                    readOnly: widget.readOnly,
+                                    scrollPhysics: const ClampingScrollPhysics(),
+                                    embedBuilders: [
+                                      CustomImageEmbedBuilder(),
+                                      CustomAudioEmbedBuilder(),
+                                    ],
+                                    customStyles: quill.DefaultStyles(
+                                      paragraph: quill.DefaultTextBlockStyle(
+                                        TextStyle(
+                                          color: widget.backgroundId != null && BackgroundAssets.findById(widget.backgroundId!)?.isPaper == true
+                                              ? Colors.black // Black text on paper
+                                              : Colors.white, // White text on dark/images
+                                          fontSize: 16,
+                                          height: 1.6,
                                         ),
-                                        placeHolder: quill.DefaultTextBlockStyle(
-                                          TextStyle(
-                                            color: widget.backgroundId != null && BackgroundAssets.findById(widget.backgroundId!)?.isPaper == true
-                                                ? Colors.black.withOpacity(0.3) // Black placeholder on paper
-                                                : Colors.white.withOpacity(0.3), // White placeholder on dark/images
-                                            fontSize: 16,
-                                          ),
-                                          const quill.VerticalSpacing(0, 0),
-                                          const quill.VerticalSpacing(0, 0),
-                                          null,
+                                        const quill.VerticalSpacing(0, 0),
+                                        const quill.VerticalSpacing(0, 0),
+                                        null,
+                                      ),
+                                      placeHolder: quill.DefaultTextBlockStyle(
+                                        TextStyle(
+                                          color: widget.backgroundId != null && BackgroundAssets.findById(widget.backgroundId!)?.isPaper == true
+                                              ? Colors.black.withOpacity(0.3) // Black placeholder on paper
+                                              : Colors.white.withOpacity(0.3), // White placeholder on dark/images
+                                          fontSize: 16,
                                         ),
+                                        const quill.VerticalSpacing(0, 0),
+                                        const quill.VerticalSpacing(0, 0),
+                                        null,
                                       ),
                                     ),
                                   ),
