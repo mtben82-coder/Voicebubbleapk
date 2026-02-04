@@ -1439,7 +1439,7 @@ class RichTextEditorState extends State<RichTextEditor> with TickerProviderState
                           color: widget.backgroundId == null ? const Color(0xFF1E1E1E) : Colors.transparent,
                           padding: const EdgeInsets.all(16),
                           constraints: BoxConstraints(
-                            minHeight: MediaQuery.of(context).size.height - 200,
+                            minHeight: MediaQuery.of(context).size.height - 100,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
