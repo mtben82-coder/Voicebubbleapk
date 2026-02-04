@@ -36,7 +36,10 @@ class AppStateProvider extends ChangeNotifier {
   bool get isRecording => _isRecording;
   bool get isProcessing => _isProcessing;
   List<ArchivedItem> get archivedItems => _archivedItems;
-  List<RecordingItem> get recordingItems => _recordingItems.where((item) => !item.hiddenInLibrary).toList();
+  // Library items - exclude hidden AND exclude items in projects
+  List<RecordingItem> get recordingItems => _recordingItems.where((item) =>
+    !item.hiddenInLibrary && item.projectId == null
+  ).toList();
   List<RecordingItem> get allRecordingItems => _recordingItems;
 
   List<RecordingItem> get outcomesItems => _recordingItems.where((item) => item.hiddenInLibrary == true).toList();
@@ -306,8 +309,9 @@ ContinueContext? get continueContext => _continueContext;
   }
   
   List<RecordingItem> getRecordingsByTag(String tagId) {
-    return _recordingItems.where((item) => 
-      !item.hiddenInLibrary && item.tags.contains(tagId)
+    // Filter by tag within Library context - exclude hidden and project items
+    return _recordingItems.where((item) =>
+      !item.hiddenInLibrary && item.projectId == null && item.tags.contains(tagId)
     ).toList();
   }
   
