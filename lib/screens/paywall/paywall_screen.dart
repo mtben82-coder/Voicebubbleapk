@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/analytics_service.dart';
 import '../../services/subscription_service.dart';
 
 class PaywallScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logPaywallViewed();
     _initStore();
   }
 
@@ -67,6 +69,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
       for (int i = 0; i < 6; i++) {
         final active = await _subscriptionService.hasActiveSubscription();
         if (active) {
+          // Track subscription purchased
+          AnalyticsService().logSubscriptionPurchased(
+            productId: productId,
+            priceString: _isYearlySelected ? 'yearly' : 'monthly',
+          );
           widget.onSubscribe();
           widget.onClose();
           return;

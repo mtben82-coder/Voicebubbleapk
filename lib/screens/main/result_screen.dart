@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/ai_service.dart';
+import '../../services/analytics_service.dart';
 import '../../services/refinement_service.dart';
 import '../../services/continue_service.dart';
 import '../../services/reminder_manager.dart';
@@ -114,6 +115,15 @@ class _ResultScreenState extends State<ResultScreen> {
         _rewrittenText = rewrittenText;
         _isLoading = false;
       });
+
+      // Track output generated
+      AnalyticsService().logOutputGenerated(
+        presetId: appState.selectedPreset?.id ?? 'unknown',
+        outputLength: _rewrittenText.length,
+        generationTimeMs: 0,
+        wasEnhanced: false,
+        qualityScore: 0,
+      );
 
       // Check if we should show review prompt for extra minute
       _checkAndShowReviewPrompt();
