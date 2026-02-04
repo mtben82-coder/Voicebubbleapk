@@ -350,8 +350,13 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
           context: context,
           builder: (context) => const CreateTagDialog(),
         );
-        // After creating, try again
-        _showTagSelection();
+        // Reload tags from app state (tags are automatically updated by CreateTagDialog)
+        final updatedAppState = context.read<AppStateProvider>();
+        final updatedTags = updatedAppState.tags;
+        // After creating and reloading, try showing tag selection again
+        if (mounted && updatedTags.isNotEmpty) {
+          _showTagSelection();
+        }
       }
       return;
     }
