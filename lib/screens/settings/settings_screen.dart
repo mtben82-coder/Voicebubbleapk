@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../providers/theme_provider.dart';
-import '../../providers/app_state_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/subscription_service.dart';
 import '../onboarding/onboarding_one.dart';
@@ -38,17 +34,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _isLoading = false;
     });
   }
-  
+
+  Future<void> _launchUrl(String urlString) async {
+    try {
+      final url = Uri.parse(urlString);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open: $urlString'),
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // BLUE/BLACK THEME - MATCHING OUR APP COLORS
-    const backgroundColor = Color(0xFF000000); // Pure black
-    const surfaceColor = Color(0xFF1A1A1A); // Dark gray cards
+    const backgroundColor = Color(0xFF000000);
+    const surfaceColor = Color(0xFF1A1A1A);
     const textColor = Colors.white;
     const secondaryTextColor = Color(0xFF94A3B8);
-    const primaryColor = Color(0xFF3B82F6); // Our blue
-    const dividerColor = Color(0xFF334155);
-    
+    const primaryColor = Color(0xFF3B82F6);
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -58,8 +79,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
@@ -70,16 +91,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: Column(
         children: [
           const UsageDisplayWidget(),
-          
-          // Upgrade to Pro Button (FREE users only)
+
+          // Upgrade Button (FREE users only)
           if (!_isLoading && !_isPro)
             Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 64,
-                child: ElevatedButton(
-                  onPressed: () {
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -97,259 +117,179 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+                  borderRadius: BorderRadius.circular(16),
                   child: Ink(
+                    height: 70,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF3B82F6),
-                          Color(0xFF2563EB),
-                          Color(0xFF1D4ED8),
-                        ],
+                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.workspace_premium, size: 28),
-                          const SizedBox(width: 12),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Upgrade to Pro',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.workspace_premium, color: Colors.white, size: 32),
+                        SizedBox(width: 16),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Upgrade to Pro',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
-                              Text(
-                                '90 minutes + Unlimited AI',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
+                            ),
+                            Text(
+                              '90 min + Unlimited AI',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          
+
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
-                // APP & STORE LINKS
-                _buildSectionHeader('APP & STORE', secondaryTextColor),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.download,
-                        title: 'Download App',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://play.google.com/store/apps/details?id=com.voicebubble.app'),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.star_rate,
-                        title: 'Rate App',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://play.google.com/store/apps/details?id=com.voicebubble.app'),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.language,
-                        title: 'Website',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://www.voice-bubble.com'),
-                      ),
-                    ],
-                  ),
+                // APP & STORE
+                _SectionHeader(title: 'APP & STORE', color: secondaryTextColor),
+                _SettingsCard(
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.shop,
+                      title: 'Download App',
+                      onTap: () => _launchUrl('https://play.google.com/store/apps/details?id=com.voicebubble.app'),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.star,
+                      title: 'Rate App',
+                      onTap: () => _launchUrl('https://play.google.com/store/apps/details?id=com.voicebubble.app'),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.language,
+                      title: 'Website',
+                      onTap: () => _launchUrl('https://www.voice-bubble.com'),
+                      isLast: true,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                
-                // SOCIAL MEDIA
-                _buildSectionHeader('SOCIALS', secondaryTextColor),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.alternate_email,
-                        title: 'X (Twitter)',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://x.com/VoiceBubbl53136'),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.camera_alt,
-                        title: 'Instagram',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://www.instagram.com/voicebubble1?igsh=MW81dXcyZG5iczRtbg=='),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.music_note,
-                        title: 'TikTok',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://www.tiktok.com/@voice_bubble?_r=1&_t=ZN-93STKgiHnWR'),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.facebook,
-                        title: 'Facebook',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://www.facebook.com/share/1AdnQ1oodx/'),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.play_circle,
-                        title: 'YouTube',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://youtube.com/@voicebubble1?si=-eSwiUjQfmg1f3Qe'),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.business,
-                        title: 'LinkedIn',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _launchUrl(context, 'https://www.linkedin.com/company/voice-bubble/'),
-                      ),
-                    ],
-                  ),
+
+                const SizedBox(height: 24),
+
+                // SOCIALS
+                _SectionHeader(title: 'SOCIALS', color: secondaryTextColor),
+                _SettingsCard(
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.tag,
+                      title: 'X (Twitter)',
+                      onTap: () => _launchUrl('https://x.com/VoiceBubbl53136'),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.camera_alt,
+                      title: 'Instagram',
+                      onTap: () => _launchUrl('https://www.instagram.com/voicebubble1?igsh=MW81dXcyZG5iczRtbg=='),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.music_note,
+                      title: 'TikTok',
+                      onTap: () => _launchUrl('https://www.tiktok.com/@voice_bubble?_r=1&_t=ZN-93STKgiHnWR'),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.facebook,
+                      title: 'Facebook',
+                      onTap: () => _launchUrl('https://www.facebook.com/share/1AdnQ1oodx/'),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.play_circle_filled,
+                      title: 'YouTube',
+                      onTap: () => _launchUrl('https://youtube.com/@voicebubble1?si=-eSwiUjQfmg1f3Qe'),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.business,
+                      title: 'LinkedIn',
+                      onTap: () => _launchUrl('https://www.linkedin.com/company/voice-bubble/'),
+                      isLast: true,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                
+
+                const SizedBox(height: 24),
+
                 // LEGAL & SUPPORT
-                _buildSectionHeader('LEGAL & SUPPORT', secondaryTextColor),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.help_outline,
-                        title: 'Help & Support',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const HelpScreen()),
-                          );
-                        },
+                _SectionHeader(title: 'LEGAL & SUPPORT', color: secondaryTextColor),
+                _SettingsCard(
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.help_outline,
+                      title: 'Help & Support',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HelpScreen()),
                       ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.privacy_tip_outlined,
-                        title: 'Privacy Policy',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
-                          );
-                        },
+                    ),
+                    _SettingsTile(
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy Policy',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PrivacyScreen()),
                       ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.description_outlined,
-                        title: 'Terms & Conditions',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const TermsScreen()),
-                          );
-                        },
+                    ),
+                    _SettingsTile(
+                      icon: Icons.description_outlined,
+                      title: 'Terms & Conditions',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TermsScreen()),
                       ),
-                    ],
-                  ),
+                      isLast: true,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                
-                // ACCOUNT SETTINGS
-                _buildSectionHeader('ACCOUNT', secondaryTextColor),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.manage_accounts,
-                        title: 'Account Management',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AccountManagementScreen()),
-                          );
-                        },
+
+                const SizedBox(height: 24),
+
+                // ACCOUNT
+                _SectionHeader(title: 'ACCOUNT', color: secondaryTextColor),
+                _SettingsCard(
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.manage_accounts,
+                      title: 'Account Management',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AccountManagementScreen()),
                       ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.cleaning_services_outlined,
-                        title: 'Clear Cache',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _showClearCacheDialog(context),
-                      ),
-                      Divider(height: 1, color: dividerColor),
-                      _buildSettingsItem(
-                        icon: Icons.logout,
-                        title: 'Sign Out',
-                        textColor: textColor,
-                        secondaryTextColor: secondaryTextColor,
-                        onTap: () => _showSignOutDialog(context),
-                      ),
-                    ],
-                  ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.cleaning_services_outlined,
+                      title: 'Clear Cache',
+                      onTap: () => _showClearCacheDialog(),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.logout,
+                      title: 'Sign Out',
+                      onTap: () => _showSignOutDialog(),
+                      isLast: true,
+                    ),
+                  ],
                 ),
+
                 const SizedBox(height: 40),
               ],
             ),
@@ -359,74 +299,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: color,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSettingsItem({
-    required IconData icon,
-    required String title,
-    Widget? trailing,
-    required Color textColor,
-    required Color secondaryTextColor,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: textColor, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: textColor,
-                ),
-              ),
-            ),
-            trailing ?? Icon(
-              Icons.chevron_right,
-              color: secondaryTextColor,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // URL Launcher helper
-  Future<void> _launchUrl(BuildContext context, String urlString) async {
-    try {
-      final url = Uri.parse(urlString);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      debugPrint('Error launching URL: $e');
-    }
-  }
-
-  void _showClearCacheDialog(BuildContext context) {
+  void _showClearCacheDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Clear Cache', style: TextStyle(color: Colors.white)),
         content: const Text(
           'This will clear temporary files and free up storage space.',
@@ -438,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('Cancel', style: TextStyle(color: Color(0xFF94A3B8))),
           ),
           TextButton(
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -454,11 +332,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showSignOutDialog(BuildContext context) {
+  void _showSignOutDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Sign Out', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Are you sure you want to sign out?',
@@ -474,17 +353,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               try {
                 await AuthService().signOut();
-                if (context.mounted) {
+                if (mounted) {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => OnboardingOne(onNext: () {})),
                     (route) => false,
                   );
                 }
               } catch (e) {
-                if (context.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error: ${e.toString()}'),
+                      content: Text('Error: $e'),
                       backgroundColor: const Color(0xFFEF4444),
                     ),
                   );
@@ -495,6 +374,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Section Header Widget
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final Color color;
+
+  const _SectionHeader({required this.title, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12, top: 0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+// Settings Card Widget
+class _SettingsCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SettingsCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+// Settings Tile Widget
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final bool isLast;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.vertical(
+              top: const Radius.circular(16),
+              bottom: isLast ? const Radius.circular(16) : Radius.zero,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(icon, color: const Color(0xFF3B82F6), size: 24),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Color(0xFF94A3B8),
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: Colors.white.withOpacity(0.05),
+            indent: 60,
+          ),
+      ],
     );
   }
 }
