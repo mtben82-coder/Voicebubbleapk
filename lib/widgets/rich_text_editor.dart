@@ -994,59 +994,54 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.image_outlined, color: Color(0xFF10B981)),
-                title: const Text('Add Image from Gallery', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _insertImageAtCursor();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF3B82F6)),
-                title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _takePhotoAtCursor();
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  _isRecordingVoiceNote ? Icons.stop_circle : Icons.mic_outlined,
-                  color: _isRecordingVoiceNote ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+        return StatefulBuilder(
+          builder: (context, setModalState) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.image_outlined, color: Color(0xFF10B981)),
+                  title: const Text('Add Image from Gallery', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _insertImageAtCursor();
+                  },
                 ),
-                title: Text(
-                  _isRecordingVoiceNote ? 'Stop Voice Recording' : 'Record Voice Note',
-                  style: const TextStyle(color: Colors.white),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF3B82F6)),
+                  title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _takePhotoAtCursor();
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _toggleVoiceNoteRecording();
-                  // Don't close menu if starting recording - show recording UI
-                  if (!_isRecordingVoiceNote) {
-                    // Starting recording - keep menu open or show recording overlay
-                    Future.delayed(const Duration(milliseconds: 100), () {
-                      if (_isRecordingVoiceNote) {
-                        _showVoiceRecordingOverlay();
-                      }
-                    });
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.check_box_outlined, color: Color(0xFF8B5CF6)),
-                title: const Text('Add Checkbox', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _insertCheckboxAtCursor();
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
+                ListTile(
+                  leading: Icon(
+                    _isRecordingVoiceNote ? Icons.stop_circle : Icons.mic_outlined,
+                    color: _isRecordingVoiceNote ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                  ),
+                  title: Text(
+                    _isRecordingVoiceNote ? 'Stop Voice Recording' : 'Record Voice Note',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    // DON'T close menu - keep it open during recording
+                    await _toggleVoiceNoteRecording();
+                    // Update the modal state to reflect recording changes
+                    setModalState(() {});
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.check_box_outlined, color: Color(0xFF8B5CF6)),
+                  title: const Text('Add Checkbox', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _insertCheckboxAtCursor();
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         );
       },
@@ -1560,10 +1555,13 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                         const SizedBox(width: 16),
                       ],
                       
-                      // Word/character count on LEFT SIDE
-                      Text(
-                        '$_wordCount words • $_characterCount characters',
-                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                      // Word/character count on LEFT SIDE (moved further left from mic)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 24), // More space from mic icon
+                        child: Text(
+                          '$_wordCount words • $_characterCount characters',
+                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                        ),
                       ),
                       const Spacer(),
                     ],
