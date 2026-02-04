@@ -191,6 +191,9 @@ class _RecordingScreenState extends State<RecordingScreen>
             listenFor: const Duration(minutes: 5), // Max 5 minutes
           );
         }
+      } catch (e) {
+        print('Error starting live speech: $e');
+      }
 
       setState(() {
         _isRecording = true;
