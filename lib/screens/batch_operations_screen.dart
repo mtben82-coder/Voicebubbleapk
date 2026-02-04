@@ -6,6 +6,8 @@ import '../services/batch_operations_service.dart';
 import '../providers/app_state_provider.dart';
 import '../services/export_service.dart';
 import '../services/project_service.dart';
+import '../widgets/create_project_dialog.dart';
+import '../widgets/create_tag_dialog.dart';
 
 class BatchOperationsScreen extends StatefulWidget {
   final List<RecordingItem> allNotes;
@@ -310,12 +312,47 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
     final availableTags = appState.tags;
 
     if (availableTags.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No tags available. Create tags first in Library.'),
-          backgroundColor: Color(0xFFF97316),
+      // Show create tag option instead of just error message
+      final shouldCreate = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            'No Tags Available',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'You don\'t have any tags yet. Would you like to create one now?',
+            style: TextStyle(color: Color(0xFF94A3B8)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF94A3B8)),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Create Tag',
+                style: TextStyle(color: Color(0xFF3B82F6)),
+              ),
+            ),
+          ],
         ),
       );
+
+      if (shouldCreate == true && mounted) {
+        // Show create tag dialog
+        await showDialog(
+          context: context,
+          builder: (context) => const CreateTagDialog(),
+        );
+        // After creating, try again
+        _showTagSelection();
+      }
       return;
     }
 
@@ -389,12 +426,47 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
     final projects = await _projectService.getAllProjects();
 
     if (projects.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No projects available. Create a project first.'),
-          backgroundColor: Color(0xFFF97316),
+      // Show create project option instead of just error message
+      final shouldCreate = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          title: const Text(
+            'No Projects Available',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'You don\'t have any projects yet. Would you like to create one now?',
+            style: TextStyle(color: Color(0xFF94A3B8)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF94A3B8)),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Create Project',
+                style: TextStyle(color: Color(0xFF8B5CF6)),
+              ),
+            ),
+          ],
         ),
       );
+
+      if (shouldCreate == true && mounted) {
+        // Show create project dialog
+        await showDialog(
+          context: context,
+          builder: (context) => const CreateProjectDialog(),
+        );
+        // After creating, try again
+        _showProjectSelection();
+      }
       return;
     }
 
