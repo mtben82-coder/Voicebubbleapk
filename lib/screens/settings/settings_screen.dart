@@ -957,15 +957,52 @@ class SettingsScreen extends StatelessWidget {
   
   // URL Launcher helper
   Future<void> _launchUrl(String urlString) async {
+    debugPrint('🔗 Attempting to launch URL: $urlString');
+    
     try {
       final url = Uri.parse(urlString);
-      if (await canLaunchUrl(url)) {
+      debugPrint('🔗 Parsed URL: $url');
+      
+      final canLaunch = await canLaunchUrl(url);
+      debugPrint('🔗 Can launch URL: $canLaunch');
+      
+      if (canLaunch) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
+        debugPrint('🔗 Successfully launched URL');
+        
+        // Show success feedback
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Opening link...'),
+              backgroundColor: const Color(0xFF10B981),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
       } else {
-        debugPrint('Could not launch $urlString');
+        // Show error to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open $urlString'),
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+          );
+        }
+        debugPrint('❌ Could not launch $urlString');
       }
     } catch (e) {
-      debugPrint('Error launching URL: $e');
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening link: ${e.toString()}'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+      debugPrint('❌ Error launching URL: $e');
     }
   }
   
