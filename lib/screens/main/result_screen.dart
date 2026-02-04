@@ -451,21 +451,20 @@ class _ResultScreenState extends State<ResultScreen> {
     await Future.delayed(const Duration(milliseconds: 1500));
 
     if (mounted) {
-      final continueContext = context.read<AppStateProvider>().continueContext;
-      
-      // If we continued from a single item, navigate back to that document
-      if (continueContext?.singleItemId != null) {
-        // Clear continue context first
-        context.read<AppStateProvider>().clearContinueContext();
-        
-        // Navigate back to the original document
+      final appState = context.read<AppStateProvider>();
+      final continueContext = appState.continueContext;
+      final originalItemId = continueContext?.singleItemId;
+
+      // Clear context
+      appState.clearContinueContext();
+
+      // If continued from a document, go back to that document
+      if (originalItemId != null) {
         Navigator.of(context).popUntil((route) => route.isFirst);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecordingDetailScreen(
-              recordingId: continueContext!.singleItemId!,
-            ),
+            builder: (context) => RecordingDetailScreen(recordingId: originalItemId),
           ),
         );
       } else {
@@ -657,18 +656,22 @@ class _ResultScreenState extends State<ResultScreen> {
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           onPressed: () {
-                            final continueContext = context.read<AppStateProvider>().continueContext;
-                            
-                            // Clear continue context first
-                            context.read<AppStateProvider>().clearContinueContext();
-                            
-                            // If we continued from a single item, navigate back to that document
-                            if (continueContext?.singleItemId != null) {
-                              // Pop back to the editor (should be 2 screens back: result -> preset -> recording -> editor)
-                              Navigator.of(context).pop(); // Close result
-                              Navigator.of(context).pop(); // Close preset selection  
-                              Navigator.of(context).pop(); // Close recording screen
-                              // Now we're back at the editor!
+                            final appState = context.read<AppStateProvider>();
+                            final continueContext = appState.continueContext;
+                            final originalItemId = continueContext?.singleItemId;
+
+                            // Clear context
+                            appState.clearContinueContext();
+
+                            // If continued from a document, go back to that document
+                            if (originalItemId != null) {
+                              Navigator.of(context).popUntil((route) => route.isFirst);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RecordingDetailScreen(recordingId: originalItemId),
+                                ),
+                              );
                             } else {
                               // Regular flow - go to main screen
                               Navigator.of(context).popUntil((route) => route.isFirst);
