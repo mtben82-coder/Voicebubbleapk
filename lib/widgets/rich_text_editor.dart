@@ -402,10 +402,10 @@ class RichTextEditor extends StatefulWidget {
   });
 
   @override
-  State<RichTextEditor> createState() => _RichTextEditorState();
+  State<RichTextEditor> createState() => RichTextEditorState();
 }
 
-class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStateMixin {
+class RichTextEditorState extends State<RichTextEditor> with TickerProviderStateMixin {
   late quill.QuillController _controller;
   final FocusNode _focusNode = FocusNode();
   Timer? _saveTimer;
@@ -564,7 +564,7 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
 
   Future<void> _saveContent() async {
     if (!mounted) return;
-    
+
     try {
       final deltaJson = jsonEncode(_controller.document.toDelta().toJson());
       final plainText = _controller.document.toPlainText().trim();
@@ -584,6 +584,11 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     } catch (e) {
       debugPrint('Save error: $e');
     }
+  }
+
+  /// Public method to force save - called before continue flow
+  Future<void> forceSave() async {
+    await _saveContent();
   }
 
   Future<void> _showAIMenu() async {

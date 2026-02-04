@@ -14,6 +14,7 @@ import '../../widgets/add_tag_bottom_sheet.dart';
 import '../../widgets/add_to_project_dialog.dart';
 import '../../widgets/rich_text_editor.dart';
 import '../../services/continue_service.dart';
+import '../../models/continue_context.dart';
 import '../../services/reminder_manager.dart';
 import '../../constants/presets.dart';
 import 'recording_screen.dart';
@@ -40,6 +41,7 @@ class RecordingDetailScreen extends StatefulWidget {
 class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
   bool _isEditingTitle = false;
   late TextEditingController _titleController;
+  final GlobalKey<RichTextEditorState> _editorKey = GlobalKey<RichTextEditorState>();
   
   @override
   void initState() {
@@ -403,6 +405,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
   Widget _buildContentEditor(RecordingItem item, AppStateProvider appState) {
     // ALWAYS use RichTextEditor with context-aware features
     return RichTextEditor(
+      key: _editorKey,
       initialFormattedContent: item.formattedContent,
       initialPlainText: item.finalText,
       onSave: (plainText, deltaJson) => _saveContent(appState, item, plainText, deltaJson),
@@ -574,11 +577,24 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
 
   void _handleContinue(BuildContext context, AppStateProvider appState, RecordingItem item) async {
     try {
-      // Build continue context from this single item
-      final continueService = ContinueService();
-      final continueContext = await continueService.buildContextFromItem(item.id);
+      // FORCE SAVE EDITOR CONTENT FIRST
+      await _editorKey.currentState?.forceSave();
 
-      // Set the context
+      // Small delay to ensure Hive write completes
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Reload item from state to get latest saved content
+      final freshItem = appState.allRecordingItems.firstWhere(
+        (r) => r.id == item.id,
+        orElse: () => item,
+      );
+
+      // Build context with FRESH content
+      final continueContext = ContinueContext(
+        singleItemId: freshItem.id,
+        contextTexts: [freshItem.finalText],
+      );
+
       appState.setContinueContext(continueContext);
 
       // Navigate to recording screen (PUSH, not replace - so we can come back)
@@ -599,7 +615,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error setting up continue: $e'),
+            content: Text('Error: $e'),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );

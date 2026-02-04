@@ -369,25 +369,28 @@ ContinueContext? get continueContext => _continueContext;
   Future<void> addItemToProject(String projectId, String itemId) async {
     final projectBox = await Hive.openBox<Project>('projects');
     final project = projectBox.get(projectId);
-    
+
     if (project != null && !project.itemIds.contains(itemId)) {
       final updatedProject = project.copyWith(
         itemIds: [...project.itemIds, itemId],
         updatedAt: DateTime.now(),
       );
       await projectBox.put(projectId, updatedProject);
-      
-      // Update recording item
+
+      // Update recording item - hide from Library when in a project
       final recordingBox = await Hive.openBox<RecordingItem>('recording_items');
       for (final key in recordingBox.keys) {
         final item = recordingBox.get(key);
         if (item?.id == itemId) {
-          final updatedItem = item!.copyWith(projectId: projectId);
+          final updatedItem = item!.copyWith(
+            projectId: projectId,
+            hiddenInLibrary: true,  // Hide from Library when in a project
+          );
           await recordingBox.put(key, updatedItem);
           break;
         }
       }
-      
+
       await _loadProjects();
       await _loadRecordingItems();
       notifyListeners();
