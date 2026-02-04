@@ -580,9 +580,9 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       // Set the context
       appState.setContinueContext(continueContext);
       
-      // Navigate to recording screen
+      // Navigate to recording screen (PUSH, not replace - so we can come back)
       if (context.mounted) {
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => const RecordingScreen(),

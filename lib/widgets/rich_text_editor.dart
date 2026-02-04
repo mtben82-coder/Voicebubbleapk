@@ -901,6 +901,68 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
     }
   }
 
+  void _showVoiceRecordingOverlay() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Pulsing mic icon
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444).withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.mic,
+                color: Color(0xFFEF4444),
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Recording Voice Note...',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tap Stop when finished',
+              style: TextStyle(
+                color: Color(0xFF94A3B8),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context); // Close overlay
+                _toggleVoiceNoteRecording(); // Stop recording
+              },
+              icon: const Icon(Icons.stop, color: Colors.white),
+              label: const Text('Stop Recording', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _insertCheckboxAtCursor() {
     final index = _controller.selection.baseOffset;
     // Use Quill's built-in checkbox attribute
@@ -952,6 +1014,15 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
                 onTap: () {
                   Navigator.pop(context);
                   _toggleVoiceNoteRecording();
+                  // Don't close menu if starting recording - show recording UI
+                  if (!_isRecordingVoiceNote) {
+                    // Starting recording - keep menu open or show recording overlay
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      if (_isRecordingVoiceNote) {
+                        _showVoiceRecordingOverlay();
+                      }
+                    });
+                  }
                 },
               ),
               ListTile(
