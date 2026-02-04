@@ -9,12 +9,14 @@ import '../../models/preset.dart';
 import '../../services/analytics_service.dart';
 import '../../services/native_overlay_service.dart';
 import '../../services/ai_service.dart';
+import '../../services/share_handler_service.dart';
 import '../../widgets/continue_banner.dart';
 import '../../widgets/language_selector_popup.dart';
 import '../main/recording_screen.dart';
 import '../main/preset_selection_screen.dart';
 import '../settings/settings_screen.dart';
 import '../paywall/paywall_screen.dart';
+import '../import/import_content_screen.dart';
 import '../../services/feature_gate.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -608,7 +610,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
               const SizedBox(height: 24),
-              // Upload Audio File option (Pro feature)
+
+              // ════════════════════════════════════════════════════
+              // IMPORT FILES - NEW
+              // ════════════════════════════════════════════════════
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.file_download, color: Color(0xFF8B5CF6)),
+                ),
+                title: Text(
+                  'Import Files',
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Text(
+                  'PDF, Word, text, images',
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.6),
+                    fontSize: 13,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImportFile();
+                },
+              ),
+              Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+
+              // ════════════════════════════════════════════════════
+              // UPLOAD AUDIO - EXISTING (with Pro badge)
+              // ════════════════════════════════════════════════════
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -621,19 +660,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     children: [
                       const Icon(Icons.upload_file, color: Color(0xFFF59E0B)),
                       Positioned(
-                        right: -4,
-                        top: -4,
-                        child: Icon(
-                          Icons.workspace_premium,
-                          size: 12,
-                          color: const Color(0xFFFFD700),
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFD700),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.workspace_premium, size: 10, color: Colors.black),
                         ),
                       ),
                     ],
                   ),
                 ),
                 title: Text(
-                  'Upload Audio File',
+                  'Upload Audio',
                   style: TextStyle(
                     color: textColor,
                     fontWeight: FontWeight.w600,
@@ -641,9 +683,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 subtitle: Text(
-                  'Pro feature • Transcribe audio files',
+                  'Pro feature - Transcribe audio files',
                   style: TextStyle(
-                    color: const Color(0xFFF59E0B),
+                    color: textColor.withOpacity(0.6),
                     fontSize: 13,
                   ),
                 ),
@@ -677,8 +719,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   _pickAudioFile();
                 },
               ),
-              const Divider(height: 1),
-              // Activate Voice Bubble option (Android only)
+              Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+
+              // ════════════════════════════════════════════════════
+              // ACTIVATE BUBBLE - EXISTING (Android only)
+              // ════════════════════════════════════════════════════
               if (Platform.isAndroid)
                 ListTile(
                   leading: Container(
@@ -701,15 +746,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   subtitle: Text(
-                    _overlayEnabled ? 'Turn off floating bubble' : 'Enable floating voice bubble',
+                    _overlayEnabled
+                        ? 'Bubble is active - Tap to disable'
+                        : 'Floating record button',
                     style: TextStyle(
                       color: textColor.withOpacity(0.6),
                       fontSize: 13,
                     ),
                   ),
-                  trailing: _overlayEnabled 
-                    ? const Icon(Icons.check_circle, color: Color(0xFF10B981))
-                    : null,
                   onTap: () async {
                     Navigator.pop(context);
                     await _toggleOverlay();
@@ -717,12 +761,114 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     await _checkOverlayStatus();
                   },
                 ),
+
               const SizedBox(height: 16),
             ],
           ),
         );
       },
     );
+  }
+
+  /// Pick and import files (PDF, Word, text, images)
+  Future<void> _pickImportFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: [
+          // Documents
+          'pdf', 'doc', 'docx',
+          // Text
+          'txt', 'md', 'rtf',
+          // Images
+          'jpg', 'jpeg', 'png', 'gif', 'webp',
+        ],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final filePath = result.files.single.path!;
+        final fileName = result.files.single.name;
+        final extension = result.files.single.extension?.toLowerCase() ?? '';
+
+        if (!mounted) return;
+
+        // Determine content type from extension
+        SharedContentType contentType;
+        String mimeType;
+
+        switch (extension) {
+          case 'jpg':
+          case 'jpeg':
+            contentType = SharedContentType.image;
+            mimeType = 'image/jpeg';
+            break;
+          case 'png':
+            contentType = SharedContentType.image;
+            mimeType = 'image/png';
+            break;
+          case 'gif':
+            contentType = SharedContentType.image;
+            mimeType = 'image/gif';
+            break;
+          case 'webp':
+            contentType = SharedContentType.image;
+            mimeType = 'image/webp';
+            break;
+          case 'pdf':
+            contentType = SharedContentType.pdf;
+            mimeType = 'application/pdf';
+            break;
+          case 'doc':
+            contentType = SharedContentType.document;
+            mimeType = 'application/msword';
+            break;
+          case 'docx':
+            contentType = SharedContentType.document;
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            break;
+          case 'txt':
+            contentType = SharedContentType.text;
+            mimeType = 'text/plain';
+            break;
+          case 'md':
+            contentType = SharedContentType.text;
+            mimeType = 'text/markdown';
+            break;
+          case 'rtf':
+            contentType = SharedContentType.text;
+            mimeType = 'text/rtf';
+            break;
+          default:
+            contentType = SharedContentType.unknown;
+            mimeType = 'application/octet-stream';
+        }
+
+        // Navigate to import screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ImportContentScreen(
+              content: SharedContent(
+                type: contentType,
+                filePath: filePath,
+                fileName: fileName,
+                mimeType: mimeType,
+              ),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error picking file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
   
   Widget _buildPresetCard(

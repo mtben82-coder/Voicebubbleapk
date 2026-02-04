@@ -1,0 +1,209 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+
+/// Handles files shared TO VoiceBubble from other apps
+class ShareHandlerService {
+  static final ShareHandlerService _instance = ShareHandlerService._internal();
+  factory ShareHandlerService() => _instance;
+  ShareHandlerService._internal();
+
+  StreamSubscription? _mediaSubscription;
+  StreamSubscription? _textSubscription;
+  bool _initialized = false;
+
+  final _pendingShareController = StreamController<SharedContent>.broadcast();
+  Stream<SharedContent> get pendingShares => _pendingShareController.stream;
+
+  /// Initialize - call once at app startup in main()
+  void initialize() {
+    if (_initialized) {
+      debugPrint('ShareHandlerService already initialized');
+      return;
+    }
+
+    debugPrint('Initializing ShareHandlerService...');
+
+    // Listen for shares while app is running
+    _mediaSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen(_handleSharedMedia, onError: (err) {
+      debugPrint('Share media stream error: $err');
+    });
+
+    _textSubscription = ReceiveSharingIntent.instance
+        .getTextStream()
+        .listen(_handleSharedText, onError: (err) {
+      debugPrint('Share text stream error: $err');
+    });
+
+    // Handle shares that opened the app (cold start)
+    _checkInitialShares();
+
+    _initialized = true;
+    debugPrint('ShareHandlerService initialized');
+  }
+
+  Future<void> _checkInitialShares() async {
+    // Check for shared media files
+    final initialMedia = await ReceiveSharingIntent.instance.getInitialMedia();
+    if (initialMedia.isNotEmpty) {
+      debugPrint('App opened with ${initialMedia.length} shared file(s)');
+      _handleSharedMedia(initialMedia);
+    }
+
+    // Check for shared text
+    final initialText = await ReceiveSharingIntent.instance.getInitialText();
+    if (initialText != null && initialText.isNotEmpty) {
+      debugPrint('App opened with shared text');
+      _handleSharedText(initialText);
+    }
+  }
+
+  void _handleSharedMedia(List<SharedMediaFile> files) {
+    if (files.isEmpty) return;
+
+    debugPrint('Received ${files.length} shared file(s):');
+
+    for (final file in files) {
+      debugPrint('  Path: ${file.path}');
+      debugPrint('  MIME: ${file.mimeType}');
+      debugPrint('  Type: ${file.type}');
+
+      final content = SharedContent(
+        type: _getContentType(file.mimeType, file.type),
+        filePath: file.path,
+        mimeType: file.mimeType,
+        fileName: _extractFileName(file.path),
+      );
+
+      _pendingShareController.add(content);
+    }
+
+    // Reset so we don't process again
+    ReceiveSharingIntent.instance.reset();
+  }
+
+  void _handleSharedText(String text) {
+    if (text.isEmpty) return;
+
+    debugPrint('Received shared text (${text.length} chars)');
+
+    final content = SharedContent(
+      type: SharedContentType.text,
+      text: text,
+    );
+
+    _pendingShareController.add(content);
+    ReceiveSharingIntent.instance.reset();
+  }
+
+  SharedContentType _getContentType(String? mimeType, SharedMediaType? mediaType) {
+    // Check media type first
+    if (mediaType == SharedMediaType.image) return SharedContentType.image;
+    if (mediaType == SharedMediaType.video) return SharedContentType.video;
+
+    // Fall back to MIME type
+    if (mimeType == null) return SharedContentType.unknown;
+
+    final mime = mimeType.toLowerCase();
+
+    if (mime.startsWith('text/')) return SharedContentType.text;
+    if (mime.startsWith('image/')) return SharedContentType.image;
+    if (mime.startsWith('audio/')) return SharedContentType.audio;
+    if (mime.startsWith('video/')) return SharedContentType.video;
+    if (mime.contains('pdf')) return SharedContentType.pdf;
+    if (mime.contains('word') || mime.contains('document') || mime.contains('msword')) {
+      return SharedContentType.document;
+    }
+
+    return SharedContentType.unknown;
+  }
+
+  String _extractFileName(String path) {
+    return path.split('/').last;
+  }
+
+  void dispose() {
+    _mediaSubscription?.cancel();
+    _textSubscription?.cancel();
+    _pendingShareController.close();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// SHARED CONTENT MODELS
+// ════════════════════════════════════════════════════════════════
+
+enum SharedContentType {
+  text,
+  image,
+  audio,
+  video,
+  pdf,
+  document,
+  unknown,
+}
+
+class SharedContent {
+  final SharedContentType type;
+  final String? filePath;
+  final String? text;
+  final String? mimeType;
+  final String? fileName;
+
+  SharedContent({
+    required this.type,
+    this.filePath,
+    this.text,
+    this.mimeType,
+    this.fileName,
+  });
+
+  /// Display name for UI
+  String get displayName {
+    switch (type) {
+      case SharedContentType.text: return 'Text';
+      case SharedContentType.image: return 'Image';
+      case SharedContentType.audio: return 'Audio';
+      case SharedContentType.video: return 'Video';
+      case SharedContentType.pdf: return 'PDF';
+      case SharedContentType.document: return 'Document';
+      case SharedContentType.unknown: return 'File';
+    }
+  }
+
+  /// Icon for UI
+  IconData get icon {
+    switch (type) {
+      case SharedContentType.text: return Icons.text_fields;
+      case SharedContentType.image: return Icons.image;
+      case SharedContentType.audio: return Icons.audiotrack;
+      case SharedContentType.video: return Icons.videocam;
+      case SharedContentType.pdf: return Icons.picture_as_pdf;
+      case SharedContentType.document: return Icons.description;
+      case SharedContentType.unknown: return Icons.insert_drive_file;
+    }
+  }
+
+  /// Color for UI
+  Color get color {
+    switch (type) {
+      case SharedContentType.text: return const Color(0xFF3B82F6); // Blue
+      case SharedContentType.image: return const Color(0xFF10B981); // Green
+      case SharedContentType.audio: return const Color(0xFFF59E0B); // Amber
+      case SharedContentType.video: return const Color(0xFFEC4899); // Pink
+      case SharedContentType.pdf: return const Color(0xFFEF4444); // Red
+      case SharedContentType.document: return const Color(0xFF8B5CF6); // Purple
+      case SharedContentType.unknown: return const Color(0xFF64748B); // Gray
+    }
+  }
+
+  /// Whether this content can be transcribed
+  bool get canTranscribe => type == SharedContentType.audio;
+
+  /// Whether this content can be processed by AI
+  bool get canProcessWithAI => type == SharedContentType.text ||
+                                type == SharedContentType.audio;
+}
