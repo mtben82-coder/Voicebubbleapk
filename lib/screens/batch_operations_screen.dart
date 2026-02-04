@@ -464,8 +464,12 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
           context: context,
           builder: (context) => const CreateProjectDialog(),
         );
-        // After creating, try again
-        _showProjectSelection();
+        // Reload projects
+        final projects = await _projectService.getAllProjects();
+        // After creating and reloading, try showing project selection again
+        if (mounted && projects.isNotEmpty) {
+          _showProjectSelection();
+        }
       }
       return;
     }

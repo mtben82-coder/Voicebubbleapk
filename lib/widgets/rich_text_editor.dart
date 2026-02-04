@@ -595,8 +595,8 @@ class _RichTextEditorState extends State<RichTextEditor> with TickerProviderStat
       builder: (ctx) => Align(
         alignment: Alignment.bottomRight,
         child: Container(
-          margin: const EdgeInsets.only(right: 16, bottom: 120), // Position in bottom-right
-          width: MediaQuery.of(context).size.width * 0.4, // 40% of screen width
+          margin: const EdgeInsets.only(right: 16, bottom: 120),
+          width: 140, // SMALL COMPACT WIDTH
           child: Material(
             color: Colors.transparent,
             child: _AIMenuSheet(
@@ -1631,11 +1631,11 @@ class _AIMenuSheetState extends State<_AIMenuSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(8), // Reduced from 16
-      padding: const EdgeInsets.all(12), // Reduced from 16
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(12), // Slightly smaller radius
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.5), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
@@ -1646,13 +1646,60 @@ class _AIMenuSheetState extends State<_AIMenuSheet> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header - smaller
-          const Row(
-            children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF8B5CF6), size: 16), // Smaller icon
-              SizedBox(width: 6),
-              Text('AI Actions', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)), // Smaller text
+          // Compact button grid - 5 presets
+          _buildCompactButton('✨ Magic', 'magic'),
+          const SizedBox(height: 4),
+          _buildCompactButton('📏 Shorten', 'shorten'),
+          const SizedBox(height: 4),
+          _buildCompactButton('📝 Expand', 'expand'),
+          const SizedBox(height: 4),
+          _buildCompactButton('💼 Professional', 'pro'),
+          const SizedBox(height: 4),
+          _buildCompactButton('😊 Casual', 'casual'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactButton(String label, String id) {
+    final isActive = _active == id;
+    return InkWell(
+      onTap: _loading ? null : () => _run(id),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF8B5CF6).withOpacity(0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_loading && isActive)
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF8B5CF6),
+                ),
+              )
+            else
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
             ],
           ),
           const SizedBox(height: 12), // Reduced spacing
