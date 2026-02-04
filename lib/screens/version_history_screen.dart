@@ -289,22 +289,28 @@ class _VersionHistoryScreenState extends State<VersionHistoryScreen> {
   Future<void> _restoreVersion(VersionSnapshot version) async {
     try {
       final appState = context.read<AppStateProvider>();
-      
+
+      // Get FRESH note from appState, not widget.note which may be stale
+      final freshNote = appState.allRecordingItems.firstWhere(
+        (item) => item.id == widget.note.id,
+        orElse: () => widget.note,
+      );
+
       // Save current version before restoring
-      await _versionService.saveVersion(widget.note, 'Before restore');
-      
-      // Update note with restored content (FIX: Use updateRecording not saveRecording)
-      final updatedNote = widget.note.copyWith(
+      await _versionService.saveVersion(freshNote, 'Before restore');
+
+      // Update note with restored content
+      final updatedNote = freshNote.copyWith(
         finalText: version.content,
         formattedContent: version.formattedContent,
       );
-      
+
       await appState.updateRecording(updatedNote);
-      
+
       if (mounted) {
-        // Navigate back to note screen to force rebuild
-        Navigator.pop(context);
-        
+        // Pop with result to tell detail screen to rebuild
+        Navigator.pop(context, true);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Version restored successfully'),

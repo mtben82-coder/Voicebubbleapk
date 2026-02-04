@@ -216,13 +216,20 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          onPressed: () {
-                            Navigator.push(
+                          onPressed: () async {
+                            final restored = await Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => VersionHistoryScreen(note: item),
                               ),
                             );
+
+                            // If version was restored, force editor rebuild
+                            if (restored == true && mounted) {
+                              setState(() {
+                                _editorRebuildKey++;
+                              });
+                            }
                           },
                           icon: Icon(Icons.history, color: primaryColor, size: 18),
                           tooltip: 'Version History',
