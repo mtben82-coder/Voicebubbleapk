@@ -318,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // VoiceBubble text with tagline + Record Icon
+                  // VoiceBubble text with tagline + Record Icon + MIC ANIMATION
                   Row(
                     children: [
                       Icon(
@@ -348,6 +348,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(width: 16),
+                      // MIC ANIMATION - Small white mic with pulsing circle
+                      Consumer<AppStateProvider>(
+                        builder: (context, appState, _) {
+                          final isRecording = appState.isRecording;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(isRecording ? 0.3 : 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.mic,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
