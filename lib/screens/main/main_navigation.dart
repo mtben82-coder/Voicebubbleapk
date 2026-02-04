@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/analytics_service.dart';
 import 'home_screen.dart';
 import 'outcomes_screen.dart';
 import 'library_screen.dart';
@@ -92,6 +93,8 @@ class _MainNavigationState extends State<MainNavigation> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
+          final tabNames = ['Library', 'Record', 'Outcomes'];
+          AnalyticsService().logTabSelected(tabName: tabNames[index]);
           setState(() {
             _currentIndex = index;
           });

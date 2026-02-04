@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/project.dart';
 import '../../models/recording_item.dart';
+import '../../services/analytics_service.dart';
 import '../../services/project_service.dart';
 import '../../services/continue_service.dart';
 import '../../widgets/outcome_chip.dart';
@@ -57,6 +58,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       _items = items;
       _isLoading = false;
     });
+
+    // Track project opened
+    AnalyticsService().logProjectOpened(itemCount: items.length);
   }
 
 

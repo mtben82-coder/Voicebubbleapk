@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'analytics_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -107,6 +108,10 @@ class AuthService {
         password: password,
       );
 
+      // Track user for analytics
+      AnalyticsService().setUserId(userCredential.user?.uid);
+      AnalyticsService().setUserProperty(name: 'sign_in_method', value: 'email');
+
       // Ensure user document exists
       await _ensureUserDocument(userCredential.user!);
 
@@ -153,6 +158,10 @@ class AuthService {
       // Sign in to Firebase with the Google credential
       final userCredential = await _auth.signInWithCredential(credential);
 
+      // Track user for analytics
+      AnalyticsService().setUserId(userCredential.user?.uid);
+      AnalyticsService().setUserProperty(name: 'sign_in_method', value: 'google');
+
       debugPrint('🟢 Firebase sign-in successful: ${userCredential.user?.email}');
 
       // Create/update user document (don't wait, do it in background)
@@ -185,6 +194,9 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     try {
+      // Clear user from analytics
+      AnalyticsService().setUserId(null);
+
       await Future.wait([
         _auth.signOut(),
         _googleSignIn.signOut(),

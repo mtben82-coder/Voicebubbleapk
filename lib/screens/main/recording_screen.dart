@@ -7,6 +7,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/ai_service.dart';
+import '../../services/analytics_service.dart';
 import '../../services/feature_gate.dart';
 import '../../services/usage_service.dart';
 import '../../services/subscription_service.dart';
@@ -187,6 +188,9 @@ class _RecordingScreenState extends State<RecordingScreen>
   }
   
   Future<void> _startRecording() async {
+    // Track recording started
+    AnalyticsService().logRecordingStarted();
+
     try {
       if (!await _audioRecorder.hasPermission()) {
         print('No microphone permission');
@@ -288,6 +292,13 @@ class _RecordingScreenState extends State<RecordingScreen>
 
         // Track STT usage for free/pro limits
         await FeatureGate.trackSTTUsage(_recordingSeconds);
+
+        // Track recording completed
+        AnalyticsService().logRecordingCompleted(
+          durationSeconds: _recordingSeconds,
+          presetId: 'voice_recording',
+          language: 'en',
+        );
 
         print('Final transcription: $transcription');
         

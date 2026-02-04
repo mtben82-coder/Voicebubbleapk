@@ -6,6 +6,7 @@ import '../../providers/app_state_provider.dart';
 import '../../constants/presets.dart';
 import '../../constants/languages.dart';
 import '../../models/preset.dart';
+import '../../services/analytics_service.dart';
 import '../../services/native_overlay_service.dart';
 import '../../services/ai_service.dart';
 import '../../widgets/continue_banner.dart';
@@ -95,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   Future<void> _toggleOverlay() async {
     if (!Platform.isAndroid) return;
-    
+
     if (_overlayEnabled) {
       // Stop the overlay service
       debugPrint('🛑 Stopping overlay service...');
@@ -103,6 +104,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       setState(() {
         _overlayEnabled = false;
       });
+      // Track overlay deactivated
+      AnalyticsService().logOverlayActivated(isEnabled: false);
       debugPrint('✅ Overlay service stopped');
     } else {
       // Check if we have overlay permission
@@ -151,12 +154,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           debugPrint('🚀 Starting overlay service...');
           final started = await NativeOverlayService.showOverlay();
           debugPrint('Service started: $started');
-          
+
           setState(() {
             _overlayEnabled = started;
           });
-          
+
           if (started && mounted) {
+            // Track overlay activated
+            AnalyticsService().logOverlayActivated(isEnabled: true);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('✓ Bubble activated! Close and reopen app to refresh status.'),
@@ -171,12 +176,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         debugPrint('🚀 Starting overlay service (permission already granted)...');
         final started = await NativeOverlayService.showOverlay();
         debugPrint('Service started: $started');
-        
+
         setState(() {
           _overlayEnabled = started;
         });
-        
+
         if (started && mounted) {
+          // Track overlay activated
+          AnalyticsService().logOverlayActivated(isEnabled: true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✓ Bubble activated! Close and reopen app to refresh status.'),
@@ -253,6 +260,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           final wordCount = transcription.split(RegExp(r'\s+')).length;
           final estimatedSeconds = (wordCount / 2.5).round().clamp(10, 300);
           await FeatureGate.trackSTTUsage(estimatedSeconds);
+
+          // Track audio file upload
+          AnalyticsService().logAudioFileUploaded(
+            durationSeconds: estimatedSeconds,
+            fileType: result.files.single.extension ?? 'unknown',
+          );
 
           // Navigate to preset selection
           Navigator.push(

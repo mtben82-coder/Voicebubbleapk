@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../constants/presets.dart';
 import '../../models/preset.dart';
+import '../../services/analytics_service.dart';
 import '../../services/preset_favorites_service.dart';
 import 'recording_screen.dart';
 import 'result_screen.dart';
@@ -71,6 +72,12 @@ class _PresetSelectionScreenState extends State<PresetSelectionScreen>
   }
   
   void _handlePresetSelection(BuildContext context, Preset preset) {
+    // Track preset selection
+    AnalyticsService().logPresetSelected(
+      presetId: preset.id,
+      presetName: preset.name,
+    );
+
     final appState = context.read<AppStateProvider>();
     print('🎯 PresetSelection - transcription: "${appState.transcription}"');
     print('🎯 PresetSelection - fromRecording: ${widget.fromRecording}');

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/app_state_provider.dart';
 import '../models/project.dart';
+import '../services/analytics_service.dart';
 
 class CreateProjectDialog extends StatefulWidget {
   const CreateProjectDialog({super.key});
@@ -251,6 +252,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     try {
       await appState.saveProject(project);
       debugPrint('✅ Project saved successfully!');
+
+      // Track project creation
+      AnalyticsService().logProjectCreated();
 
       if (mounted) {
         Navigator.pop(context, project);
