@@ -31,21 +31,28 @@ subprojects {
 
 // Force all subprojects to use consistent JVM target for both Java and Kotlin
 subprojects {
-    project.plugins.whenPluginAdded {
-        if (this is org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin) {
-            project.tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-                kotlinOptions {
-                    jvmTarget = "11"
-                }
+    afterEvaluate {
+        // Configure Kotlin JVM target for all Kotlin compile tasks
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            kotlinOptions {
+                jvmTarget = "11"
             }
         }
-    }
 
-    // Set Java compiler target for all subprojects when Java plugin is applied
-    project.plugins.withType<JavaPlugin> {
-        project.tasks.withType<JavaCompile>().configureEach {
+        // Configure Java compiler target for all Java compile tasks
+        tasks.withType<JavaCompile>().configureEach {
             sourceCompatibility = JavaVersion.VERSION_11.toString()
             targetCompatibility = JavaVersion.VERSION_11.toString()
+        }
+
+        // For Android library plugins specifically (like device_info_plus)
+        plugins.withId("com.android.library") {
+            extensions.configure<com.android.build.gradle.LibraryExtension> {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_11
+                    targetCompatibility = JavaVersion.VERSION_11
+                }
+            }
         }
     }
 }
