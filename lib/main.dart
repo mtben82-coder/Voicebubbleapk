@@ -10,7 +10,6 @@ import 'services/storage_service.dart';
 import 'services/reminder_manager.dart';
 import 'services/analytics_service.dart';
 import 'services/share_handler_service.dart';
-import 'services/usage_service.dart';
 import 'screens/main/main_navigation.dart';
 import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
@@ -34,10 +33,6 @@ void main() async {
   // Initialize Hive storage - CRITICAL FOR SAVING!
   await StorageService.initialize();
   debugPrint('✅ Hive storage initialized successfully');
-
-  // Sync usage from Firestore to prevent abuse via reinstall/clear data
-  await UsageService().syncFromFirestore();
-  debugPrint('✅ Usage synced from Firestore');
 
   // Initialize reminder system
   await ReminderManager().initialize();
