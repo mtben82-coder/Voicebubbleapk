@@ -58,9 +58,13 @@ class UsageService {
   }
 
   /// Claim the review bonus (adds 1 minute)
-  Future<void> claimReviewBonus() async {
+  Future<bool> claimReviewBonus() async {
     final box = await Hive.openBox(_boxName);
+    final alreadyClaimed = box.get('review_bonus_claimed', defaultValue: false);
+    if (alreadyClaimed) return false;
     await box.put('review_bonus_claimed', true);
+    await box.put('review_bonus_claimed_at', DateTime.now().toIso8601String());
+    return true;
   }
 
   /// Should we prompt for review? (after using 3+ minutes, and not yet claimed)
