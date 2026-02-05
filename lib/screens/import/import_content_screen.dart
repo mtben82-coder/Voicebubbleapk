@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:archive/archive.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../../models/recording_item.dart';
 import '../../providers/app_state_provider.dart';
 import '../../services/share_handler_service.dart';
@@ -36,6 +39,7 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
   bool _isTranscribing = false;
   String? _extractedText;
   String? _error;
+  String? _savedImagePath; // For image imports
 
   // Colors
   static const _backgroundColor = Color(0xFF000000);
@@ -86,7 +90,7 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
           break;
 
         case SharedContentType.image:
-          _extractedText = _buildImageImportText();
+          await _processImageImport();
           break;
 
         case SharedContentType.video:
@@ -97,6 +101,15 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
             '- Extract the audio and share it separately\n'
             '- Use voice recording to describe the content',
           );
+          break;
+
+        case SharedContentType.unknown:
+          // Check for OCR mode (mimeType == 'image/ocr')
+          if (widget.content.mimeType == 'image/ocr') {
+            await _processImageOCR();
+          } else {
+            _error = 'Unsupported file type: ${widget.content.mimeType ?? "unknown"}';
+          }
           break;
 
         default:
@@ -134,20 +147,41 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
 
       final bytes = await file.readAsBytes();
 
-      // Load PDF document
-      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      // Validate PDF magic bytes (%PDF)
+      if (bytes.length < 4 ||
+          bytes[0] != 0x25 || bytes[1] != 0x50 ||
+          bytes[2] != 0x44 || bytes[3] != 0x46) {
+        _error = 'This file does not appear to be a valid PDF.';
+        return;
+      }
 
-      // Extract text from all pages
+      PdfDocument? document;
+      try {
+        document = PdfDocument(inputBytes: bytes);
+      } catch (e) {
+        debugPrint('PDF load error: $e');
+        _error = 'Could not open this PDF. It may be encrypted or corrupted.';
+        return;
+      }
+
       final StringBuffer textBuffer = StringBuffer();
-      final PdfTextExtractor extractor = PdfTextExtractor(document);
+      int successPages = 0;
+      int failedPages = 0;
 
+      // Page-by-page extraction with individual error handling
       for (int i = 0; i < document.pages.count; i++) {
-        final pageText = extractor.extractText(startPageIndex: i, endPageIndex: i);
-        if (pageText.isNotEmpty) {
-          if (textBuffer.isNotEmpty) {
-            textBuffer.write('\n\n');
+        try {
+          final extractor = PdfTextExtractor(document);
+          final pageText = extractor.extractText(startPageIndex: i, endPageIndex: i);
+          if (pageText.trim().isNotEmpty) {
+            if (textBuffer.isNotEmpty) textBuffer.write('\n\n');
+            textBuffer.write(pageText.trim());
+            successPages++;
           }
-          textBuffer.write(pageText.trim());
+        } catch (e) {
+          debugPrint('PDF page $i error: $e');
+          failedPages++;
+          // Continue — don't let one bad page kill the import
         }
       }
 
@@ -156,15 +190,20 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
       final extractedText = textBuffer.toString().trim();
 
       if (extractedText.isEmpty) {
-        _error = 'No text could be extracted from this PDF. It may be an image-based PDF.';
+        _error = failedPages > 0
+            ? 'Could not extract text. The PDF may be scanned/image-based or damaged.'
+            : 'No text found in this PDF. It may be an image-based (scanned) PDF.';
         return;
       }
 
       _extractedText = extractedText;
-      debugPrint('PDF extraction complete: ${_extractedText!.length} chars from ${document.pages.count} pages');
+      if (failedPages > 0 && successPages > 0) {
+        _extractedText = '⚠️ Note: $failedPages page(s) could not be read.\n\n$_extractedText';
+      }
+      debugPrint('PDF done: ${_extractedText!.length} chars, $successPages ok, $failedPages failed');
     } catch (e) {
       debugPrint('PDF extraction error: $e');
-      _error = 'Failed to extract text from PDF: ${e.toString()}';
+      _error = 'Failed to process PDF: ${e.toString()}';
     }
   }
 
@@ -253,15 +292,139 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
     }
   }
 
-  /// Build import text for images
-  String _buildImageImportText() {
-    final fileName = widget.content.fileName ?? 'Unknown';
-    return '[Image Import]\n\n'
-           'File: $fileName\n\n'
-           'Image OCR (text extraction) coming soon!\n\n'
-           'For now, you can:\n'
-           '- Type the text you see in the image\n'
-           '- Use voice recording to describe it';
+  /// Process image import — save to permanent storage
+  Future<void> _processImageImport() async {
+    if (widget.content.filePath == null) {
+      _error = 'No image file path';
+      return;
+    }
+
+    try {
+      final sourceFile = File(widget.content.filePath!);
+      if (!await sourceFile.exists()) {
+        _error = 'Image file not found';
+        return;
+      }
+
+      // Copy to permanent storage
+      final appDir = await getApplicationDocumentsDirectory();
+      final imagesDir = Directory(p.join(appDir.path, 'images'));
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
+      }
+
+      final ext = widget.content.filePath!.split('.').last.toLowerCase();
+      final fileName = '${const Uuid().v4()}.$ext';
+      final savedPath = p.join(imagesDir.path, fileName);
+      await sourceFile.copy(savedPath);
+
+      _savedImagePath = savedPath;
+      _extractedText = '[Image ready to import]';
+      debugPrint('Image saved to: $savedPath');
+    } catch (e) {
+      debugPrint('Image import error: $e');
+      _error = 'Failed to import image: ${e.toString()}';
+    }
+  }
+
+  /// OCR — Extract text from image using Google ML Kit
+  Future<void> _processImageOCR() async {
+    if (widget.content.filePath == null) {
+      _error = 'No image file path';
+      return;
+    }
+
+    try {
+      final file = File(widget.content.filePath!);
+      if (!await file.exists()) {
+        _error = 'Image file not found';
+        return;
+      }
+
+      final inputImage = InputImage.fromFilePath(widget.content.filePath!);
+      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+
+      try {
+        final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+
+        if (recognizedText.text.trim().isEmpty) {
+          _error = 'No text detected in this image. Try a clearer photo with visible text.';
+          return;
+        }
+
+        // Build structured text preserving blocks and lines
+        final StringBuffer textBuffer = StringBuffer();
+        for (final block in recognizedText.blocks) {
+          for (final line in block.lines) {
+            textBuffer.writeln(line.text);
+          }
+          textBuffer.writeln(); // Paragraph break between blocks
+        }
+
+        _extractedText = textBuffer.toString().trim();
+        debugPrint('OCR complete: ${_extractedText!.length} chars from ${recognizedText.blocks.length} blocks');
+      } finally {
+        textRecognizer.close();
+      }
+    } catch (e) {
+      debugPrint('OCR error: $e');
+      _error = 'Text extraction failed: ${e.toString()}';
+    }
+  }
+
+  /// Save imported image to note
+  Future<void> _saveImageImport() async {
+    if (_savedImagePath == null) return;
+
+    HapticFeedback.mediumImpact();
+
+    final appState = context.read<AppStateProvider>();
+
+    if (widget.appendToNoteId != null) {
+      // Update existing note with image
+      final existingItem = appState.allRecordingItems.firstWhere(
+        (r) => r.id == widget.appendToNoteId,
+        orElse: () => throw Exception('Note not found'),
+      );
+
+      final updatedItem = existingItem.copyWith(
+        rawTranscript: _savedImagePath,
+        contentType: 'image',
+      );
+      await appState.updateRecording(updatedItem);
+
+      if (mounted) Navigator.pop(context, true);
+    } else {
+      // Create new image note
+      String title = widget.content.fileName ?? 'Imported Image';
+      if (title.contains('.')) title = title.substring(0, title.lastIndexOf('.'));
+      title = title.replaceAll('_', ' ').replaceAll('-', ' ');
+
+      final newItem = RecordingItem(
+        id: const Uuid().v4(),
+        rawTranscript: _savedImagePath!,
+        finalText: '',
+        presetUsed: 'Image Import',
+        outcomes: [],
+        projectId: null,
+        createdAt: DateTime.now(),
+        editHistory: ['Imported image: ${widget.content.fileName}'],
+        presetId: 'image_import',
+        tags: [],
+        contentType: 'image',
+        customTitle: title,
+      );
+      await appState.saveRecording(newItem);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RecordingDetailScreen(recordingId: newItem.id),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _transcribeAudio() async {
@@ -644,7 +807,9 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$wordCount words - Ready to save',
+                      widget.content.type == SharedContentType.image && _savedImagePath != null
+                        ? 'Image ready to import'
+                        : '$wordCount words - Ready to save',
                       style: const TextStyle(color: _secondaryTextColor, fontSize: 13),
                     ),
                   ],
@@ -678,14 +843,32 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
               padding: const EdgeInsets.all(16),
               child: SizedBox(
                 width: double.infinity,
-                child: SelectableText(
-                  _extractedText ?? 'No content',
-                  style: const TextStyle(
-                    color: _textColor,
-                    fontSize: 15,
-                    height: 1.6,
-                  ),
-                ),
+                child: widget.content.type == SharedContentType.image && _savedImagePath != null
+                  ? Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(_savedImagePath!),
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          widget.content.fileName ?? 'Image',
+                          style: const TextStyle(color: _secondaryTextColor, fontSize: 13),
+                        ),
+                      ],
+                    )
+                  : SelectableText(
+                      _extractedText ?? 'No content',
+                      style: const TextStyle(
+                        color: _textColor,
+                        fontSize: 15,
+                        height: 1.6,
+                      ),
+                    ),
               ),
             ),
           ),
@@ -740,7 +923,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
                   child: widget.appendToNoteId != null
                     // When appending, make it primary action with filled button
                     ? ElevatedButton.icon(
-                        onPressed: _extractedText != null ? _saveAsNote : null,
+                        onPressed: _extractedText != null
+                          ? (widget.content.type == SharedContentType.image && _savedImagePath != null
+                              ? _saveImageImport
+                              : _saveAsNote)
+                          : null,
                         icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
                         label: const Text(
                           'Add to Note',
@@ -761,7 +948,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
                       )
                     // When creating new, use outlined button
                     : OutlinedButton.icon(
-                        onPressed: _extractedText != null ? _saveAsNote : null,
+                        onPressed: _extractedText != null
+                          ? (widget.content.type == SharedContentType.image && _savedImagePath != null
+                              ? _saveImageImport
+                              : _saveAsNote)
+                          : null,
                         icon: Icon(Icons.save_alt, color: _secondaryTextColor, size: 20),
                         label: Text(
                           'Save as Note',
