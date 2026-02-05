@@ -882,7 +882,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         final fileName = result.files.single.name;
         final extension = result.files.single.extension?.toLowerCase() ?? '';
 
-        if (!mounted) return;
+        if (!context.mounted) return;
 
         // Determine actual content type from extension (for multi-extension picks)
         SharedContentType contentType = forceType;
@@ -926,7 +926,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         );
 
         // If content was imported, refresh the editor
-        if (imported == true && mounted) {
+        if (imported == true && context.mounted) {
           setState(() {
             _editorRebuildKey++;
           });
@@ -934,7 +934,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       }
     } catch (e) {
       debugPrint('Error picking file: $e');
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),

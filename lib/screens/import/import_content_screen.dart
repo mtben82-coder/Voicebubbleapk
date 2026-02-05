@@ -502,9 +502,17 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
           ? _extractedText!
           : '${existingItem.finalText}\n\n---\n[Imported from: ${widget.content.fileName ?? "file"}]\n\n${_extractedText!}';
 
+      // Build new Quill Delta JSON so the editor loads the updated content
+      // This is critical: the editor prioritizes formattedContent over finalText
+      // If we just set finalText, the old formattedContent will be loaded instead
+      final newDelta = [
+        {'insert': '$newText\n'}
+      ];
+      final newFormattedContent = jsonEncode(newDelta);
+
       final updatedItem = existingItem.copyWith(
         finalText: newText,
-        formattedContent: null, // Reset formatted content so editor uses plain text
+        formattedContent: newFormattedContent, // Editor will load THIS, which has the new text
       );
 
       await appState.updateRecording(updatedItem);
