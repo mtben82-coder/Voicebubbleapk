@@ -156,7 +156,7 @@ class RecordingItem {
       finalText: finalText ?? this.finalText,
       presetUsed: presetUsed ?? this.presetUsed,
       outcomes: outcomes ?? List.from(this.outcomes),
-      projectId: projectId,
+      projectId: projectId ?? this.projectId,
       createdAt: createdAt ?? this.createdAt,
       editHistory: editHistory ?? List.from(this.editHistory),
       presetId: presetId ?? this.presetId,
