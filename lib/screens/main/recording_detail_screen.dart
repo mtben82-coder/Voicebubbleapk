@@ -584,7 +584,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         break;
       // ✨ IMPORT HANDLER ✨
       case 'import':
-        _pickImportFile(context, appState, item);
+        _showImportDialog(context, appState, item);
         break;
       // ✨ EXPORT HANDLER ✨
       case 'export':
@@ -712,19 +712,169 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
     }
   }
 
-  /// Pick and import files (PDF, Word, text, images) into the current note
-  Future<void> _pickImportFile(BuildContext context, AppStateProvider appState, RecordingItem item) async {
+  /// Show import type selection dialog (like Export dialog)
+  void _showImportDialog(BuildContext context, AppStateProvider appState, RecordingItem item) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final surfaceColor = Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1A1A1A)
+            : const Color(0xFFFFFFFF);
+        final textColor = Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : const Color(0xFF1F2937);
+
+        return Dialog(
+          backgroundColor: surfaceColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Import Content',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose what to import',
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // PDF
+                ListTile(
+                  leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFEF4444)),
+                  title: Text('PDF Document', style: TextStyle(color: textColor)),
+                  subtitle: const Text('Extract text from PDF', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndImportFile(
+                      context, appState, item,
+                      extensions: ['pdf'],
+                      forceType: SharedContentType.pdf,
+                      forceMime: 'application/pdf',
+                    );
+                  },
+                ),
+
+                // Word Document
+                ListTile(
+                  leading: const Icon(Icons.description, color: Color(0xFF3B82F6)),
+                  title: Text('Word Document', style: TextStyle(color: textColor)),
+                  subtitle: const Text('Import .docx files', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndImportFile(
+                      context, appState, item,
+                      extensions: ['doc', 'docx'],
+                      forceType: SharedContentType.document,
+                      forceMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    );
+                  },
+                ),
+
+                // Text File
+                ListTile(
+                  leading: const Icon(Icons.text_fields, color: Color(0xFF10B981)),
+                  title: Text('Text File', style: TextStyle(color: textColor)),
+                  subtitle: const Text('Import .txt, .md, .rtf', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndImportFile(
+                      context, appState, item,
+                      extensions: ['txt', 'md', 'rtf'],
+                      forceType: SharedContentType.text,
+                      forceMime: 'text/plain',
+                    );
+                  },
+                ),
+
+                // Image (visual)
+                ListTile(
+                  leading: const Icon(Icons.image, color: Color(0xFFF59E0B)),
+                  title: Text('Image', style: TextStyle(color: textColor)),
+                  subtitle: const Text('Add image to document', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndImportFile(
+                      context, appState, item,
+                      extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                      forceType: SharedContentType.image,
+                      forceMime: 'image/jpeg',
+                    );
+                  },
+                ),
+
+                // Image to Text (OCR) — NEW
+                ListTile(
+                  leading: const Icon(Icons.document_scanner, color: Color(0xFF8B5CF6)),
+                  title: Text('Image to Text (OCR)', style: TextStyle(color: textColor)),
+                  subtitle: const Text('Extract text from image', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndImportFile(
+                      context, appState, item,
+                      extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                      forceType: SharedContentType.image,
+                      forceMime: 'image/jpeg',
+                      ocrMode: true, // NEW: triggers OCR instead of image save
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Cancel
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: textColor.withOpacity(0.7),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Pick a file and navigate to import screen
+  Future<void> _pickAndImportFile(
+    BuildContext context,
+    AppStateProvider appState,
+    RecordingItem item, {
+    required List<String> extensions,
+    required SharedContentType forceType,
+    required String forceMime,
+    bool ocrMode = false,
+  }) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: [
-          // Documents
-          'pdf', 'doc', 'docx',
-          // Text
-          'txt', 'md', 'rtf',
-          // Images
-          'jpg', 'jpeg', 'png', 'gif', 'webp',
-        ],
+        allowedExtensions: extensions,
       );
 
       if (result != null && result.files.single.path != null) {
@@ -734,56 +884,30 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
 
         if (!mounted) return;
 
-        // Determine content type from extension
-        SharedContentType contentType;
-        String mimeType;
+        // Determine actual content type from extension (for multi-extension picks)
+        SharedContentType contentType = forceType;
+        String mimeType = forceMime;
 
-        switch (extension) {
-          case 'jpg':
-          case 'jpeg':
-            contentType = SharedContentType.image;
-            mimeType = 'image/jpeg';
-            break;
-          case 'png':
-            contentType = SharedContentType.image;
-            mimeType = 'image/png';
-            break;
-          case 'gif':
-            contentType = SharedContentType.image;
-            mimeType = 'image/gif';
-            break;
-          case 'webp':
-            contentType = SharedContentType.image;
-            mimeType = 'image/webp';
-            break;
-          case 'pdf':
-            contentType = SharedContentType.pdf;
-            mimeType = 'application/pdf';
-            break;
-          case 'doc':
-            contentType = SharedContentType.document;
-            mimeType = 'application/msword';
-            break;
-          case 'docx':
-            contentType = SharedContentType.document;
-            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            break;
-          case 'txt':
-            contentType = SharedContentType.text;
-            mimeType = 'text/plain';
-            break;
-          case 'md':
-            contentType = SharedContentType.text;
-            mimeType = 'text/markdown';
-            break;
-          case 'rtf':
-            contentType = SharedContentType.text;
-            mimeType = 'text/rtf';
-            break;
-          default:
-            contentType = SharedContentType.unknown;
-            mimeType = 'application/octet-stream';
+        // Refine mime type for specific extensions
+        if (forceType == SharedContentType.image) {
+          switch (extension) {
+            case 'png': mimeType = 'image/png'; break;
+            case 'gif': mimeType = 'image/gif'; break;
+            case 'webp': mimeType = 'image/webp'; break;
+            default: mimeType = 'image/jpeg'; break;
+          }
+        } else if (forceType == SharedContentType.text) {
+          switch (extension) {
+            case 'md': mimeType = 'text/markdown'; break;
+            case 'rtf': mimeType = 'text/rtf'; break;
+            default: mimeType = 'text/plain'; break;
+          }
+        } else if (forceType == SharedContentType.document) {
+          if (extension == 'doc') mimeType = 'application/msword';
         }
+
+        // If OCR mode, override type to trigger OCR path
+        final actualType = ocrMode ? SharedContentType.unknown : contentType;
 
         // Navigate to import screen
         final imported = await Navigator.push<bool>(
@@ -791,12 +915,12 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
           MaterialPageRoute(
             builder: (_) => ImportContentScreen(
               content: SharedContent(
-                type: contentType,
+                type: actualType,
                 filePath: filePath,
                 fileName: fileName,
-                mimeType: mimeType,
+                mimeType: ocrMode ? 'image/ocr' : mimeType, // Special marker for OCR
               ),
-              appendToNoteId: item.id, // Pass the current note ID to append content
+              appendToNoteId: item.id,
             ),
           ),
         );

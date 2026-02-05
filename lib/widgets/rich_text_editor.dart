@@ -1363,71 +1363,6 @@ class RichTextEditorState extends State<RichTextEditor> with TickerProviderState
                     ),
                   ),
                 
-                // Image section (for image content types) - FIXED
-                if (widget.showImageSection)
-                  Container(
-                    color: surfaceColor,
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Image',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _showImageSourceDialog,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF3B82F6),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _imagePath != null ? Icons.edit : Icons.add_photo_alternate,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _imagePath != null ? 'Change' : 'Add',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (_imagePath != null && File(_imagePath!).existsSync()) ...[
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              File(_imagePath!),
-                              width: double.infinity,
-                              height: 200,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                
                 // Outcome chips section (for outcomes tab) - FIXED
                 Expanded(
                   child: Stack(
@@ -1450,6 +1385,70 @@ class RichTextEditorState extends State<RichTextEditor> with TickerProviderState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Image section — INSIDE scroll area (image docs only)
+                              if (widget.showImageSection) ...[
+                                Container(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text(
+                                            'Image',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: _showImageSourceDialog,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF3B82F6),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    _imagePath != null ? Icons.edit : Icons.add_photo_alternate,
+                                                    size: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    _imagePath != null ? 'Change' : 'Add',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (_imagePath != null && File(_imagePath!).existsSync()) ...[
+                                        const SizedBox(height: 8),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.file(
+                                            File(_imagePath!),
+                                            width: double.infinity,
+                                            height: 200,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
                               // Let QuillEditor expand naturally - no fixed height SizedBox
                               Theme(
                                 data: ThemeData.dark().copyWith(

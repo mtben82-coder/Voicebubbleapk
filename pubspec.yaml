@@ -81,6 +81,9 @@ dependencies:
   # PDF/Document Import (text extraction)
   syncfusion_flutter_pdf: ^28.2.4
   archive: ^3.4.10
+
+  # OCR - Image text extraction
+  google_mlkit_text_recognition: ^0.14.0
 dependency_overrides:
   # Fix flutter_inappwebview namespace issue
   flutter_inappwebview: ^6.1.5
