@@ -57,7 +57,7 @@ class ShareHandlerService {
     }
   }
 
-  void _handleSharedMedia(List<SharedMediaFile> files) {
+  void _handleSharedMedia(List<SharedMediaFile> files) async {
     if (files.isEmpty) return;
 
     debugPrint('Received ${files.length} shared file(s):');
@@ -69,10 +69,21 @@ class ShareHandlerService {
 
       // Handle text shared via SharedMediaType.text
       if (file.type == SharedMediaType.text) {
-        // For text type, the path might contain the actual text or a file path
+        // Read the actual file content instead of showing the file path
+        String? textContent;
+        try {
+          final textFile = File(file.path);
+          if (await textFile.exists()) {
+            textContent = await textFile.readAsString();
+          }
+        } catch (e) {
+          debugPrint('Failed to read shared text file: $e');
+          textContent = file.path; // Fallback to path if read fails
+        }
+
         final content = SharedContent(
           type: SharedContentType.text,
-          text: file.path, // In text type, path often contains the text content
+          text: textContent ?? file.path,
           mimeType: file.mimeType,
         );
         _bufferedContent = content; // Buffer in case no listener yet
