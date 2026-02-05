@@ -51,70 +51,38 @@ class UsageService {
     return freeSecondsLimit + (hasReviewBonus ? reviewBonusSeconds : 0);
   }
 
-  /// Check if user has claimed review bonus
+  /// Check if review bonus has been claimed
   Future<bool> hasClaimedReviewBonus() async {
     final box = await Hive.openBox(_boxName);
     return box.get('review_bonus_claimed', defaultValue: false);
   }
 
-  /// Claim review bonus (only works once, only for free users)
-  Future<bool> claimReviewBonus() async {
+  /// Claim the review bonus (adds 1 minute)
+  Future<void> claimReviewBonus() async {
     final box = await Hive.openBox(_boxName);
-    final alreadyClaimed = box.get('review_bonus_claimed', defaultValue: false);
-
-    if (alreadyClaimed) return false;
-
     await box.put('review_bonus_claimed', true);
-    await box.put('review_bonus_claimed_at', DateTime.now().toIso8601String());
-    return true;
   }
 
-  /// Check if user has exhausted free limit (to show review prompt)
+  /// Should we prompt for review? (after using 3+ minutes, and not yet claimed)
   Future<bool> shouldShowReviewPrompt({required bool isPro}) async {
     if (isPro) return false;
-
-    final hasBonus = await hasClaimedReviewBonus();
-    if (hasBonus) return false; // Already claimed
-
+    final claimed = await hasClaimedReviewBonus();
+    if (claimed) return false;
     final used = await getSecondsUsed();
-    return used >= freeSecondsLimit; // Show when 5 min exhausted
+    return used >= 180; // After 3 minutes of use
   }
 
-  /// Format seconds to MM:SS display
+  /// Format seconds as "Xm Ys"
   String formatTime(int seconds) {
-    final mins = seconds ~/ 60;
+    final minutes = seconds ~/ 60;
     final secs = seconds % 60;
-    return '$mins:${secs.toString().padLeft(2, '0')}';
+    if (minutes > 0) {
+      return '${minutes}m ${secs}s';
+    }
+    return '${secs}s';
   }
 
-  /// Format for display like "4:30 / 5:00"
-  Future<String> getUsageDisplayString({required bool isPro}) async {
-    final used = await getSecondsUsed();
-    final limit = await getTotalLimit(isPro: isPro);
-    return '${formatTime(used)} / ${formatTime(limit)}';
-  }
-
-  /// Get percentage used (0.0 to 1.0)
-  Future<double> getUsagePercentage({required bool isPro}) async {
-    final used = await getSecondsUsed();
-    final limit = await getTotalLimit(isPro: isPro);
-    return (used / limit).clamp(0.0, 1.0);
-  }
-
-  /// Reset usage (for testing or admin)
-  Future<void> resetUsage() async {
-    final box = await Hive.openBox(_boxName);
-    final monthKey = _getCurrentMonthKey();
-    await box.put('stt_seconds_$monthKey', 0);
-  }
-
-  /// Reset review bonus (for testing)
-  Future<void> resetReviewBonus() async {
-    final box = await Hive.openBox(_boxName);
-    await box.put('review_bonus_claimed', false);
-    await box.delete('review_bonus_claimed_at');
-  }
-
+  /// Get the current month key (e.g., "2026_2" for February 2026)
   String _getCurrentMonthKey() {
     final now = DateTime.now();
     return '${now.year}_${now.month}';
