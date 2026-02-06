@@ -15,6 +15,7 @@ import 'screens/onboarding/onboarding_one.dart';
 import 'screens/onboarding/onboarding_two.dart';
 import 'screens/onboarding/onboarding_three_new.dart';
 import 'screens/onboarding/permissions_screen.dart';
+import 'screens/onboarding/feature_showcase_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/paywall/paywall_screen.dart';
 import 'screens/import/import_content_screen.dart';
@@ -262,7 +263,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   int _currentStep = 0;
 
   void _nextStep() {
-    if (_currentStep < 5) {
+    if (_currentStep < 6) {
       setState(() {
         _currentStep++;
       });
@@ -290,13 +291,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       case 2:
         return OnboardingThreeNew(onNext: _nextStep);
       case 3:
-        return SignInScreen(onSignIn: _handleSignIn);
+        return FeatureShowcaseScreen(onComplete: _nextStep);
       case 4:
-        return PermissionsScreen(onComplete: _nextStep);
+        return SignInScreen(onSignIn: _handleSignIn);
       case 5:
+        return PermissionsScreen(onComplete: _nextStep);
+      case 6:
         return PaywallScreen(
           onSubscribe: () {
-            // TODO: Implement subscription
             widget.onComplete(context);
           },
           onRestore: () {

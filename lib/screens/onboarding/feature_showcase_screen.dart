@@ -7,27 +7,27 @@ import 'dart:async';
 /// Every killer feature that makes VoiceBubble special
 class FeatureShowcaseScreen extends StatefulWidget {
   final VoidCallback onComplete;
-  
+
   const FeatureShowcaseScreen({super.key, required this.onComplete});
 
   @override
   State<FeatureShowcaseScreen> createState() => _FeatureShowcaseScreenState();
 }
 
-class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> 
+class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     with TickerProviderStateMixin {
-  
+
   late AnimationController _backgroundController;
   late AnimationController _contentController;
   late AnimationController _iconController;
   late AnimationController _particleController;
   late AnimationController _demoController;
-  
+
   late Animation<double> _backgroundAnimation;
   late Animation<double> _iconScale;
   late Animation<double> _iconGlow;
   late Animation<Offset> _slideIn;
-  
+
   int _currentFeature = 0;
   Timer? _autoAdvanceTimer;
 
@@ -42,7 +42,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.voiceWaves,
       gradient: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
     ),
-    
+
     // 2. AI Presets
     _Feature(
       icon: Icons.auto_awesome_rounded,
@@ -52,7 +52,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.presetCards,
       gradient: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
     ),
-    
+
     // 3. Custom Instructions
     _Feature(
       icon: Icons.tune_rounded,
@@ -62,7 +62,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.customInstructions,
       gradient: [Color(0xFF6366F1), Color(0xFF3B82F6)],
     ),
-    
+
     // 4. Highlight to AI
     _Feature(
       icon: Icons.highlight_rounded,
@@ -72,7 +72,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.highlightText,
       gradient: [Color(0xFFF59E0B), Color(0xFFEF4444)],
     ),
-    
+
     // 5. Continue with AI Chat
     _Feature(
       icon: Icons.chat_bubble_rounded,
@@ -82,7 +82,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.aiChat,
       gradient: [Color(0xFF10B981), Color(0xFF06B6D4)],
     ),
-    
+
     // 6. Full Document Editor
     _Feature(
       icon: Icons.edit_document,
@@ -92,7 +92,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.documentEditor,
       gradient: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
     ),
-    
+
     // 7. Share to App → Instant AI
     _Feature(
       icon: Icons.share_rounded,
@@ -102,7 +102,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.shareToAI,
       gradient: [Color(0xFFEC4899), Color(0xFFF59E0B)],
     ),
-    
+
     // 8. Image to Text (OCR)
     _Feature(
       icon: Icons.document_scanner_rounded,
@@ -112,7 +112,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.imageToText,
       gradient: [Color(0xFF10B981), Color(0xFF14B8A6)],
     ),
-    
+
     // 9. Import Anything
     _Feature(
       icon: Icons.folder_copy_rounded,
@@ -122,7 +122,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.importFiles,
       gradient: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
     ),
-    
+
     // 10. Upload Audio to AI
     _Feature(
       icon: Icons.audio_file_rounded,
@@ -132,7 +132,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.audioUpload,
       gradient: [Color(0xFFF97316), Color(0xFFEF4444)],
     ),
-    
+
     // 11. Batch Processing
     _Feature(
       icon: Icons.bolt_rounded,
@@ -142,7 +142,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.batchProcess,
       gradient: [Color(0xFFEF4444), Color(0xFFF97316)],
     ),
-    
+
     // 12. Export Anywhere
     _Feature(
       icon: Icons.ios_share_rounded,
@@ -152,7 +152,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.exportShare,
       gradient: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
     ),
-    
+
     // 13. Version History
     _Feature(
       icon: Icons.history_rounded,
@@ -162,7 +162,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.versionHistory,
       gradient: [Color(0xFF64748B), Color(0xFF475569)],
     ),
-    
+
     // 14. Tasks & Scheduling
     _Feature(
       icon: Icons.task_alt_rounded,
@@ -172,7 +172,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       demo: _DemoType.tasksSchedule,
       gradient: [Color(0xFF10B981), Color(0xFF059669)],
     ),
-    
+
     // 15. Ready - CTA
     _Feature(
       icon: Icons.rocket_launch_rounded,
@@ -196,7 +196,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       duration: const Duration(milliseconds: 4000),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _backgroundAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
     );
@@ -205,7 +205,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
+
     _slideIn = Tween<Offset>(
       begin: const Offset(0.15, 0),
       end: Offset.zero,
@@ -218,11 +218,11 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _iconScale = Tween<double>(begin: 1.0, end: 1.08).animate(
       CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
     );
-    
+
     _iconGlow = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
     );
@@ -240,7 +240,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   void _startFeature() {
     _contentController.forward(from: 0);
-    
+
     _autoAdvanceTimer?.cancel();
     _autoAdvanceTimer = Timer(const Duration(milliseconds: 3000), () {
       if (mounted && _currentFeature < _features.length - 1) {
@@ -295,7 +295,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
   Widget build(BuildContext context) {
     final feature = _features[_currentFeature];
     final isLastFeature = _currentFeature == _features.length - 1;
-    
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
@@ -580,7 +580,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(14, (index) {
         final delay = index * 0.07;
-        final height = 15 + 
+        final height = 15 +
             math.sin((_demoController.value * 2 * math.pi) + delay * math.pi * 2) * 25;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 2.5),
@@ -629,7 +629,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
   Widget _buildHighlightDemo(_Feature feature) {
     final progress = _demoController.value;
     final highlightWidth = progress < 0.5 ? progress * 2 : 1.0;
-    
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -673,7 +673,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildAIChatDemo(_Feature feature) {
     final progress = _demoController.value;
-    
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -768,7 +768,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildShareToAIDemo(_Feature feature) {
     final progress = _demoController.value;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -801,7 +801,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildImageToTextDemo(_Feature feature) {
     final progress = _demoController.value;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -836,13 +836,13 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildImportFilesDemo(_Feature feature) {
     final icons = [Icons.picture_as_pdf, Icons.description, Icons.image, Icons.audiotrack];
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(icons.length, (index) {
         final delay = index * 0.15;
         final bounce = math.sin((_demoController.value + delay) * math.pi * 2) * 6;
-        
+
         return Transform.translate(
           offset: Offset(0, bounce),
           child: Container(
@@ -861,7 +861,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildAudioUploadDemo(_Feature feature) {
     final progress = _demoController.value;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -888,7 +888,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildBatchDemo(_Feature feature) {
     final count = ((_demoController.value * 100) % 100).floor();
-    
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -915,7 +915,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildExportShareDemo(_Feature feature) {
     final icons = [Icons.copy, Icons.share, Icons.save_alt, Icons.email];
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(icons.length, (index) {
@@ -961,7 +961,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
             color: isActive ? feature.gradient[0] : Colors.white.withOpacity(0.1),
           ),
           child: Center(
-            child: isActive 
+            child: isActive
               ? const Icon(Icons.check, color: Colors.white, size: 16)
               : null,
           ),
@@ -1042,7 +1042,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   Widget _buildRocketDemo(_Feature feature) {
     final bounce = math.sin(_demoController.value * math.pi * 4) * 8;
-    
+
     return Transform.translate(
       offset: Offset(0, -bounce.abs()),
       child: Icon(Icons.rocket_launch_rounded, color: feature.gradient[0], size: 56),
@@ -1057,7 +1057,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
         children: List.generate(_features.length, (index) {
           final isActive = index == _currentFeature;
           final isPast = index < _currentFeature;
-          
+
           return GestureDetector(
             onTap: () => _goToFeature(index),
             child: AnimatedContainer(
