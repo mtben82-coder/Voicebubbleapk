@@ -4,306 +4,126 @@ import 'dart:math' as math;
 import 'dart:async';
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// ELITE CINEMATIC FEATURE SHOWCASE
+/// THE GREATEST ONBOARDING EVER MADE
 /// ═══════════════════════════════════════════════════════════════════════════
-/// 
-/// A masterpiece onboarding experience. 5 pages, 3 features each.
-/// Staggered reveals. Breathing backgrounds. Glowing icons. Pure cinema.
+///
+/// Pure cinema. Dark canvas. Each feature gets its own unique animation.
+/// No templates. No repeated layouts. Just visual storytelling.
 ///
 /// ═══════════════════════════════════════════════════════════════════════════
 
 class FeatureShowcaseScreen extends StatefulWidget {
   final VoidCallback onComplete;
-  
+
   const FeatureShowcaseScreen({super.key, required this.onComplete});
 
   @override
   State<FeatureShowcaseScreen> createState() => _FeatureShowcaseScreenState();
 }
 
-class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> 
+class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late AnimationController _loopController;
   
-  // ═══════════════════════════════════════════════════════════════
-  // ANIMATION CONTROLLERS
-  // ═══════════════════════════════════════════════════════════════
-  
-  late AnimationController _backgroundController;
-  late AnimationController _feature1Controller;
-  late AnimationController _feature2Controller;
-  late AnimationController _feature3Controller;
-  late AnimationController _glowController;
-  late AnimationController _particleController;
-  
-  int _currentPage = 0;
-  Timer? _autoAdvanceTimer;
-
-  // ═══════════════════════════════════════════════════════════════
-  // PAGE DATA - 5 PAGES, 3 FEATURES EACH
-  // ═══════════════════════════════════════════════════════════════
-
-  final List<_PageData> _pages = [
-    // PAGE 1: CAPTURE
-    _PageData(
-      title: 'Capture',
-      subtitle: 'Everything',
-      gradient: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
-      features: [
-        _FeatureData(
-          icon: Icons.mic_rounded,
-          title: 'Voice to Text',
-          subtitle: 'Speak naturally, watch it write',
-        ),
-        _FeatureData(
-          icon: Icons.document_scanner_rounded,
-          title: 'Image to Text',
-          subtitle: 'OCR extracts text instantly',
-        ),
-        _FeatureData(
-          icon: Icons.folder_rounded,
-          title: 'Import Anything',
-          subtitle: 'PDFs, Docs, Audio — all supported',
-        ),
-      ],
-    ),
-    
-    // PAGE 2: TRANSFORM
-    _PageData(
-      title: 'Transform',
-      subtitle: 'Instantly',
-      gradient: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-      features: [
-        _FeatureData(
-          icon: Icons.auto_awesome_rounded,
-          title: 'AI Presets',
-          subtitle: 'One tap, perfect output',
-        ),
-        _FeatureData(
-          icon: Icons.tune_rounded,
-          title: 'Custom Instructions',
-          subtitle: 'Your rules, your style',
-        ),
-        _FeatureData(
-          icon: Icons.highlight_rounded,
-          title: 'Highlight to AI',
-          subtitle: 'Select text, transform instantly',
-        ),
-      ],
-    ),
-    
-    // PAGE 3: REFINE
-    _PageData(
-      title: 'Refine',
-      subtitle: 'Perfectly',
-      gradient: [Color(0xFF10B981), Color(0xFF06B6D4)],
-      features: [
-        _FeatureData(
-          icon: Icons.chat_rounded,
-          title: 'Continue with AI',
-          subtitle: 'Chat to expand or refine',
-        ),
-        _FeatureData(
-          icon: Icons.edit_document,
-          title: 'Power Editor',
-          subtitle: 'Full rich text formatting',
-        ),
-        _FeatureData(
-          icon: Icons.history_rounded,
-          title: 'Version History',
-          subtitle: 'Restore any previous edit',
-        ),
-      ],
-    ),
-    
-    // PAGE 4: POWER
-    _PageData(
-      title: 'Power',
-      subtitle: 'Unleashed',
-      gradient: [Color(0xFFF59E0B), Color(0xFFEF4444)],
-      features: [
-        _FeatureData(
-          icon: Icons.bubble_chart_rounded,
-          title: 'Floating Bubble',
-          subtitle: 'Access anywhere on your phone',
-        ),
-        _FeatureData(
-          icon: Icons.bolt_rounded,
-          title: 'Batch Processing',
-          subtitle: 'Transform 100 files at once',
-        ),
-        _FeatureData(
-          icon: Icons.ios_share_rounded,
-          title: 'Export & Share',
-          subtitle: 'Send anywhere, any format',
-        ),
-      ],
-    ),
-    
-    // PAGE 5: READY
-    _PageData(
-      title: "Let's",
-      subtitle: 'Go',
-      gradient: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-      features: [],
-      isLastPage: true,
-    ),
-  ];
+  int _scene = 0;
+  final int _totalScenes = 8;
 
   @override
   void initState() {
     super.initState();
-    _initAnimations();
-    _startPageAnimations();
-  }
-
-  void _initAnimations() {
-    // Background gradient breathing
-    _backgroundController = AnimationController(
-      duration: const Duration(milliseconds: 4000),
-      vsync: this,
-    )..repeat(reverse: true);
     
-    // Staggered feature animations
-    _feature1Controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
     
-    _feature2Controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    _feature3Controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    // Icon glow pulse
-    _glowController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    // Floating particles
-    _particleController = AnimationController(
-      duration: const Duration(milliseconds: 6000),
+    _loopController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     )..repeat();
+
+    _playScene();
   }
 
-  void _startPageAnimations() {
-    // Reset all feature animations
-    _feature1Controller.reset();
-    _feature2Controller.reset();
-    _feature3Controller.reset();
-    
-    // Staggered reveal - each feature appears 300ms after the previous
-    _feature1Controller.forward();
-    
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _feature2Controller.forward();
-    });
-    
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) _feature3Controller.forward();
-    });
-    
-    // Auto-advance after 4 seconds (skip on last page)
-    _autoAdvanceTimer?.cancel();
-    if (_currentPage < _pages.length - 1) {
-      _autoAdvanceTimer = Timer(const Duration(milliseconds: 4000), () {
-        if (mounted) _nextPage();
+  void _playScene() {
+    _controller.forward(from: 0).then((_) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted && _scene < _totalScenes - 1) {
+          setState(() => _scene++);
+          _playScene();
+        }
       });
-    }
+    });
   }
 
-  void _nextPage() {
-    if (_currentPage < _pages.length - 1) {
-      HapticFeedback.lightImpact();
-      setState(() => _currentPage++);
-      _startPageAnimations();
-    }
+  void _skip() {
+    HapticFeedback.mediumImpact();
+    widget.onComplete();
   }
 
-  void _previousPage() {
-    if (_currentPage > 0) {
-      HapticFeedback.lightImpact();
-      setState(() => _currentPage--);
-      _startPageAnimations();
-    }
-  }
-
-  void _goToPage(int index) {
-    if (index != _currentPage && index >= 0 && index < _pages.length) {
-      _autoAdvanceTimer?.cancel();
-      HapticFeedback.lightImpact();
-      setState(() => _currentPage = index);
-      _startPageAnimations();
+  void _nextScene() {
+    HapticFeedback.lightImpact();
+    if (_scene < _totalScenes - 1) {
+      setState(() => _scene++);
+      _playScene();
+    } else {
+      widget.onComplete();
     }
   }
 
   @override
   void dispose() {
-    _autoAdvanceTimer?.cancel();
-    _backgroundController.dispose();
-    _feature1Controller.dispose();
-    _feature2Controller.dispose();
-    _feature3Controller.dispose();
-    _glowController.dispose();
-    _particleController.dispose();
+    _controller.dispose();
+    _loopController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final page = _pages[_currentPage];
-    
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          _autoAdvanceTimer?.cancel();
-          if (details.primaryVelocity! < -300) {
-            _nextPage();
-          } else if (details.primaryVelocity! > 300) {
-            _previousPage();
-          }
-        },
+        onTap: _nextScene,
+        behavior: HitTestBehavior.opaque,
         child: Stack(
           children: [
-            // Layer 1: Animated gradient background
-            _buildBackground(page),
+            // The scene
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              child: _buildScene(_scene),
+            ),
             
-            // Layer 2: Floating particles
-            _buildParticles(page),
-            
-            // Layer 3: Radial glow behind content
-            _buildRadialGlow(page),
-            
-            // Layer 4: Main content
-            SafeArea(
-              child: Column(
-                children: [
-                  // Header with skip button
-                  _buildHeader(),
-                  
-                  // Main content area
-                  Expanded(
-                    child: page.isLastPage 
-                        ? _buildLastPage(page)
-                        : _buildFeaturePage(page),
+            // Skip button
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 20,
+              child: GestureDetector(
+                onTap: _skip,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  
-                  // Progress dots
-                  _buildProgressDots(),
-                  
-                  // CTA Button
-                  _buildCTAButton(page),
-                  
-                  const SizedBox(height: 24),
-                ],
+                  child: Text(
+                    'Skip',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
+            ),
+            
+            // Progress bar
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 40,
+              left: 40,
+              right: 40,
+              child: _buildProgressBar(),
             ),
           ],
         ),
@@ -311,29 +131,143 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // BACKGROUND LAYERS
-  // ═══════════════════════════════════════════════════════════════
+  Widget _buildProgressBar() {
+    return Column(
+      children: [
+        // Tap to continue hint
+        AnimatedOpacity(
+          opacity: _scene < _totalScenes - 1 ? 0.5 : 0,
+          duration: const Duration(milliseconds: 300),
+          child: const Text(
+            'tap to continue',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 1,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Progress dots
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_totalScenes, (i) {
+            final isActive = i == _scene;
+            final isPast = i < _scene;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: isActive ? 24 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: isPast
+                    ? Colors.white.withOpacity(0.5)
+                    : isActive
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.2),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
 
-  Widget _buildBackground(_PageData page) {
+  Widget _buildScene(int scene) {
+    switch (scene) {
+      case 0:
+        return _Scene1VoiceToText(key: const ValueKey(0), controller: _controller);
+      case 1:
+        return _Scene2AIPresets(key: const ValueKey(1), controller: _controller);
+      case 2:
+        return _Scene3HighlightAI(key: const ValueKey(2), controller: _controller, loopController: _loopController);
+      case 3:
+        return _Scene4ImageToText(key: const ValueKey(3), controller: _controller);
+      case 4:
+        return _Scene5Import(key: const ValueKey(4), controller: _controller);
+      case 5:
+        return _Scene6FloatingBubble(key: const ValueKey(5), controller: _controller, loopController: _loopController);
+      case 6:
+        return _Scene7ContinueAI(key: const ValueKey(6), controller: _controller);
+      case 7:
+        return _Scene8Finale(key: const ValueKey(7), controller: _controller, loopController: _loopController, onComplete: widget.onComplete);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 1: VOICE TO TEXT
+// Voice waves pulse, then text appears letter by letter
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene1VoiceToText extends StatelessWidget {
+  final AnimationController controller;
+
+  const _Scene1VoiceToText({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _backgroundController,
+      animation: controller,
       builder: (context, _) {
-        final breathe = math.sin(_backgroundController.value * math.pi) * 0.15;
-        
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 500),
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.5 + breathe),
-              radius: 1.8,
-              colors: [
-                page.gradient[0].withOpacity(0.35 + breathe * 0.5),
-                page.gradient[1].withOpacity(0.15),
-                Colors.black,
-                Colors.black,
+        final wavePhase = (controller.value * 2).clamp(0.0, 1.0);
+        final textPhase = ((controller.value - 0.4) * 1.67).clamp(0.0, 1.0);
+
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Voice waves
+                SizedBox(
+                  height: 80,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(7, (i) {
+                      final delay = i * 0.1;
+                      final wave = math.sin((wavePhase * math.pi * 3) + delay * math.pi * 2);
+                      final height = 20 + (wave.abs() * 50 * wavePhase);
+                      final opacity = wavePhase;
+
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 50),
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        width: 6,
+                        height: height,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(3),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              const Color(0xFF3B82F6).withOpacity(opacity),
+                              const Color(0xFF8B5CF6).withOpacity(opacity),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withOpacity(opacity * 0.5),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 60),
+
+                // Text appearing letter by letter
+                _buildRevealingText('Speak.', textPhase, 32, FontWeight.w300),
+                const SizedBox(height: 8),
+                _buildRevealingText('Watch it write.', textPhase, 48, FontWeight.w700),
               ],
-              stops: const [0.0, 0.3, 0.6, 1.0],
             ),
           ),
         );
@@ -341,38 +275,253 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     );
   }
 
-  Widget _buildParticles(_PageData page) {
+  Widget _buildRevealingText(String text, double progress, double size, FontWeight weight) {
+    final chars = (text.length * progress).floor();
+    final visibleText = text.substring(0, chars);
+    final opacity = progress > 0 ? 1.0 : 0.0;
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: opacity,
+      child: Text(
+        visibleText,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size,
+          fontWeight: weight,
+          letterSpacing: -1,
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 2: AI PRESETS
+// Preset chips cascade down, one transforms with glow
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene2AIPresets extends StatelessWidget {
+  final AnimationController controller;
+
+  const _Scene2AIPresets({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final presets = ['Email', 'Notes', 'Social', 'Recipe', 'Summary', 'Story'];
+
     return AnimatedBuilder(
-      animation: _particleController,
+      animation: controller,
       builder: (context, _) {
-        return CustomPaint(
-          size: Size.infinite,
-          painter: _EliteParticlePainter(
-            progress: _particleController.value,
-            color: page.gradient[0],
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Title
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: controller.value > 0.1 ? 1 : 0,
+                  child: const Text(
+                    'One tap.',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: controller.value > 0.2 ? 1 : 0,
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'Perfect output.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -1.5,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+
+                // Preset chips
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: List.generate(presets.length, (i) {
+                    final delay = i * 0.1;
+                    final appear = ((controller.value - 0.3 - delay) * 3).clamp(0.0, 1.0);
+                    final isActive = i == 0 && controller.value > 0.7;
+
+                    return Transform.translate(
+                      offset: Offset(0, 20 * (1 - appear)),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: appear,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            color: isActive ? null : Colors.white.withOpacity(0.1),
+                            gradient: isActive
+                                ? const LinearGradient(
+                                    colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                                  )
+                                : null,
+                            boxShadow: isActive
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF8B5CF6).withOpacity(0.5),
+                                      blurRadius: 20,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Text(
+                            presets[i],
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(isActive ? 1 : 0.7),
+                              fontSize: 16,
+                              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
+}
 
-  Widget _buildRadialGlow(_PageData page) {
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 3: HIGHLIGHT TO AI
+// Text with highlight sweep, then transforms
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene3HighlightAI extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
+
+  const _Scene3HighlightAI({super.key, required this.controller, required this.loopController});
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _glowController,
+      animation: Listenable.merge([controller, loopController]),
       builder: (context, _) {
-        final intensity = 0.1 + _glowController.value * 0.1;
+        final highlightProgress = ((controller.value - 0.2) * 2).clamp(0.0, 1.0);
+        final transformProgress = ((controller.value - 0.6) * 2.5).clamp(0.0, 1.0);
         
-        return Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  page.gradient[0].withOpacity(intensity),
-                  page.gradient[0].withOpacity(0),
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Original text with highlight
+                  Stack(
+                    children: [
+                      // Background text
+                      Text(
+                        'Make this sound better',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      // Highlight sweep
+                      ClipRect(
+                        clipper: _HighlightClipper(highlightProgress),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF59E0B).withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'Make this sound better',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Transform indicator
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: controller.value > 0.5 ? 1 : 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          color: const Color(0xFFF59E0B).withOpacity(0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'AI rewriting...',
+                          style: TextStyle(
+                            color: const Color(0xFFF59E0B).withOpacity(0.8),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Transformed text
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: transformProgress,
+                    child: Transform.translate(
+                      offset: Offset(0, 10 * (1 - transformProgress)),
+                      child: const Text(
+                        'Elevate this to perfection',
+                        style: TextStyle(
+                          color: Color(0xFFF59E0B),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -381,332 +530,613 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       },
     );
   }
+}
 
-  // ═══════════════════════════════════════════════════════════════
-  // HEADER
-  // ═══════════════════════════════════════════════════════════════
+class _HighlightClipper extends CustomClipper<Rect> {
+  final double progress;
+  _HighlightClipper(this.progress);
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Logo
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF3B82F6).withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+  @override
+  Rect getClip(Size size) => Rect.fromLTWH(0, 0, size.width * progress, size.height);
+
+  @override
+  bool shouldReclip(_HighlightClipper old) => old.progress != progress;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 4: IMAGE TO TEXT
+// Image frame appears, scan line sweeps, text extracts
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene4ImageToText extends StatelessWidget {
+  final AnimationController controller;
+
+  const _Scene4ImageToText({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final frameAppear = (controller.value * 3).clamp(0.0, 1.0);
+        final scanProgress = ((controller.value - 0.3) * 2).clamp(0.0, 1.0);
+        final textAppear = ((controller.value - 0.7) * 3.3).clamp(0.0, 1.0);
+
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Image frame with scan
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: frameAppear,
+                  child: Transform.scale(
+                    scale: 0.9 + (frameAppear * 0.1),
+                    child: Container(
+                      width: 200,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withOpacity(0.5),
+                          width: 2,
+                        ),
+                        color: Colors.white.withOpacity(0.05),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Fake image content
+                          Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 60,
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                          // Scan line
+                          if (scanProgress > 0 && scanProgress < 1)
+                            Positioned(
+                              top: scanProgress * 140,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      const Color(0xFF10B981),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF10B981).withOpacity(0.8),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-                child: const Icon(Icons.mic, color: Colors.white, size: 18),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'VoiceBubble',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
+
+                const SizedBox(height: 50),
+
+                // Extracted text
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: textAppear,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - textAppear)),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Image → Text',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'in seconds',
+                          style: TextStyle(
+                            color: const Color(0xFF10B981),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          
-          // Skip button
-          TextButton(
-            onPressed: widget.onComplete,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 5: IMPORT ANYTHING
+// File icons float in from different directions
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene5Import extends StatelessWidget {
+  final AnimationController controller;
+
+  const _Scene5Import({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final files = [
+      (Icons.picture_as_pdf, 'PDF', const Color(0xFFEF4444), const Offset(-100, -50)),
+      (Icons.description, 'DOC', const Color(0xFF3B82F6), const Offset(100, -30)),
+      (Icons.image, 'IMG', const Color(0xFF10B981), const Offset(-80, 50)),
+      (Icons.audiotrack, 'MP3', const Color(0xFF8B5CF6), const Offset(90, 60)),
+    ];
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final titleAppear = (controller.value * 3).clamp(0.0, 1.0);
+
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // File icons floating in
+                SizedBox(
+                  height: 180,
+                  width: 280,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: List.generate(files.length, (i) {
+                      final delay = i * 0.15;
+                      final progress = ((controller.value - delay) * 2.5).clamp(0.0, 1.0);
+                      final file = files[i];
+
+                      return AnimatedPositioned(
+                        duration: const Duration(milliseconds: 100),
+                        left: 140 + (file.$4.dx * (1 - progress)) - 30,
+                        top: 90 + (file.$4.dy * (1 - progress)) - 30,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: progress,
+                          child: Transform.scale(
+                            scale: 0.5 + (progress * 0.5),
+                            child: Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: file.$3.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: file.$3.withOpacity(0.4),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: file.$3.withOpacity(0.3),
+                                    blurRadius: 15,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                file.$1,
+                                color: file.$3,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Text
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: titleAppear,
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Import',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 48,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -1.5,
+                        ),
+                      ),
+                      ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                        ).createShader(bounds),
+                        child: const Text(
+                          'anything.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 48,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 6: FLOATING BUBBLE
+// Bubble floats in, pulses, shows "anywhere" concept
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene6FloatingBubble extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
+
+  const _Scene6FloatingBubble({super.key, required this.controller, required this.loopController});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([controller, loopController]),
+      builder: (context, _) {
+        final bubbleAppear = (controller.value * 2).clamp(0.0, 1.0);
+        final textAppear = ((controller.value - 0.4) * 1.67).clamp(0.0, 1.0);
+        final float = math.sin(loopController.value * math.pi * 2) * 8;
+
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Floating bubble
+                Transform.translate(
+                  offset: Offset(0, float),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: bubbleAppear,
+                    child: Transform.scale(
+                      scale: 0.8 + (bubbleAppear * 0.2),
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withOpacity(0.5),
+                              blurRadius: 30,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.mic,
+                          color: Colors.white,
+                          size: 44,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+
+                // Text
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: textAppear,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - textAppear)),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Floating bubble.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Access anywhere.',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.6),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 7: CONTINUE WITH AI
+// Chat bubbles appear in conversation style
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene7ContinueAI extends StatelessWidget {
+  final AnimationController controller;
+
+  const _Scene7ContinueAI({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final msg1 = (controller.value * 3).clamp(0.0, 1.0);
+        final msg2 = ((controller.value - 0.25) * 3).clamp(0.0, 1.0);
+        final msg3 = ((controller.value - 0.5) * 3).clamp(0.0, 1.0);
+
+        return Container(
+          color: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // User message
+                _buildMessage(
+                  'Make it longer',
+                  isUser: true,
+                  progress: msg1,
+                ),
+                const SizedBox(height: 16),
+                // AI response
+                _buildMessage(
+                  'Done! Expanded with more detail.',
+                  isUser: false,
+                  progress: msg2,
+                ),
+                const SizedBox(height: 16),
+                // User follow-up
+                _buildMessage(
+                  'Now more casual',
+                  isUser: true,
+                  progress: msg3,
+                ),
+
+                const SizedBox(height: 50),
+
+                // Title
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: msg3,
+                  child: const Text(
+                    'Continue the\nconversation.',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                      height: 1.1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMessage(String text, {required bool isUser, required double progress}) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 300),
+      opacity: progress,
+      child: Transform.translate(
+        offset: Offset(isUser ? 20 : -20, 0) * (1 - progress),
+        child: Align(
+          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: isUser
+                  ? const Color(0xFF3B82F6)
+                  : Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20).copyWith(
+                bottomRight: isUser ? const Radius.circular(4) : null,
+                bottomLeft: !isUser ? const Radius.circular(4) : null,
+              ),
             ),
             child: Text(
-              'Skip',
+              text,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 15,
+                color: Colors.white.withOpacity(isUser ? 1 : 0.8),
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  // ═══════════════════════════════════════════════════════════════
-  // FEATURE PAGE (Pages 1-4)
-  // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 8: FINALE
+// Epic ending with logo and CTA
+// ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildFeaturePage(_PageData page) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Column(
-        children: [
-          const Spacer(flex: 2),
-          
-          // Page title
-          _buildPageTitle(page),
-          
-          const SizedBox(height: 48),
-          
-          // 3 Features with staggered animation
-          _buildFeatureCard(page.features[0], _feature1Controller, page),
-          const SizedBox(height: 16),
-          _buildFeatureCard(page.features[1], _feature2Controller, page),
-          const SizedBox(height: 16),
-          _buildFeatureCard(page.features[2], _feature3Controller, page),
-          
-          const Spacer(flex: 3),
-        ],
-      ),
-    );
-  }
+class _Scene8Finale extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
+  final VoidCallback onComplete;
 
-  Widget _buildPageTitle(_PageData page) {
-    return Column(
-      children: [
-        // Main title
-        Text(
-          page.title,
-          style: const TextStyle(
-            fontSize: 52,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            letterSpacing: -2,
-            height: 1.0,
-          ),
-        ),
-        // Gradient subtitle
-        ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: page.gradient,
-          ).createShader(bounds),
-          child: Text(
-            page.subtitle,
-            style: const TextStyle(
-              fontSize: 52,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: -2,
-              height: 1.1,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  const _Scene8Finale({
+    super.key,
+    required this.controller,
+    required this.loopController,
+    required this.onComplete,
+  });
 
-  Widget _buildFeatureCard(_FeatureData feature, AnimationController controller, _PageData page) {
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        final slideValue = Curves.easeOutCubic.transform(controller.value);
-        final fadeValue = Curves.easeOut.transform(controller.value);
-        
-        return Transform.translate(
-          offset: Offset(0, 30 * (1 - slideValue)),
-          child: Opacity(
-            opacity: fadeValue,
-            child: child,
-          ),
-        );
-      },
-      child: AnimatedBuilder(
-        animation: _glowController,
-        builder: (context, _) {
-          final glowIntensity = 0.1 + _glowController.value * 0.15;
-          
-          return Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: page.gradient[0].withOpacity(0.2 + _glowController.value * 0.1),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: page.gradient[0].withOpacity(glowIntensity * 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
+      animation: Listenable.merge([controller, loopController]),
+      builder: (context, _) {
+        final logoAppear = (controller.value * 2).clamp(0.0, 1.0);
+        final textAppear = ((controller.value - 0.3) * 2).clamp(0.0, 1.0);
+        final buttonAppear = ((controller.value - 0.6) * 2.5).clamp(0.0, 1.0);
+        final glow = 0.4 + (math.sin(loopController.value * math.pi * 2) * 0.3);
+
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Glowing icon
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: page.gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: page.gradient[0].withOpacity(glowIntensity),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
+                // Logo with glow
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 500),
+                  opacity: logoAppear,
+                  child: Transform.scale(
+                    scale: 0.8 + (logoAppear * 0.2),
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3B82F6).withOpacity(glow),
+                            blurRadius: 50,
+                            spreadRadius: 10,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    feature.icon,
-                    color: Colors.white,
-                    size: 26,
+                      child: const Icon(
+                        Icons.mic,
+                        color: Colors.white,
+                        size: 56,
+                      ),
+                    ),
                   ),
                 ),
-                
-                const SizedBox(width: 16),
-                
-                // Text content
-                Expanded(
+
+                const SizedBox(height: 40),
+
+                // Text
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: textAppear,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        feature.title,
-                        style: const TextStyle(
+                      const Text(
+                        'VoiceBubble',
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -1.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
-                        feature.subtitle,
+                        'Your voice, transformed.',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.6),
-                          fontSize: 14,
+                          fontSize: 18,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 
-  // ═══════════════════════════════════════════════════════════════
-  // LAST PAGE (Page 5 - CTA)
-  // ═══════════════════════════════════════════════════════════════
+                const SizedBox(height: 60),
 
-  Widget _buildLastPage(_PageData page) {
-    return AnimatedBuilder(
-      animation: _feature1Controller,
-      builder: (context, _) {
-        final scale = 0.8 + (0.2 * _feature1Controller.value);
-        final opacity = _feature1Controller.value;
-        
-        return Transform.scale(
-          scale: scale,
-          child: Opacity(
-            opacity: opacity,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Animated rocket icon with glow
-                AnimatedBuilder(
-                  animation: _glowController,
-                  builder: (context, _) {
-                    final bounce = math.sin(_glowController.value * math.pi * 2) * 8;
-                    final glowIntensity = 0.4 + _glowController.value * 0.4;
-                    
-                    return Transform.translate(
-                      offset: Offset(0, -bounce),
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: page.gradient,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                // CTA Button
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: buttonAppear,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - buttonAppear)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: GestureDetector(
+                        onTap: onComplete,
+                        child: Container(
+                          width: double.infinity,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6).withOpacity(0.4),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: page.gradient[0].withOpacity(glowIntensity),
-                              blurRadius: 50,
-                              spreadRadius: 10,
+                          child: const Center(
+                            child: Text(
+                              'Get Started',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            BoxShadow(
-                              color: page.gradient[1].withOpacity(glowIntensity * 0.5),
-                              blurRadius: 80,
-                              spreadRadius: 20,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.rocket_launch_rounded,
-                          color: Colors.white,
-                          size: 64,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                ),
-                
-                const SizedBox(height: 48),
-                
-                // Title
-                const Text(
-                  "Let's",
-                  style: TextStyle(
-                    fontSize: 56,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: -2,
-                    height: 1.0,
-                  ),
-                ),
-                ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: page.gradient,
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Go',
-                    style: TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -2,
-                      height: 1.1,
                     ),
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Tagline
-                Text(
-                  'Your voice, transformed',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -715,200 +1145,5 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
         );
       },
     );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PROGRESS DOTS
-  // ═══════════════════════════════════════════════════════════════
-
-  Widget _buildProgressDots() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_pages.length, (index) {
-          final isActive = index == _currentPage;
-          final isPast = index < _currentPage;
-          
-          return GestureDetector(
-            onTap: () => _goToPage(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              width: isActive ? 28 : 10,
-              height: 10,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                gradient: (isActive || isPast)
-                    ? LinearGradient(colors: _pages[index].gradient)
-                    : null,
-                color: (isActive || isPast) ? null : Colors.white.withOpacity(0.2),
-                boxShadow: isActive
-                    ? [
-                        BoxShadow(
-                          color: _pages[index].gradient[0].withOpacity(0.5),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // CTA BUTTON
-  // ═══════════════════════════════════════════════════════════════
-
-  Widget _buildCTAButton(_PageData page) {
-    final isLastPage = page.isLastPage;
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: AnimatedBuilder(
-        animation: _glowController,
-        builder: (context, _) {
-          final glowIntensity = 0.3 + _glowController.value * 0.2;
-          
-          return Container(
-            width: double.infinity,
-            height: 58,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(colors: page.gradient),
-              boxShadow: [
-                BoxShadow(
-                  color: page.gradient[0].withOpacity(glowIntensity),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: isLastPage ? widget.onComplete : () {
-                  _autoAdvanceTimer?.cancel();
-                  _nextPage();
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isLastPage ? 'Get Started' : 'Continue',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        isLastPage 
-                            ? Icons.arrow_forward_rounded 
-                            : Icons.arrow_forward_ios_rounded,
-                        color: Colors.white,
-                        size: isLastPage ? 22 : 18,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// DATA MODELS
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _PageData {
-  final String title;
-  final String subtitle;
-  final List<Color> gradient;
-  final List<_FeatureData> features;
-  final bool isLastPage;
-
-  const _PageData({
-    required this.title,
-    required this.subtitle,
-    required this.gradient,
-    required this.features,
-    this.isLastPage = false,
-  });
-}
-
-class _FeatureData {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _FeatureData({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ELITE PARTICLE PAINTER
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _EliteParticlePainter extends CustomPainter {
-  final double progress;
-  final Color color;
-
-  _EliteParticlePainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    final random = math.Random(42);
-
-    // Floating orbs - larger, more visible
-    for (int i = 0; i < 15; i++) {
-      final x = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
-      final speed = 0.2 + random.nextDouble() * 0.3;
-      final y = (baseY - (progress * size.height * speed * 0.5)) % size.height;
-      final radius = 3 + random.nextDouble() * 6;
-      final opacity = 0.15 + random.nextDouble() * 0.2;
-
-      paint.color = color.withOpacity(opacity);
-      paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-      canvas.drawCircle(Offset(x, y), radius, paint);
-    }
-
-    // Tiny sparkles
-    paint.maskFilter = null;
-    for (int i = 0; i < 30; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-      final twinkle = math.sin((progress * 4 + i * 0.5) * math.pi);
-      
-      if (twinkle > 0.3) {
-        final radius = 1 + twinkle * 2;
-        final opacity = twinkle * 0.4;
-        paint.color = Colors.white.withOpacity(opacity);
-        canvas.drawCircle(Offset(x, y), radius, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _EliteParticlePainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }
