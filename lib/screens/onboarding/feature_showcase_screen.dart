@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'dart:async';
 
-/// Cinematic feature showcase screen for onboarding.
-/// Displays 15 features with auto-advancing pages and smooth animations.
+/// CINEMATIC FEATURE SHOWCASE - THE COMPLETE EXPERIENCE
+/// Every killer feature that makes VoiceBubble special
 class FeatureShowcaseScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
@@ -14,399 +16,1191 @@ class FeatureShowcaseScreen extends StatefulWidget {
 
 class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     with TickerProviderStateMixin {
-  late PageController _pageController;
-  late AnimationController _fadeController;
-  late AnimationController _pulseController;
-  late Animation<double> _fadeAnimation;
-  int _currentPage = 0;
 
-  static const _features = <_Feature>[
+  late AnimationController _backgroundController;
+  late AnimationController _contentController;
+  late AnimationController _iconController;
+  late AnimationController _particleController;
+  late AnimationController _demoController;
+
+  late Animation<double> _backgroundAnimation;
+  late Animation<double> _iconScale;
+  late Animation<double> _iconGlow;
+  late Animation<Offset> _slideIn;
+
+  int _currentFeature = 0;
+  Timer? _autoAdvanceTimer;
+
+  // ALL THE KILLER FEATURES
+  final List<_Feature> _features = [
+    // 1. Voice to Text
     _Feature(
       icon: Icons.mic_rounded,
-      title: 'Voice-to-Text',
-      subtitle: 'Speak naturally and watch your words appear as polished text instantly',
-      color: Color(0xFF3B82F6),
+      title: 'Speak',
+      subtitle: 'Watch It Write',
+      tagline: 'Crystal-clear AI transcription in seconds',
+      demo: _DemoType.voiceWaves,
+      gradient: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
     ),
+
+    // 2. AI Presets
     _Feature(
       icon: Icons.auto_awesome_rounded,
-      title: 'AI Rewriting',
-      subtitle: 'Your raw speech is refined into clear, professional writing automatically',
-      color: Color(0xFF8B5CF6),
+      title: 'One Tap',
+      subtitle: 'Perfect Output',
+      tagline: '10+ AI presets — emails, notes, social & more',
+      demo: _DemoType.presetCards,
+      gradient: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
     ),
+
+    // 3. Custom Instructions
     _Feature(
-      icon: Icons.bubble_chart_rounded,
-      title: 'Floating Bubble',
-      subtitle: 'Access VoiceBubble from any app with the always-on floating overlay',
-      color: Color(0xFF06B6D4),
+      icon: Icons.tune_rounded,
+      title: 'Your Rules',
+      subtitle: 'Your Style',
+      tagline: 'Add custom instructions to any preset',
+      demo: _DemoType.customInstructions,
+      gradient: [Color(0xFF6366F1), Color(0xFF3B82F6)],
     ),
+
+    // 4. Highlight to AI
     _Feature(
-      icon: Icons.language_rounded,
-      title: '30+ Languages',
-      subtitle: 'Speak in English, Spanish, French, German, Japanese, and many more',
-      color: Color(0xFF10B981),
+      icon: Icons.highlight_rounded,
+      title: 'Highlight',
+      subtitle: 'Transform',
+      tagline: 'Select any text → tap preset → done',
+      demo: _DemoType.highlightText,
+      gradient: [Color(0xFFF59E0B), Color(0xFFEF4444)],
     ),
+
+    // 5. Continue with AI Chat
     _Feature(
-      icon: Icons.palette_rounded,
-      title: '30+ AI Presets',
-      subtitle: 'Professional email, casual chat, poetry, social media captions, and more',
-      color: Color(0xFFF59E0B),
+      icon: Icons.chat_bubble_rounded,
+      title: 'Continue',
+      subtitle: 'With AI',
+      tagline: 'Chat to refine, expand, or change anything',
+      demo: _DemoType.aiChat,
+      gradient: [Color(0xFF10B981), Color(0xFF06B6D4)],
     ),
+
+    // 6. Full Document Editor
     _Feature(
-      icon: Icons.bolt_rounded,
-      title: 'Lightning Fast',
-      subtitle: 'Tap the bubble, speak for a few seconds, and your text is ready to paste',
-      color: Color(0xFFEF4444),
+      icon: Icons.edit_document,
+      title: 'Power',
+      subtitle: 'Editor',
+      tagline: 'Full rich text editing with formatting',
+      demo: _DemoType.documentEditor,
+      gradient: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
     ),
-    _Feature(
-      icon: Icons.content_copy_rounded,
-      title: 'One-Tap Copy',
-      subtitle: 'Copy your polished text to clipboard with a single tap',
-      color: Color(0xFF3B82F6),
-    ),
+
+    // 7. Share to App → Instant AI
     _Feature(
       icon: Icons.share_rounded,
-      title: 'Share Anywhere',
-      subtitle: 'Send your text directly to WhatsApp, Gmail, Instagram, or any app',
-      color: Color(0xFF8B5CF6),
+      title: 'Share',
+      subtitle: 'Instant AI',
+      tagline: 'Share anything → tap AI → transformed',
+      demo: _DemoType.shareToAI,
+      gradient: [Color(0xFFEC4899), Color(0xFFF59E0B)],
     ),
+
+    // 8. Image to Text (OCR)
+    _Feature(
+      icon: Icons.document_scanner_rounded,
+      title: 'Image',
+      subtitle: 'To Text',
+      tagline: 'OCR extracts text from any image',
+      demo: _DemoType.imageToText,
+      gradient: [Color(0xFF10B981), Color(0xFF14B8A6)],
+    ),
+
+    // 9. Import Anything
+    _Feature(
+      icon: Icons.folder_copy_rounded,
+      title: 'Import',
+      subtitle: 'Anything',
+      tagline: 'PDFs, Docs, Images, Audio — all supported',
+      demo: _DemoType.importFiles,
+      gradient: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+    ),
+
+    // 10. Upload Audio to AI
+    _Feature(
+      icon: Icons.audio_file_rounded,
+      title: 'Audio',
+      subtitle: 'To AI',
+      tagline: 'Upload voice memos → transcribe → transform',
+      demo: _DemoType.audioUpload,
+      gradient: [Color(0xFFF97316), Color(0xFFEF4444)],
+    ),
+
+    // 11. Batch Processing
+    _Feature(
+      icon: Icons.bolt_rounded,
+      title: 'Batch',
+      subtitle: 'Process',
+      tagline: 'Transform 100 files in one go',
+      demo: _DemoType.batchProcess,
+      gradient: [Color(0xFFEF4444), Color(0xFFF97316)],
+    ),
+
+    // 12. Export Anywhere
+    _Feature(
+      icon: Icons.ios_share_rounded,
+      title: 'Export',
+      subtitle: 'Anywhere',
+      tagline: 'Share, copy, or save in any format',
+      demo: _DemoType.exportShare,
+      gradient: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
+    ),
+
+    // 13. Version History
     _Feature(
       icon: Icons.history_rounded,
-      title: 'History & Search',
-      subtitle: 'All your voice notes are saved and searchable so nothing is lost',
-      color: Color(0xFF06B6D4),
+      title: 'Version',
+      subtitle: 'Restore',
+      tagline: 'Every edit saved — restore anytime',
+      demo: _DemoType.versionHistory,
+      gradient: [Color(0xFF64748B), Color(0xFF475569)],
     ),
+
+    // 14. Tasks & Scheduling
     _Feature(
-      icon: Icons.folder_rounded,
-      title: 'Smart Folders',
-      subtitle: 'Organize your recordings into custom folders for easy access',
-      color: Color(0xFF10B981),
+      icon: Icons.task_alt_rounded,
+      title: 'Tasks',
+      subtitle: 'Schedule',
+      tagline: 'Create tasks & schedule content',
+      demo: _DemoType.tasksSchedule,
+      gradient: [Color(0xFF10B981), Color(0xFF059669)],
     ),
+
+    // 15. Ready - CTA
     _Feature(
-      icon: Icons.edit_note_rounded,
-      title: 'Edit & Refine',
-      subtitle: 'Fine-tune your AI-generated text before sharing or copying',
-      color: Color(0xFFF59E0B),
-    ),
-    _Feature(
-      icon: Icons.notifications_active_rounded,
-      title: 'Smart Reminders',
-      subtitle: 'Set reminders on your voice notes so you never forget to follow up',
-      color: Color(0xFFEF4444),
-    ),
-    _Feature(
-      icon: Icons.dark_mode_rounded,
-      title: 'Dark Mode',
-      subtitle: 'Beautiful dark interface that is easy on your eyes day and night',
-      color: Color(0xFF3B82F6),
-    ),
-    _Feature(
-      icon: Icons.import_export_rounded,
-      title: 'Import & Export',
-      subtitle: 'Receive shared audio, text, and files from other apps seamlessly',
-      color: Color(0xFF8B5CF6),
-    ),
-    _Feature(
-      icon: Icons.security_rounded,
-      title: 'Private & Secure',
-      subtitle: 'Your voice recordings and text stay on your device, always private',
-      color: Color(0xFF10B981),
+      icon: Icons.rocket_launch_rounded,
+      title: 'Ready?',
+      subtitle: "Let's Go",
+      tagline: 'Your voice, transformed',
+      demo: _DemoType.rocket,
+      gradient: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _initAnimations();
+    _startFeature();
+  }
 
-    _fadeController = AnimationController(
+  void _initAnimations() {
+    _backgroundController = AnimationController(
+      duration: const Duration(milliseconds: 4000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _backgroundAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
+    );
+
+    _contentController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
-    _pulseController = AnimationController(
+    _slideIn = Tween<Offset>(
+      begin: const Offset(0.15, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _contentController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _iconController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+    _iconScale = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
     );
 
-    _fadeController.forward();
+    _iconGlow = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
+    );
+
+    _particleController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    )..repeat();
+
+    _demoController = AnimationController(
+      duration: const Duration(milliseconds: 2500),
+      vsync: this,
+    )..repeat();
+  }
+
+  void _startFeature() {
+    _contentController.forward(from: 0);
+
+    _autoAdvanceTimer?.cancel();
+    _autoAdvanceTimer = Timer(const Duration(milliseconds: 3000), () {
+      if (mounted && _currentFeature < _features.length - 1) {
+        _nextFeature();
+      }
+    });
+  }
+
+  void _nextFeature() {
+    if (_currentFeature < _features.length - 1) {
+      HapticFeedback.lightImpact();
+      _contentController.reverse().then((_) {
+        setState(() => _currentFeature++);
+        _startFeature();
+      });
+    }
+  }
+
+  void _previousFeature() {
+    if (_currentFeature > 0) {
+      HapticFeedback.lightImpact();
+      _contentController.reverse().then((_) {
+        setState(() => _currentFeature--);
+        _startFeature();
+      });
+    }
+  }
+
+  void _goToFeature(int index) {
+    if (index != _currentFeature) {
+      _autoAdvanceTimer?.cancel();
+      HapticFeedback.lightImpact();
+      _contentController.reverse().then((_) {
+        setState(() => _currentFeature = index);
+        _startFeature();
+      });
+    }
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _fadeController.dispose();
-    _pulseController.dispose();
+    _autoAdvanceTimer?.cancel();
+    _backgroundController.dispose();
+    _contentController.dispose();
+    _iconController.dispose();
+    _particleController.dispose();
+    _demoController.dispose();
     super.dispose();
-  }
-
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentPage = page;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLastPage = _currentPage == _features.length - 1;
+    final feature = _features[_currentFeature];
+    final isLastFeature = _currentFeature == _features.length - 1;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0A0A0A),
-              Color(0xFF1A1A1A),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              children: [
-                // Header with progress
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${_currentPage + 1} / ${_features.length}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withOpacity(0.5),
-                            ),
-                          ),
-                          if (!isLastPage)
-                            GestureDetector(
-                              onTap: widget.onComplete,
-                              child: Text(
-                                'Skip',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white.withOpacity(0.5),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Progress bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: (_currentPage + 1) / _features.length,
-                          backgroundColor: Colors.white.withOpacity(0.1),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _features[_currentPage].color,
-                          ),
-                          minHeight: 3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Page content
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    itemCount: _features.length,
-                    itemBuilder: (context, index) {
-                      return _FeaturePage(
-                        feature: _features[index],
-                        index: index,
-                        pulseController: _pulseController,
-                      );
-                    },
-                  ),
-                ),
-
-                // Dot indicators
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_features.length, (index) {
-                      final isActive = index == _currentPage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: isActive ? 24 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
-                          color: isActive
-                              ? _features[_currentPage].color
-                              : Colors.white.withOpacity(0.2),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-
-                // Bottom button
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLastPage
-                          ? widget.onComplete
-                          : () {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeInOut,
-                              );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _features[_currentPage].color,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        isLastPage ? 'Continue' : 'Next Feature',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          _autoAdvanceTimer?.cancel();
+          if (details.primaryVelocity! < -300) {
+            _nextFeature();
+          } else if (details.primaryVelocity! > 300) {
+            _previousFeature();
+          }
+        },
+        child: Stack(
+          children: [
+            _buildBackground(feature),
+            _buildParticles(feature),
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: SlideTransition(
+                      position: _slideIn,
+                      child: FadeTransition(
+                        opacity: _contentController,
+                        child: _buildContent(feature),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  _buildProgress(),
+                  _buildCTA(isLastFeature, feature),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
-}
 
-/// Individual feature page shown inside the PageView.
-class _FeaturePage extends StatelessWidget {
-  final _Feature feature;
-  final int index;
-  final AnimationController pulseController;
+  Widget _buildBackground(_Feature feature) {
+    return AnimatedBuilder(
+      animation: _backgroundAnimation,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(
+                math.sin(_backgroundAnimation.value * math.pi) * 0.5,
+                -0.3 + math.cos(_backgroundAnimation.value * math.pi) * 0.2,
+              ),
+              radius: 1.5,
+              colors: [
+                feature.gradient[0].withOpacity(0.35),
+                feature.gradient[1].withOpacity(0.15),
+                Colors.black,
+              ],
+              stops: const [0.0, 0.35, 0.7],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-  const _FeaturePage({
-    required this.feature,
-    required this.index,
-    required this.pulseController,
-  });
+  Widget _buildParticles(_Feature feature) {
+    return AnimatedBuilder(
+      animation: _particleController,
+      builder: (context, _) {
+        return CustomPaint(
+          size: Size.infinite,
+          painter: _ParticlePainter(
+            progress: _particleController.value,
+            color: feature.gradient[0],
+          ),
+        );
+      },
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Animated icon container
-          AnimatedBuilder(
-            animation: pulseController,
-            builder: (context, child) {
-              final scale = 1.0 + 0.08 * math.sin(pulseController.value * math.pi);
-              return Transform.scale(
-                scale: scale,
-                child: child,
-              );
-            },
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    feature.color,
-                    feature.color.withOpacity(0.7),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: feature.color.withOpacity(0.4),
-                    blurRadius: 50,
-                    offset: const Offset(0, 20),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(Icons.mic, color: Colors.white, size: 16),
               ),
-              child: Icon(
-                feature.icon,
-                size: 64,
-                color: Colors.white,
+              const SizedBox(width: 8),
+              const Text(
+                'VoiceBubble',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 48),
-          // Title
-          Text(
-            feature.title,
-            style: const TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          // Subtitle
-          Text(
-            feature.subtitle,
-            style: TextStyle(
-              fontSize: 17,
-              color: Colors.white.withOpacity(0.8),
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-          // Decorative accent line
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: feature.color.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(2),
+          TextButton(
+            onPressed: widget.onComplete,
+            child: Text(
+              'Skip',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 14,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildContent(_Feature feature) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildAnimatedIcon(feature),
+          const SizedBox(height: 32),
+          _buildTitle(feature),
+          const SizedBox(height: 14),
+          _buildTagline(feature),
+          const SizedBox(height: 32),
+          _buildDemo(feature),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedIcon(_Feature feature) {
+    return AnimatedBuilder(
+      animation: _iconController,
+      builder: (context, child) {
+        return Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: feature.gradient,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: feature.gradient[0].withOpacity(0.5 * _iconGlow.value),
+                blurRadius: 40 * _iconGlow.value,
+                spreadRadius: 8 * _iconGlow.value,
+              ),
+            ],
+          ),
+          child: Transform.scale(
+            scale: _iconScale.value,
+            child: Icon(feature.icon, color: Colors.white, size: 46),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTitle(_Feature feature) {
+    return Column(
+      children: [
+        Text(
+          feature.title,
+          style: const TextStyle(
+            fontSize: 44,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: -1.5,
+            height: 1.0,
+          ),
+        ),
+        const SizedBox(height: 2),
+        ShaderMask(
+          shaderCallback: (bounds) => LinearGradient(
+            colors: feature.gradient,
+          ).createShader(bounds),
+          child: Text(
+            feature.subtitle,
+            style: const TextStyle(
+              fontSize: 44,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -1.5,
+              height: 1.0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTagline(_Feature feature) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: feature.gradient[0].withOpacity(0.25),
+        ),
+      ),
+      child: Text(
+        feature.tagline,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.85),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildDemo(_Feature feature) {
+    return AnimatedBuilder(
+      animation: _demoController,
+      builder: (context, _) {
+        return SizedBox(
+          height: 80,
+          child: _buildDemoContent(feature),
+        );
+      },
+    );
+  }
+
+  Widget _buildDemoContent(_Feature feature) {
+    switch (feature.demo) {
+      case _DemoType.voiceWaves:
+        return _buildVoiceWavesDemo(feature);
+      case _DemoType.presetCards:
+        return _buildPresetCardsDemo(feature);
+      case _DemoType.highlightText:
+        return _buildHighlightDemo(feature);
+      case _DemoType.imageToText:
+        return _buildImageToTextDemo(feature);
+      case _DemoType.importFiles:
+        return _buildImportFilesDemo(feature);
+      case _DemoType.batchProcess:
+        return _buildBatchDemo(feature);
+      case _DemoType.customInstructions:
+        return _buildCustomInstructionsDemo(feature);
+      case _DemoType.rocket:
+        return _buildRocketDemo(feature);
+      case _DemoType.aiChat:
+        return _buildAIChatDemo(feature);
+      case _DemoType.documentEditor:
+        return _buildDocumentEditorDemo(feature);
+      case _DemoType.shareToAI:
+        return _buildShareToAIDemo(feature);
+      case _DemoType.audioUpload:
+        return _buildAudioUploadDemo(feature);
+      case _DemoType.exportShare:
+        return _buildExportShareDemo(feature);
+      case _DemoType.versionHistory:
+        return _buildVersionHistoryDemo(feature);
+      case _DemoType.tasksSchedule:
+        return _buildTasksScheduleDemo(feature);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEMO ANIMATIONS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildVoiceWavesDemo(_Feature feature) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(14, (index) {
+        final delay = index * 0.07;
+        final height = 15 +
+            math.sin((_demoController.value * 2 * math.pi) + delay * math.pi * 2) * 25;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 2.5),
+          width: 4,
+          height: height.abs() + 8,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: feature.gradient,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildPresetCardsDemo(_Feature feature) {
+    final presets = ['Email', 'Notes', 'Social', 'Recipe'];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(presets.length, (index) {
+        final isActive = ((_demoController.value * 4).floor() % 4) == index;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? feature.gradient[0] : Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            presets[index],
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildHighlightDemo(_Feature feature) {
+    final progress = _demoController.value;
+    final highlightWidth = progress < 0.5 ? progress * 2 : 1.0;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Stack(
+          children: [
+            Text(
+              'Transform this text',
+              style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 16),
+            ),
+            ClipRect(
+              clipper: _TextClipper(highlightWidth),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                decoration: BoxDecoration(
+                  color: feature.gradient[0].withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'Transform this text',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (progress > 0.6)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.auto_awesome, color: feature.gradient[0], size: 14),
+                const SizedBox(width: 5),
+                Text('AI Rewriting...', style: TextStyle(color: feature.gradient[0], fontSize: 12, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAIChatDemo(_Feature feature) {
+    final progress = _demoController.value;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // User message
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: feature.gradient[0],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text('Make it longer', style: TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // AI response
+        if (progress > 0.3)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: feature.gradient[1], size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      progress > 0.6 ? 'Done! Expanded to 3 paragraphs' : 'Expanding...',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentEditorDemo(_Feature feature) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: feature.gradient[0].withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              _buildFormatButton(Icons.format_bold, feature),
+              _buildFormatButton(Icons.format_italic, feature),
+              _buildFormatButton(Icons.format_list_bulleted, feature),
+              _buildFormatButton(Icons.image, feature),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 2,
+            width: 100 + (_demoController.value * 60),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormatButton(IconData icon, _Feature feature) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Icon(icon, color: feature.gradient[0], size: 16),
+    );
+  }
+
+  Widget _buildShareToAIDemo(_Feature feature) {
+    final progress = _demoController.value;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.share, color: Colors.white.withOpacity(0.6), size: 28),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: List.generate(3, (i) {
+              final opacity = ((progress * 3 - i) % 1.0).clamp(0.0, 1.0);
+              return Icon(Icons.chevron_right, color: feature.gradient[0].withOpacity(opacity), size: 20);
+            }),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: feature.gradient),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 24),
+        ),
+        if (progress > 0.7)
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Icon(Icons.check_circle, color: feature.gradient[1], size: 28),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImageToTextDemo(_Feature feature) {
+    final progress = _demoController.value;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(Icons.image, color: feature.gradient[0], size: 28),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            children: List.generate(3, (i) {
+              final opacity = ((progress * 3 - i) % 1.0).clamp(0.0, 1.0);
+              return Icon(Icons.chevron_right, color: feature.gradient[0].withOpacity(opacity), size: 20);
+            }),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(Icons.text_fields, color: feature.gradient[1], size: 28),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImportFilesDemo(_Feature feature) {
+    final icons = [Icons.picture_as_pdf, Icons.description, Icons.image, Icons.audiotrack];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(icons.length, (index) {
+        final delay = index * 0.15;
+        final bounce = math.sin((_demoController.value + delay) * math.pi * 2) * 6;
+
+        return Transform.translate(
+          offset: Offset(0, bounce),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: feature.gradient[index % 2].withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icons[index], color: Colors.white, size: 20),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildAudioUploadDemo(_Feature feature) {
+    final progress = _demoController.value;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.audio_file, color: feature.gradient[0], size: 32),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 100,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation(feature.gradient[0]),
+              minHeight: 5,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        if (progress > 0.8)
+          Icon(Icons.text_snippet, color: feature.gradient[1], size: 32),
+      ],
+    );
+  }
+
+  Widget _buildBatchDemo(_Feature feature) {
+    final count = ((_demoController.value * 100) % 100).floor();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '$count / 100',
+          style: TextStyle(color: feature.gradient[0], fontSize: 28, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: 180,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: _demoController.value,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation(feature.gradient[0]),
+              minHeight: 5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExportShareDemo(_Feature feature) {
+    final icons = [Icons.copy, Icons.share, Icons.save_alt, Icons.email];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(icons.length, (index) {
+        final isActive = ((_demoController.value * 4).floor() % 4) == index;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isActive ? feature.gradient[0] : Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icons[index], color: Colors.white, size: 20),
+        );
+      }),
+    );
+  }
+
+  Widget _buildVersionHistoryDemo(_Feature feature) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildVersionDot('v1', feature, 0.3),
+        _buildVersionLine(feature),
+        _buildVersionDot('v2', feature, 0.6),
+        _buildVersionLine(feature),
+        _buildVersionDot('v3', feature, 1.0),
+      ],
+    );
+  }
+
+  Widget _buildVersionDot(String label, _Feature feature, double targetProgress) {
+    final isActive = _demoController.value >= targetProgress;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive ? feature.gradient[0] : Colors.white.withOpacity(0.1),
+          ),
+          child: Center(
+            child: isActive
+              ? const Icon(Icons.check, color: Colors.white, size: 16)
+              : null,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10)),
+      ],
+    );
+  }
+
+  Widget _buildVersionLine(_Feature feature) {
+    return Container(
+      width: 30,
+      height: 2,
+      margin: const EdgeInsets.only(bottom: 16),
+      color: feature.gradient[0].withOpacity(0.3),
+    );
+  }
+
+  Widget _buildTasksScheduleDemo(_Feature feature) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle, color: feature.gradient[0], size: 18),
+              const SizedBox(width: 6),
+              const Text('Send report', style: TextStyle(color: Colors.white, fontSize: 12)),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: feature.gradient[0].withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.schedule, color: feature.gradient[1], size: 18),
+              const SizedBox(width: 6),
+              const Text('2:00 PM', style: TextStyle(color: Colors.white, fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCustomInstructionsDemo(_Feature feature) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: feature.gradient[0].withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.edit_note, color: feature.gradient[0], size: 20),
+          const SizedBox(width: 10),
+          Text(
+            '"Make it professional & concise"',
+            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, fontStyle: FontStyle.italic),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRocketDemo(_Feature feature) {
+    final bounce = math.sin(_demoController.value * math.pi * 4) * 8;
+
+    return Transform.translate(
+      offset: Offset(0, -bounce.abs()),
+      child: Icon(Icons.rocket_launch_rounded, color: feature.gradient[0], size: 56),
+    );
+  }
+
+  Widget _buildProgress() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_features.length, (index) {
+          final isActive = index == _currentFeature;
+          final isPast = index < _currentFeature;
+
+          return GestureDetector(
+            onTap: () => _goToFeature(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 20 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3),
+                color: isActive || isPast
+                    ? _features[index].gradient[0]
+                    : Colors.white.withOpacity(0.2),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCTA(bool isLastFeature, _Feature feature) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: ElevatedButton(
+          onPressed: isLastFeature ? widget.onComplete : () {
+            _autoAdvanceTimer?.cancel();
+            _nextFeature();
+          },
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            elevation: 0,
+          ),
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: feature.gradient),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Container(
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isLastFeature ? 'Get Started' : 'Next',
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    isLastFeature ? Icons.arrow_forward_rounded : Icons.arrow_forward_ios,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-/// Data class for a single feature entry.
+// ═══════════════════════════════════════════════════════════════
+// MODELS & PAINTERS
+// ═══════════════════════════════════════════════════════════════
+
+enum _DemoType {
+  voiceWaves,
+  presetCards,
+  highlightText,
+  imageToText,
+  importFiles,
+  batchProcess,
+  customInstructions,
+  rocket,
+  aiChat,
+  documentEditor,
+  shareToAI,
+  audioUpload,
+  exportShare,
+  versionHistory,
+  tasksSchedule,
+}
+
 class _Feature {
   final IconData icon;
   final String title;
   final String subtitle;
-  final Color color;
+  final String tagline;
+  final _DemoType demo;
+  final List<Color> gradient;
 
   const _Feature({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.color,
+    required this.tagline,
+    required this.demo,
+    required this.gradient,
   });
+}
+
+class _ParticlePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ParticlePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final random = math.Random(42);
+
+    for (int i = 0; i < 25; i++) {
+      final x = random.nextDouble() * size.width;
+      final baseY = random.nextDouble() * size.height;
+      final speed = 0.3 + random.nextDouble() * 0.4;
+      final y = (baseY - (progress * size.height * speed)) % size.height;
+      final radius = 1.5 + random.nextDouble() * 3;
+      final opacity = 0.08 + random.nextDouble() * 0.15;
+
+      paint.color = color.withOpacity(opacity);
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
+  }
+}
+
+class _TextClipper extends CustomClipper<Rect> {
+  final double progress;
+  _TextClipper(this.progress);
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTWH(0, 0, size.width * progress, size.height);
+
+  @override
+  bool shouldReclip(covariant _TextClipper oldClipper) => oldClipper.progress != progress;
 }
