@@ -29,8 +29,8 @@ android {
     defaultConfig {
         applicationId = "com.voicebubble.app"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 16
+        targetSdk = 35
+        versionCode = 17
         versionName = "1.0.6"
     }
 
