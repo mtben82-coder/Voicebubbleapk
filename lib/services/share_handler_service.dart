@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -67,38 +66,15 @@ class ShareHandlerService {
       debugPrint('  MIME: ${file.mimeType}');
       debugPrint('  Type: ${file.type}');
 
-      // Handle text shared via SharedMediaType.text
-      if (file.type == SharedMediaType.text) {
-        // Read the actual file content instead of showing the file path
-        String? textContent;
-        try {
-          final textFile = File(file.path);
-          if (await textFile.exists()) {
-            textContent = await textFile.readAsString();
-          }
-        } catch (e) {
-          debugPrint('Failed to read shared text file: $e');
-          textContent = file.path; // Fallback to path if read fails
-        }
-
-        final content = SharedContent(
-          type: SharedContentType.text,
-          text: textContent ?? file.path,
-          mimeType: file.mimeType,
-        );
-        _bufferedContent = content; // Buffer in case no listener yet
-        _pendingShareController.add(content);
-      } else {
-        // Handle files (images, audio, video, documents)
-        final content = SharedContent(
-          type: _getContentType(file.mimeType, file.type),
-          filePath: file.path,
-          mimeType: file.mimeType,
-          fileName: _extractFileName(file.path),
-        );
-        _bufferedContent = content; // Buffer in case no listener yet
-        _pendingShareController.add(content);
-      }
+      final contentType = _getContentType(file.mimeType, file.type);
+      final content = SharedContent(
+        type: contentType,
+        filePath: file.path,
+        mimeType: file.mimeType,
+        fileName: _extractFileName(file.path),
+      );
+      _bufferedContent = content; // Buffer in case no listener yet
+      _pendingShareController.add(content);
     }
 
     // Reset so we don't process again
