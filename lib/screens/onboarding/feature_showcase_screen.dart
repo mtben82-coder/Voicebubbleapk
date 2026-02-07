@@ -3,18 +3,12 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// 
-///   ██╗   ██╗ ██████╗ ██╗ ██████╗███████╗██████╗ ██╗   ██╗██████╗ ██████╗ ██╗     ███████╗
-///   ██║   ██║██╔═══██╗██║██╔════╝██╔════╝██╔══██╗██║   ██║██╔══██╗██╔══██╗██║     ██╔════╝
-///   ██║   ██║██║   ██║██║██║     █████╗  ██████╔╝██║   ██║██████╔╝██████╔╝██║     █████╗  
-///   ╚██╗ ██╔╝██║   ██║██║██║     ██╔══╝  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██║     ██╔══╝  
-///    ╚████╔╝ ╚██████╔╝██║╚██████╗███████╗██████╔╝╚██████╔╝██████╔╝██████╔╝███████╗███████╗
-///     ╚═══╝   ╚═════╝ ╚═╝ ╚═════╝╚══════╝╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
+/// VOICEBUBBLE CINEMA - THE EXPERIENCE
+/// ═══════════════════════════════════════════════════════════════════════════
 ///
-///   THE CINEMA - ONE CONTINUOUS MOVIE
-///   
-///   No pages. No dots. No buttons. Just the experience.
-///   Each moment hits. Fades. Next moment. Pure cinema.
+/// Slower. Cleaner. Each moment breathes.
+/// Text appears smoothly, centered, readable.
+/// No rushing. No clutter. Just impact.
 ///
 /// ═══════════════════════════════════════════════════════════════════════════
 
@@ -30,52 +24,50 @@ class FeatureShowcaseScreen extends StatefulWidget {
 class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     with TickerProviderStateMixin {
   
-  late AnimationController _masterController;
-  late AnimationController _waveController;
-  late AnimationController _glowController;
-  
-  // Total duration: ~18 seconds
-  static const double _sceneDuration = 2.2;
-  static const int _totalScenes = 8;
+  late AnimationController _sceneController;
+  late AnimationController _loopController;
   
   int _currentScene = 0;
-  bool _showingFinale = false;
+  bool _isFinale = false;
+  
+  // 8 scenes + finale
+  static const int _totalScenes = 8;
+  // Each scene: 3.5 seconds (slower, more time to absorb)
+  static const Duration _sceneDuration = Duration(milliseconds: 3500);
+  // Pause between scenes
+  static const Duration _scenePause = Duration(milliseconds: 400);
 
   @override
   void initState() {
     super.initState();
     
-    _masterController = AnimationController(
-      duration: Duration(milliseconds: (_sceneDuration * 1000).toInt()),
+    _sceneController = AnimationController(
+      duration: _sceneDuration,
       vsync: this,
     );
     
-    _waveController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    _loopController = AnimationController(
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     )..repeat();
     
-    _glowController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _runCinema();
+    _startCinema();
   }
 
-  void _runCinema() async {
+  Future<void> _startCinema() async {
     for (int i = 0; i < _totalScenes; i++) {
       if (!mounted) return;
       
       setState(() => _currentScene = i);
-      _masterController.forward(from: 0);
+      await _sceneController.forward(from: 0);
       
-      await Future.delayed(Duration(milliseconds: (_sceneDuration * 1000).toInt() + 300));
+      if (!mounted) return;
+      await Future.delayed(_scenePause);
     }
     
     // Show finale
     if (mounted) {
-      setState(() => _showingFinale = true);
+      setState(() => _isFinale = true);
     }
   }
 
@@ -86,101 +78,80 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 
   @override
   void dispose() {
-    _masterController.dispose();
-    _waveController.dispose();
-    _glowController.dispose();
+    _sceneController.dispose();
+    _loopController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          // Main cinema
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: _showingFinale 
-                ? _FinaleScene(
-                    key: const ValueKey('finale'),
-                    glowController: _glowController,
-                    onComplete: widget.onComplete,
-                  )
-                : _buildScene(_currentScene),
-          ),
+          // Main content
+          _isFinale
+              ? _Finale(
+                  loopController: _loopController,
+                  onComplete: widget.onComplete,
+                )
+              : _buildCurrentScene(),
           
-          // Skip button - subtle, top right
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 20,
-            child: GestureDetector(
-              onTap: _skip,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: _showingFinale ? 0 : 0.5,
-                child: Text(
-                  'Skip',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+          // Skip button - top right, subtle
+          if (!_isFinale)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 24,
+              child: GestureDetector(
+                onTap: _skip,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
+                    'Skip',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildScene(int index) {
+  Widget _buildCurrentScene() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: KeyedSubtree(
+        key: ValueKey(_currentScene),
+        child: _getScene(_currentScene),
+      ),
+    );
+  }
+
+  Widget _getScene(int index) {
     switch (index) {
       case 0:
-        return _Scene1Voice(
-          key: const ValueKey(0),
-          master: _masterController,
-          wave: _waveController,
-        );
+        return _SceneVoice(controller: _sceneController, loopController: _loopController);
       case 1:
-        return _Scene2Presets(
-          key: const ValueKey(1),
-          master: _masterController,
-          glow: _glowController,
-        );
+        return _ScenePresets(controller: _sceneController, loopController: _loopController);
       case 2:
-        return _Scene3Highlight(
-          key: const ValueKey(2),
-          master: _masterController,
-        );
+        return _SceneHighlight(controller: _sceneController);
       case 3:
-        return _Scene4Import(
-          key: const ValueKey(3),
-          master: _masterController,
-          glow: _glowController,
-        );
+        return _SceneImport(controller: _sceneController, loopController: _loopController);
       case 4:
-        return _Scene5ImageToText(
-          key: const ValueKey(4),
-          master: _masterController,
-        );
+        return _SceneOCR(controller: _sceneController);
       case 5:
-        return _Scene6VoiceToTasks(
-          key: const ValueKey(5),
-          master: _masterController,
-        );
+        return _SceneTasks(controller: _sceneController);
       case 6:
-        return _Scene7Batch(
-          key: const ValueKey(6),
-          master: _masterController,
-        );
+        return _SceneBatch(controller: _sceneController);
       case 7:
-        return _Scene8Anywhere(
-          key: const ValueKey(7),
-          master: _masterController,
-          glow: _glowController,
-        );
+        return _SceneAnywhere(controller: _sceneController, loopController: _loopController);
       default:
         return const SizedBox.shrink();
     }
@@ -188,62 +159,60 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 1: VOICE WAVEFORM - "Speak. AI Amplifies. Done."
+// SCENE 1: VOICE - Waveform + "Speak. AI Writes. Done."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene1Voice extends StatelessWidget {
-  final AnimationController master;
-  final AnimationController wave;
+class _SceneVoice extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
 
-  const _Scene1Voice({super.key, required this.master, required this.wave});
+  const _SceneVoice({required this.controller, required this.loopController});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([master, wave]),
+      animation: Listenable.merge([controller, loopController]),
       builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 3).clamp(0.0, 1.0));
-        final textAppear = Curves.easeOut.transform(((master.value - 0.3) * 2).clamp(0.0, 1.0));
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
+        // Smooth fade in for first 20% of animation
+        final fadeIn = (controller.value * 5).clamp(0.0, 1.0);
+        // Fade out in last 15%
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // WAVEFORM
+                  // Waveform
                   SizedBox(
-                    height: 80,
+                    height: 70,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(9, (i) {
-                        final offset = (i - 4).abs();
-                        final waveVal = math.sin((wave.value * math.pi * 2) + (i * 0.6));
-                        final height = 16 + (waveVal.abs() * 55 * appear);
-                        final barOpacity = appear * (1 - offset * 0.1);
-
+                      children: List.generate(7, (i) {
+                        final wave = math.sin((loopController.value * math.pi * 2) + (i * 0.7));
+                        final height = 20 + (wave.abs() * 45);
+                        
                         return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: 5,
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          width: 6,
                           height: height,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(3),
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                const Color(0xFF3B82F6).withOpacity(barOpacity),
-                                const Color(0xFF8B5CF6).withOpacity(barOpacity),
-                              ],
+                              colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(barOpacity * 0.6),
+                                color: const Color(0xFF3B82F6).withOpacity(0.5),
                                 blurRadius: 12,
-                                spreadRadius: 1,
                               ),
                             ],
                           ),
@@ -251,53 +220,45 @@ class _Scene1Voice extends StatelessWidget {
                       }),
                     ),
                   ),
-
-                  const SizedBox(height: 50),
-
-                  // TEXT
-                  Opacity(
-                    opacity: textAppear,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - textAppear)),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Speak.',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 52,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -2,
-                              height: 1.1,
-                            ),
-                          ),
-                          ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                            ).createShader(bounds),
-                            child: const Text(
-                              'AI Amplifies.',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 52,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -2,
-                                height: 1.1,
-                              ),
-                            ),
-                          ),
-                          const Text(
-                            'Done.',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 52,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -2,
-                              height: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
+                  
+                  const SizedBox(height: 60),
+                  
+                  // Text - simple, centered, clean
+                  _AnimatedText(
+                    text: 'Speak.',
+                    controller: controller,
+                    delay: 0.1,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                      height: 1.2,
+                    ),
+                  ),
+                  _AnimatedText(
+                    text: 'AI Writes.',
+                    controller: controller,
+                    delay: 0.2,
+                    gradient: const [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                      height: 1.2,
+                    ),
+                  ),
+                  _AnimatedText(
+                    text: 'Done.',
+                    controller: controller,
+                    delay: 0.3,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                      height: 1.2,
                     ),
                   ),
                 ],
@@ -311,128 +272,108 @@ class _Scene1Voice extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 2: PRESETS - "20+ Presets. One Tap Perfection."
+// SCENE 2: PRESETS - Chips + "20+ Presets. One Tap."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene2Presets extends StatelessWidget {
-  final AnimationController master;
-  final AnimationController glow;
+class _ScenePresets extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
 
-  const _Scene2Presets({super.key, required this.master, required this.glow});
+  const _ScenePresets({required this.controller, required this.loopController});
 
   @override
   Widget build(BuildContext context) {
-    // Preset data: name, color
     final presets = [
       ('Magic', const Color(0xFF9333EA)),
       ('Email', const Color(0xFFDC2626)),
       ('Social', const Color(0xFFEC4899)),
       ('Poem', const Color(0xFFF59E0B)),
       ('Notes', const Color(0xFF10B981)),
-      ('+15', const Color(0xFF6366F1)),
     ];
 
     return AnimatedBuilder(
-      animation: Listenable.merge([master, glow]),
+      animation: Listenable.merge([controller, loopController]),
       builder: (context, _) {
-        final textAppear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
-        final activeIndex = (glow.value * presets.length).floor() % presets.length;
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        // Active preset cycles every 0.5 seconds
+        final activeIndex = ((loopController.value * presets.length * 2).floor()) % presets.length;
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // PRESET CHIPS
-                  Opacity(
-                    opacity: textAppear,
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: List.generate(presets.length, (i) {
-                        final delay = i * 0.08;
-                        final chipAppear = ((master.value - delay) * 4).clamp(0.0, 1.0);
-                        final isActive = i == activeIndex && master.value > 0.4;
-                        final preset = presets[i];
-
-                        return Transform.translate(
-                          offset: Offset(0, 15 * (1 - chipAppear)),
-                          child: Opacity(
-                            opacity: chipAppear,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: isActive ? preset.$2 : preset.$2.withOpacity(0.15),
-                                border: Border.all(
-                                  color: preset.$2.withOpacity(isActive ? 0 : 0.4),
-                                  width: 1.5,
-                                ),
-                                boxShadow: isActive
-                                    ? [
-                                        BoxShadow(
-                                          color: preset.$2.withOpacity(0.6),
-                                          blurRadius: 20,
-                                          spreadRadius: 2,
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Text(
-                                preset.$1,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(isActive ? 1 : 0.8),
-                                  fontSize: 15,
-                                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                  // Preset chips
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: List.generate(presets.length, (i) {
+                      final isActive = i == activeIndex && controller.value > 0.3;
+                      final preset = presets[i];
+                      
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          color: isActive ? preset.$2 : preset.$2.withOpacity(0.2),
+                          border: Border.all(
+                            color: preset.$2.withOpacity(isActive ? 0.8 : 0.4),
+                            width: 2,
                           ),
-                        );
-                      }),
+                          boxShadow: isActive ? [
+                            BoxShadow(
+                              color: preset.$2.withOpacity(0.5),
+                              blurRadius: 20,
+                            ),
+                          ] : null,
+                        ),
+                        child: Text(
+                          preset.$1,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(isActive ? 1 : 0.7),
+                            fontSize: 16,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  
+                  const SizedBox(height: 50),
+                  
+                  // Text
+                  _AnimatedText(
+                    text: '20+ Presets.',
+                    controller: controller,
+                    delay: 0.15,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 42,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
                     ),
                   ),
-
-                  const SizedBox(height: 50),
-
-                  // TEXT
-                  Opacity(
-                    opacity: textAppear,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - textAppear)),
-                      child: Column(
-                        children: [
-                          const Text(
-                            '20+ Presets.',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 44,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1.5,
-                            ),
-                          ),
-                          ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                            ).createShader(bounds),
-                            child: const Text(
-                              'One Tap Perfection.',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 44,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                  const SizedBox(height: 4),
+                  _AnimatedText(
+                    text: 'One Tap.',
+                    controller: controller,
+                    delay: 0.25,
+                    gradient: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 42,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
                     ),
                   ),
                 ],
@@ -449,162 +390,132 @@ class _Scene2Presets extends StatelessWidget {
 // SCENE 3: HIGHLIGHT - "Highlight. Transform."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene3Highlight extends StatelessWidget {
-  final AnimationController master;
+class _SceneHighlight extends StatelessWidget {
+  final AnimationController controller;
 
-  const _Scene3Highlight({super.key, required this.master});
+  const _SceneHighlight({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: master,
+      animation: controller,
       builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final highlightSweep = Curves.easeInOut.transform(((master.value - 0.2) * 2).clamp(0.0, 1.0));
-        final transform = Curves.easeOut.transform(((master.value - 0.55) * 2.5).clamp(0.0, 1.0));
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        // Highlight sweep from 20% to 50%
+        final highlightProgress = ((controller.value - 0.2) / 0.3).clamp(0.0, 1.0);
+        // Transform appears from 55% to 75%
+        final transformProgress = ((controller.value - 0.55) / 0.2).clamp(0.0, 1.0);
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Center(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Highlight demo
-                  Opacity(
-                    opacity: appear,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.white.withOpacity(0.05),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Base text
-                          Text(
-                            'Make this better',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.3),
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          // Highlight sweep
-                          ClipRect(
-                            clipper: _SweepClipper(highlightSweep),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFFF59E0B).withOpacity(0.5),
-                                    const Color(0xFFEF4444).withOpacity(0.4),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'Make this better',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Arrow + sparkle
-                  Opacity(
-                    opacity: transform,
-                    child: Icon(
-                      Icons.arrow_downward_rounded,
-                      color: const Color(0xFFF59E0B).withOpacity(0.7),
-                      size: 28,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Transformed result
-                  Opacity(
-                    opacity: transform,
-                    child: Transform.translate(
-                      offset: Offset(0, 10 * (1 - transform)),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFFF59E0B).withOpacity(0.15),
-                              const Color(0xFFEF4444).withOpacity(0.1),
-                            ],
-                          ),
-                          border: Border.all(
-                            color: const Color(0xFFF59E0B).withOpacity(0.3),
-                          ),
-                        ),
-                        child: ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
-                          ).createShader(bounds),
-                          child: const Text(
-                            'Elevated to perfection',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 50),
-
-                  // Label
-                  Opacity(
-                    opacity: appear,
-                    child: Column(
+                  // Original text with highlight
+                  ClipRect(
+                    child: Stack(
                       children: [
-                        const Text(
-                          'Highlight.',
+                        // Base text (faded)
+                        Text(
+                          'make this better',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 48,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -1.5,
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
+                        // Highlighted portion
                         ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
-                          ).createShader(bounds),
-                          child: const Text(
-                            'Transform.',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 48,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1.5,
+                          shaderCallback: (bounds) {
+                            return LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Colors.white,
+                                Colors.transparent,
+                                Colors.transparent,
+                              ],
+                              stops: [0, highlightProgress, highlightProgress, 1],
+                            ).createShader(bounds);
+                          },
+                          blendMode: BlendMode.srcIn,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'make this better',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Arrow
+                  Opacity(
+                    opacity: transformProgress,
+                    child: const Icon(
+                      Icons.arrow_downward_rounded,
+                      color: Color(0xFFF59E0B),
+                      size: 28,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Transformed text
+                  Opacity(
+                    opacity: transformProgress,
+                    child: Transform.translate(
+                      offset: Offset(0, 10 * (1 - transformProgress)),
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
+                        ).createShader(bounds),
+                        child: const Text(
+                          'elevated to perfection',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 50),
+                  
+                  // Label
+                  _AnimatedText(
+                    text: 'Highlight. Transform.',
+                    controller: controller,
+                    delay: 0.1,
+                    gradient: const [Color(0xFFF59E0B), Color(0xFFEF4444)],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -615,383 +526,353 @@ class _Scene3Highlight extends StatelessWidget {
   }
 }
 
-class _SweepClipper extends CustomClipper<Rect> {
-  final double progress;
-  _SweepClipper(this.progress);
-
-  @override
-  Rect getClip(Size size) => Rect.fromLTWH(0, 0, size.width * progress, size.height);
-
-  @override
-  bool shouldReclip(_SweepClipper old) => old.progress != progress;
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 4: IMPORT/EXPORT - "Import/Export Anything."
+// SCENE 4: IMPORT - File icons + "Import. Export. Anything."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene4Import extends StatelessWidget {
-  final AnimationController master;
-  final AnimationController glow;
+class _SceneImport extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
 
-  const _Scene4Import({super.key, required this.master, required this.glow});
+  const _SceneImport({required this.controller, required this.loopController});
 
   @override
   Widget build(BuildContext context) {
     final files = [
-      (Icons.picture_as_pdf_rounded, 'PDF', const Color(0xFFEF4444)),
-      (Icons.description_rounded, 'DOC', const Color(0xFF3B82F6)),
-      (Icons.image_rounded, 'IMG', const Color(0xFF10B981)),
-      (Icons.audiotrack_rounded, 'MP3', const Color(0xFF8B5CF6)),
+      (Icons.picture_as_pdf_rounded, const Color(0xFFEF4444)),
+      (Icons.description_rounded, const Color(0xFF3B82F6)),
+      (Icons.image_rounded, const Color(0xFF10B981)),
+      (Icons.audiotrack_rounded, const Color(0xFF8B5CF6)),
     ];
 
     return AnimatedBuilder(
-      animation: Listenable.merge([master, glow]),
+      animation: Listenable.merge([controller, loopController]),
       builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // File icons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(files.length, (i) {
-                      final delay = i * 0.1;
-                      final iconAppear = ((master.value - delay) * 3).clamp(0.0, 1.0);
-                      final float = math.sin((glow.value * math.pi * 2) + (i * 1.2)) * 6;
-                      final file = files[i];
+          opacity: opacity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // File icons floating
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(files.length, (i) {
+                    final float = math.sin((loopController.value * math.pi * 2) + (i * 1.5)) * 8;
+                    final file = files[i];
+                    
+                    return Transform.translate(
+                      offset: Offset(0, float),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 12),
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: file.$2,
+                          boxShadow: [
+                            BoxShadow(
+                              color: file.$2.withOpacity(0.5),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(file.$1, color: Colors.white, size: 28),
+                      ),
+                    );
+                  }),
+                ),
+                
+                const SizedBox(height: 50),
+                
+                // Text
+                _AnimatedText(
+                  text: 'Import. Export.',
+                  controller: controller,
+                  delay: 0.15,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _AnimatedText(
+                  text: 'Anything.',
+                  controller: controller,
+                  delay: 0.25,
+                  gradient: const [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
-                      return Transform.translate(
-                        offset: Offset(0, float + (20 * (1 - iconAppear))),
-                        child: Opacity(
-                          opacity: iconAppear,
+// ═══════════════════════════════════════════════════════════════════════════
+// SCENE 5: OCR - Image scan + "Image to Text. Instant."
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _SceneOCR extends StatelessWidget {
+  final AnimationController controller;
+
+  const _SceneOCR({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        // Scan line moves from 20% to 60%
+        final scanProgress = ((controller.value - 0.2) / 0.4).clamp(0.0, 1.0);
+        // Text appears from 55%
+        final textReveal = ((controller.value - 0.55) / 0.2).clamp(0.0, 1.0);
+
+        return Opacity(
+          opacity: opacity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Image frame with scan
+                Container(
+                  width: 180,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Document lines
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _docLine(0.8),
+                            const SizedBox(height: 8),
+                            _docLine(0.6),
+                            const SizedBox(height: 8),
+                            _docLine(0.7),
+                          ],
+                        ),
+                      ),
+                      // Scan line
+                      if (scanProgress > 0 && scanProgress < 1)
+                        Positioned(
+                          top: scanProgress * 120,
+                          left: 0,
+                          right: 0,
                           child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [file.$3, file.$3.withOpacity(0.7)],
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: file.$3.withOpacity(0.5),
-                                        blurRadius: 16,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(file.$1, color: Colors.white, size: 28),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  file.$2,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.5),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
+                            height: 3,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  const Color(0xFF10B981),
+                                  Colors.transparent,
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981).withOpacity(0.8),
+                                  blurRadius: 12,
                                 ),
                               ],
                             ),
                           ),
                         ),
-                      );
-                    }),
+                    ],
                   ),
-
-                  const SizedBox(height: 50),
-
-                  // Text
-                  Opacity(
-                    opacity: appear,
-                    child: Transform.translate(
-                      offset: Offset(0, 15 * (1 - appear)),
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                        ).createShader(bounds),
-                        child: const Text(
-                          'Import/Export Anything.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 38,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -1,
-                          ),
-                        ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Extracted text
+                Opacity(
+                  opacity: textReveal,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFF10B981).withOpacity(0.15),
+                    ),
+                    child: const Text(
+                      '"Meeting tomorrow at 3pm..."',
+                      style: TextStyle(
+                        color: Color(0xFF10B981),
+                        fontSize: 16,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                
+                const SizedBox(height: 50),
+                
+                // Label
+                _AnimatedText(
+                  text: 'Image to Text.',
+                  controller: controller,
+                  delay: 0.1,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _AnimatedText(
+                  text: 'Instant.',
+                  controller: controller,
+                  delay: 0.2,
+                  gradient: const [Color(0xFF10B981), Color(0xFF06B6D4)],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                  ),
+                ),
+              ],
             ),
           ),
         );
       },
     );
   }
-}
 
-// ═══════════════════════════════════════════════════════════════════════════
-// SCENE 5: IMAGE TO TEXT - "Instant Image to Text."
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _Scene5ImageToText extends StatelessWidget {
-  final AnimationController master;
-
-  const _Scene5ImageToText({super.key, required this.master});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: master,
-      builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final scanProgress = ((master.value - 0.2) * 1.8).clamp(0.0, 1.0);
-        final textReveal = ((master.value - 0.5) * 2.5).clamp(0.0, 1.0);
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
-
-        return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Image frame with scan
-                  Opacity(
-                    opacity: appear,
-                    child: Container(
-                      width: 200,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: const Color(0xFF10B981).withOpacity(0.5),
-                          width: 2,
-                        ),
-                        color: Colors.white.withOpacity(0.03),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Placeholder lines
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: List.generate(4, (i) {
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  width: [140.0, 100.0, 120.0, 80.0][i],
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                          // Scan line
-                          if (scanProgress > 0 && scanProgress < 1)
-                            Positioned(
-                              top: scanProgress * 140,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                height: 3,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.transparent,
-                                      const Color(0xFF10B981),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF10B981).withOpacity(0.8),
-                                      blurRadius: 15,
-                                      spreadRadius: 3,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // Extracted text preview
-                  Opacity(
-                    opacity: textReveal,
-                    child: Transform.translate(
-                      offset: Offset(0, 10 * (1 - textReveal)),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: const Color(0xFF10B981).withOpacity(0.1),
-                          border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          '"Meeting at 3pm tomorrow..."',
-                          style: TextStyle(
-                            color: const Color(0xFF10B981),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Label
-                  Opacity(
-                    opacity: appear,
-                    child: ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'Instant Image to Text.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 38,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+  Widget _docLine(double width) {
+    return FractionallySizedBox(
+      widthFactor: width,
+      child: Container(
+        height: 8,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 6: VOICE TO TASKS - "Voice to Tasks."
+// SCENE 6: TASKS - "Voice to Tasks."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene6VoiceToTasks extends StatelessWidget {
-  final AnimationController master;
+class _SceneTasks extends StatelessWidget {
+  final AnimationController controller;
 
-  const _Scene6VoiceToTasks({super.key, required this.master});
+  const _SceneTasks({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     final tasks = ['Call Sarah', 'Send report', 'Book flight'];
 
     return AnimatedBuilder(
-      animation: master,
+      animation: controller,
       builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Tasks appearing
-                  ...List.generate(tasks.length, (i) {
-                    final delay = 0.15 + (i * 0.12);
-                    final taskAppear = ((master.value - delay) * 3.5).clamp(0.0, 1.0);
-
-                    return Opacity(
-                      opacity: taskAppear,
-                      child: Transform.translate(
-                        offset: Offset(-30 * (1 - taskAppear), 0),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.white.withOpacity(0.05),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
-                                  ),
-                                ),
-                                child: const Icon(Icons.check, color: Colors.white, size: 14),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                tasks[i],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+          opacity: opacity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Tasks
+                ...List.generate(tasks.length, (i) {
+                  final taskProgress = ((controller.value - 0.15 - (i * 0.1)) / 0.2).clamp(0.0, 1.0);
+                  
+                  return Opacity(
+                    opacity: taskProgress,
+                    child: Transform.translate(
+                      offset: Offset(-20 * (1 - taskProgress), 0),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white.withOpacity(0.08),
                         ),
-                      ),
-                    );
-                  }),
-
-                  const SizedBox(height: 40),
-
-                  // Label
-                  Opacity(
-                    opacity: appear,
-                    child: ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'Voice to Tasks.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 44,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1.5,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
+                                ),
+                              ),
+                              child: const Icon(Icons.check, color: Colors.white, size: 16),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              tasks[i],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                  );
+                }),
+                
+                const SizedBox(height: 40),
+                
+                // Label
+                _AnimatedText(
+                  text: 'Voice to Tasks.',
+                  controller: controller,
+                  delay: 0.1,
+                  gradient: const [Color(0xFF10B981), Color(0xFF06B6D4)],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 42,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -1004,112 +885,96 @@ class _Scene6VoiceToTasks extends StatelessWidget {
 // SCENE 7: BATCH - "Process in Batches."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene7Batch extends StatelessWidget {
-  final AnimationController master;
+class _SceneBatch extends StatelessWidget {
+  final AnimationController controller;
 
-  const _Scene7Batch({super.key, required this.master});
+  const _SceneBatch({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: master,
+      animation: controller,
       builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final progress = ((master.value - 0.2) * 1.5).clamp(0.0, 1.0);
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        // Docs merge from 20% to 60%
+        final mergeProgress = ((controller.value - 0.2) / 0.4).clamp(0.0, 1.0);
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Multiple docs merging
-                  Opacity(
-                    opacity: appear,
-                    child: SizedBox(
-                      width: 200,
-                      height: 100,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: List.generate(5, (i) {
-                          final offset = (i - 2) * 25.0;
-                          final moveProgress = progress;
-                          final currentOffset = offset * (1 - moveProgress);
-
-                          return Transform.translate(
-                            offset: Offset(currentOffset, 0),
-                            child: Container(
-                              width: 50,
-                              height: 65,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    const Color(0xFF6366F1).withOpacity(0.8 - (i * 0.1)),
-                                    const Color(0xFF8B5CF6).withOpacity(0.6 - (i * 0.1)),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF6366F1).withOpacity(0.3),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.description,
-                                color: Colors.white.withOpacity(0.8),
-                                size: 24,
-                              ),
+          opacity: opacity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Multiple docs merging
+                SizedBox(
+                  width: 200,
+                  height: 80,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: List.generate(5, (i) {
+                      final startOffset = (i - 2) * 30.0;
+                      final currentOffset = startOffset * (1 - mergeProgress);
+                      
+                      return Transform.translate(
+                        offset: Offset(currentOffset, 0),
+                        child: Container(
+                          width: 45,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF6366F1).withOpacity(0.9 - (i * 0.15)),
+                                const Color(0xFF8B5CF6).withOpacity(0.7 - (i * 0.1)),
+                              ],
                             ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Counter
-                  Opacity(
-                    opacity: appear,
-                    child: Text(
-                      '${(progress * 100).toInt()}%',
-                      style: TextStyle(
-                        color: const Color(0xFF8B5CF6),
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Label
-                  Opacity(
-                    opacity: appear,
-                    child: ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'Process in Batches.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 40,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1.5,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withOpacity(0.3),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.description, color: Colors.white70, size: 22),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ),
-                ],
-              ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Counter
+                Text(
+                  '${(mergeProgress * 100).toInt()}%',
+                  style: const TextStyle(
+                    color: Color(0xFF8B5CF6),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // Label
+                _AnimatedText(
+                  text: 'Process in Batches.',
+                  controller: controller,
+                  delay: 0.1,
+                  gradient: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 38,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -1119,84 +984,226 @@ class _Scene7Batch extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 8: ANYWHERE - "Anywhere." (Floating Bubble)
+// SCENE 8: ANYWHERE - Floating bubble + "Anywhere."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Scene8Anywhere extends StatelessWidget {
-  final AnimationController master;
-  final AnimationController glow;
+class _SceneAnywhere extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
 
-  const _Scene8Anywhere({super.key, required this.master, required this.glow});
+  const _SceneAnywhere({required this.controller, required this.loopController});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([master, glow]),
+      animation: Listenable.merge([controller, loopController]),
       builder: (context, _) {
-        final appear = Curves.easeOut.transform((master.value * 2.5).clamp(0.0, 1.0));
-        final float = math.sin(glow.value * math.pi * 2) * 10;
-        final fadeOut = master.value > 0.85 ? ((master.value - 0.85) * 6.67).clamp(0.0, 1.0) : 0.0;
+        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
+        final fadeOut = controller.value > 0.85 
+            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
+            : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        final float = math.sin(loopController.value * math.pi * 2) * 10;
 
         return Opacity(
-          opacity: 1 - fadeOut,
-          child: Container(
-            color: Colors.black,
-            child: Center(
+          opacity: opacity,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Floating bubble
+                Transform.translate(
+                  offset: Offset(0, float),
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3B82F6).withOpacity(0.5),
+                          blurRadius: 30,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 44),
+                  ),
+                ),
+                
+                const SizedBox(height: 50),
+                
+                // Label
+                _AnimatedText(
+                  text: 'Anywhere.',
+                  controller: controller,
+                  delay: 0.15,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FINALE - Logo + "100x Your Voice" + Get Started
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Finale extends StatefulWidget {
+  final AnimationController loopController;
+  final VoidCallback onComplete;
+
+  const _Finale({required this.loopController, required this.onComplete});
+
+  @override
+  State<_Finale> createState() => _FinaleState();
+}
+
+class _FinaleState extends State<_Finale> with SingleTickerProviderStateMixin {
+  late AnimationController _fadeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_fadeController, widget.loopController]),
+      builder: (context, _) {
+        final appear = Curves.easeOut.transform(_fadeController.value);
+        final glow = 0.4 + (math.sin(widget.loopController.value * math.pi * 2) * 0.2);
+
+        return Opacity(
+          opacity: appear,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Floating bubble
-                  Transform.translate(
-                    offset: Offset(0, float),
-                    child: Opacity(
-                      opacity: appear,
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                  // Logo
+                  Transform.scale(
+                    scale: 0.9 + (appear * 0.1),
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3B82F6).withOpacity(glow),
+                            blurRadius: 40,
+                            spreadRadius: 8,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF3B82F6).withOpacity(0.5),
-                              blurRadius: 30,
-                              spreadRadius: 8,
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: Image.asset(
+                          'assets/app_logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                              ),
                             ),
-                            BoxShadow(
-                              color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                              blurRadius: 50,
-                              spreadRadius: 15,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.mic_rounded,
-                          color: Colors.white,
-                          size: 44,
+                            child: const Icon(Icons.mic, color: Colors.white, size: 50),
+                          ),
                         ),
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 50),
-
-                  // Label
-                  Opacity(
-                    opacity: appear,
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Tagline
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                    ).createShader(bounds),
                     child: const Text(
-                      'Anywhere.',
+                      '100x',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 52,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 56,
+                        fontWeight: FontWeight.w900,
                         letterSpacing: -2,
                       ),
                     ),
                   ),
+                  const Text(
+                    'Your Voice. Your Docs.',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 60),
+                  
+                  // Get Started button
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      widget.onComplete();
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3B82F6).withOpacity(0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Get Started',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1208,167 +1215,44 @@ class _Scene8Anywhere extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FINALE - Logo + "100x Your Voice. Your Docs." + Get Started
+// HELPER: Animated Text with optional gradient
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _FinaleScene extends StatelessWidget {
-  final AnimationController glowController;
-  final VoidCallback onComplete;
+class _AnimatedText extends StatelessWidget {
+  final String text;
+  final AnimationController controller;
+  final double delay;
+  final TextStyle style;
+  final List<Color>? gradient;
 
-  const _FinaleScene({
-    super.key,
-    required this.glowController,
-    required this.onComplete,
+  const _AnimatedText({
+    required this.text,
+    required this.controller,
+    required this.delay,
+    required this.style,
+    this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: glowController,
+      animation: controller,
       builder: (context, _) {
-        final glow = 0.4 + (math.sin(glowController.value * math.pi * 2) * 0.3);
+        final progress = ((controller.value - delay) / 0.2).clamp(0.0, 1.0);
+        final opacity = Curves.easeOut.transform(progress);
+        final offset = 15 * (1 - progress);
 
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeOut,
-          builder: (context, appear, _) {
-            return Container(
-              color: Colors.black,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo with glow
-                    Transform.scale(
-                      scale: 0.8 + (appear * 0.2),
-                      child: Opacity(
-                        opacity: appear,
-                        child: Container(
-                          width: 130,
-                          height: 130,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(32),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(glow),
-                                blurRadius: 50,
-                                spreadRadius: 10,
-                              ),
-                              BoxShadow(
-                                color: const Color(0xFF8B5CF6).withOpacity(glow * 0.5),
-                                blurRadius: 80,
-                                spreadRadius: 20,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(32),
-                            child: Image.asset(
-                              'assets/app_logo.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(32),
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                                  ),
-                                ),
-                                child: const Icon(Icons.mic, color: Colors.white, size: 56),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // Tagline
-                    Opacity(
-                      opacity: appear,
-                      child: Column(
-                        children: [
-                          ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                            ).createShader(bounds),
-                            child: const Text(
-                              '100x',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 56,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -2,
-                              ),
-                            ),
-                          ),
-                          const Text(
-                            'Your Voice. Your Docs.',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 60),
-
-                    // Get Started button
-                    Opacity(
-                      opacity: appear,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - appear)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              onComplete();
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF3B82F6).withOpacity(0.4),
-                                    blurRadius: 25,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'Get Started',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+        return Opacity(
+          opacity: opacity,
+          child: Transform.translate(
+            offset: Offset(0, offset),
+            child: gradient != null
+                ? ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(colors: gradient!).createShader(bounds),
+                    child: Text(text, style: style, textAlign: TextAlign.center),
+                  )
+                : Text(text, style: style, textAlign: TextAlign.center),
+          ),
         );
       },
     );
