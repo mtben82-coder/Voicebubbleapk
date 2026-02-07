@@ -7,6 +7,8 @@ import '../../models/outcome_type.dart';
 import '../../models/recording_item.dart';
 import '../../widgets/multi_option_fab.dart';
 import '../../services/reminder_manager.dart';
+import '../settings/settings_screen.dart';
+import '../paywall/paywall_screen.dart';
 import 'recording_screen.dart';
 import 'recording_detail_screen.dart';
 import 'outcome_creation_screen.dart';
@@ -66,6 +68,48 @@ class _OutcomesScreenCleanState extends State<OutcomesScreenClean> {
                         ),
                       ),
                       const Spacer(),
+                      // Paywall icon
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A1A),
+                          borderRadius: BorderRadius.circular(38),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => PaywallScreen(
+                                onSubscribe: () {},
+                                onRestore: () {},
+                                onClose: () => Navigator.pop(context),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.workspace_premium, color: Color(0xFFFFD700), size: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      // Settings icon
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A1A),
+                          borderRadius: BorderRadius.circular(38),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                          ),
+                          icon: const Icon(Icons.settings, color: Colors.white, size: 20),
+                        ),
+                      ),
                     ],
                   ),
                 ),
