@@ -88,7 +88,7 @@ class _LanguageSelectorPopupState extends State<LanguageSelectorPopup> {
                           ),
                         ),
                         Text(
-                          'Output language for AI',
+                          'Which language should AI write in?',
                           style: TextStyle(
                             fontSize: 12,
                             color: secondaryTextColor,

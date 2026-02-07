@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
-import 'home_screen.dart';
 import 'outcomes_screen.dart';
 import 'library_screen.dart';
 // Templates import removed
@@ -13,12 +12,11 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 1; // Start on Record (middle)
+  int _currentIndex = 0; // Start on Library (home)
 
   final List<Widget> _screens = const [
-    LibraryScreen(),    // Index 0
-    HomeScreen(),       // Index 1 (Record)
-    OutcomesScreen(),   // Index 2
+    LibraryScreen(),    // Index 0 (Home)
+    OutcomesScreen(),   // Index 1
   ];
 
   @override
@@ -57,17 +55,9 @@ class _MainNavigationState extends State<MainNavigation> {
                   secondaryTextColor: secondaryTextColor,
                 ),
                 _buildNavItem(
-                  icon: Icons.mic,
-                  label: 'Record',
-                  index: 1,
-                  primaryColor: primaryColor,
-                  textColor: textColor,
-                  secondaryTextColor: secondaryTextColor,
-                ),
-                _buildNavItem(
                   icon: Icons.dashboard,
                   label: 'Outcomes',
-                  index: 2,
+                  index: 1,
                   primaryColor: primaryColor,
                   textColor: textColor,
                   secondaryTextColor: secondaryTextColor,
@@ -93,7 +83,7 @@ class _MainNavigationState extends State<MainNavigation> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          final tabNames = ['Library', 'Record', 'Outcomes'];
+          final tabNames = ['Library', 'Outcomes'];
           AnalyticsService().logTabSelected(tabName: tabNames[index]);
           setState(() {
             _currentIndex = index;
@@ -133,67 +123,6 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecordButton({
-    required int index,
-    required Color primaryColor,
-  }) {
-    final isSelected = _currentIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Big circular record button that sticks out
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [primaryColor, const Color(0xFF2563EB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryColor.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Record',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? primaryColor : const Color(0xFF94A3B8),
-              ),
-            ),
-          ],
         ),
       ),
     );
