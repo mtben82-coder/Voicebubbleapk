@@ -9,6 +9,8 @@ import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:math' as math;
+import '../../widgets/curved_text_painter.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/recording_item.dart';
 import '../../models/tag.dart';
@@ -619,11 +621,11 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                           const SizedBox(width: 8),
                           // Paywall icon
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 38,
+                            height: 38,
                             decoration: BoxDecoration(
                               color: surfaceColor,
-                              borderRadius: BorderRadius.circular(36),
+                              borderRadius: BorderRadius.circular(38),
                             ),
                             child: IconButton(
                               padding: EdgeInsets.zero,
@@ -638,17 +640,17 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                                   ),
                                 );
                               },
-                              icon: const Icon(Icons.workspace_premium, color: Color(0xFFFFD700), size: 18),
+                              icon: const Icon(Icons.workspace_premium, color: Color(0xFFFFD700), size: 20),
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           // Settings icon
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 38,
+                            height: 38,
                             decoration: BoxDecoration(
                               color: surfaceColor,
-                              borderRadius: BorderRadius.circular(36),
+                              borderRadius: BorderRadius.circular(38),
                             ),
                             child: IconButton(
                               padding: EdgeInsets.zero,
@@ -656,7 +658,7 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                                 context,
                                 MaterialPageRoute(builder: (context) => const SettingsScreen()),
                               ),
-                              icon: Icon(Icons.settings, color: textColor, size: 18),
+                              icon: Icon(Icons.settings, color: textColor, size: 20),
                             ),
                           ),
                         ],
@@ -814,217 +816,267 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
       floatingActionButton: _viewMode == 1
           ? FloatingActionButton(
               heroTag: 'project_fab',
-              // Projects tab - ONLY add project button (simple FAB)
               onPressed: () => _showCreateProjectDialog(context),
               backgroundColor: const Color(0xFF3B82F6),
               child: const Icon(Icons.create_new_folder, color: Colors.white),
             )
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // LEFT FAB: Bubble/Upload Audio
-                  FloatingActionButton(
-                    heroTag: 'bubble_fab',
-                    onPressed: () => _showOptionsMenu(context, const Color(0xFF1A1A1A), Colors.white),
-                    backgroundColor: const Color(0xFF1A1A1A),
-                    mini: true,
-                    child: const Icon(Icons.add, color: Colors.white, size: 20),
-                  ),
-                  // CENTER FAB: Record (BIG)
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FloatingActionButton.large(
-                        heroTag: 'record_fab',
-                        onPressed: () {
-                          Provider.of<AppStateProvider>(context, listen: false).reset();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RecordingScreen(),
-                            ),
-                          );
-                        },
+          : SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // LEFT FAB: Bubble/Upload Audio — same size as right FAB, blue, file icon
+                    Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: FloatingActionButton(
+                        heroTag: 'bubble_fab',
+                        onPressed: () => _showOptionsMenu(context, const Color(0xFF1A1A1A), Colors.white),
                         backgroundColor: const Color(0xFF3B82F6),
-                        elevation: 8,
-                        child: const Icon(Icons.mic, color: Colors.white, size: 36),
+                        child: const Icon(Icons.insert_drive_file, color: Colors.white, size: 24),
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Speak to AI',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF3B82F6),
-                        ),
+                    ),
+                    // CENTER FAB: Big round mic with curved text — dead center
+                    Positioned(
+                      bottom: 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Provider.of<AppStateProvider>(context, listen: false).reset();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RecordingScreen(),
+                                ),
+                              );
+                            },
+                            child: SizedBox(
+                              width: 72,
+                              height: 72,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Background circle
+                                  Container(
+                                    width: 72,
+                                    height: 72,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF3B82F6).withOpacity(0.4),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Curved text overlay
+                                  CustomPaint(
+                                    size: const Size(72, 72),
+                                    painter: CurvedTextPainter(
+                                      text: 'Speak, AI Writes, Done.',
+                                      textColor: Colors.white.withOpacity(0.9),
+                                      fontSize: 7.5,
+                                    ),
+                                  ),
+                                  // Mic icon on top
+                                  const Icon(Icons.mic, size: 28, color: Colors.white),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Speak to AI',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF3B82F6),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  // RIGHT FAB: MultiOptionFab (without voice option)
-                  MultiOptionFab(
-                    showProjectOption: false,
-                    onVoicePressed: null,
-                    onTextPressed: () async {
-                      final appState = Provider.of<AppStateProvider>(context, listen: false);
-                      final newItem = RecordingItem(
-                        id: const Uuid().v4(),
-                        rawTranscript: '',
-                        finalText: '',
-                        presetUsed: 'Text Document',
-                        outcomes: [],
-                        projectId: null,
-                        createdAt: DateTime.now(),
-                        editHistory: [],
-                        presetId: 'text_document',
-                        tags: [],
-                        contentType: 'text',
-                      );
-                      await appState.saveRecording(newItem);
+                    ),
+                    // RIGHT FAB: MultiOptionFab (without voice option)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: MultiOptionFab(
+                        showProjectOption: false,
+                        onVoicePressed: null,
+                        onTextPressed: () async {
+                          final appState = Provider.of<AppStateProvider>(context, listen: false);
+                          final newItem = RecordingItem(
+                            id: const Uuid().v4(),
+                            rawTranscript: '',
+                            finalText: '',
+                            presetUsed: 'Text Document',
+                            outcomes: [],
+                            projectId: null,
+                            createdAt: DateTime.now(),
+                            editHistory: [],
+                            presetId: 'text_document',
+                            tags: [],
+                            contentType: 'text',
+                          );
+                          await appState.saveRecording(newItem);
 
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
-                          ),
-                        );
-                      }
-                    },
-                    onNotePressed: () async {
-                      final appState = Provider.of<AppStateProvider>(context, listen: false);
-                      final newItem = RecordingItem(
-                        id: const Uuid().v4(),
-                        rawTranscript: '',
-                        finalText: '',
-                        presetUsed: 'Quick Note',
-                        outcomes: [],
-                        projectId: null,
-                        createdAt: DateTime.now(),
-                        editHistory: [],
-                        presetId: 'quick_note',
-                        tags: [],
-                        contentType: 'text',
-                      );
-                      await appState.saveRecording(newItem);
-
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
-                          ),
-                        );
-                      }
-                    },
-                    onTodoPressed: () async {
-                      final appState = Provider.of<AppStateProvider>(context, listen: false);
-
-                      final newItem = RecordingItem(
-                        id: const Uuid().v4(),
-                        rawTranscript: '',
-                        finalText: '',
-                        presetUsed: 'Todo List',
-                        outcomes: [],
-                        projectId: null,
-                        createdAt: DateTime.now(),
-                        editHistory: [],
-                        presetId: 'todo_list',
-                        tags: [],
-                        contentType: 'todo',
-                      );
-                      await appState.saveRecording(newItem);
-
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
-                          ),
-                        );
-                      }
-                    },
-                    onImagePressed: () async {
-                      final ImagePicker picker = ImagePicker();
-                      final ImageSource? source = await showDialog<ImageSource>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: const Color(0xFF1A1A1A),
-                          title: const Text('Add Image', style: TextStyle(color: Colors.white)),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
-                                title: const Text('Gallery', style: TextStyle(color: Colors.white)),
-                                onTap: () => Navigator.pop(context, ImageSource.gallery),
+                          if (mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
                               ),
-                              ListTile(
-                                leading: const Icon(Icons.camera_alt, color: Color(0xFF3B82F6)),
-                                title: const Text('Camera', style: TextStyle(color: Colors.white)),
-                                onTap: () => Navigator.pop(context, ImageSource.camera),
+                            );
+                          }
+                        },
+                        onNotePressed: () async {
+                          final appState = Provider.of<AppStateProvider>(context, listen: false);
+                          final newItem = RecordingItem(
+                            id: const Uuid().v4(),
+                            rawTranscript: '',
+                            finalText: '',
+                            presetUsed: 'Quick Note',
+                            outcomes: [],
+                            projectId: null,
+                            createdAt: DateTime.now(),
+                            editHistory: [],
+                            presetId: 'quick_note',
+                            tags: [],
+                            contentType: 'text',
+                          );
+                          await appState.saveRecording(newItem);
+
+                          if (mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
                               ),
-                            ],
-                          ),
-                        ),
-                      );
+                            );
+                          }
+                        },
+                        onTodoPressed: () async {
+                          final appState = Provider.of<AppStateProvider>(context, listen: false);
 
-                      if (source == null) return;
+                          final newItem = RecordingItem(
+                            id: const Uuid().v4(),
+                            rawTranscript: '',
+                            finalText: '',
+                            presetUsed: 'Todo List',
+                            outcomes: [],
+                            projectId: null,
+                            createdAt: DateTime.now(),
+                            editHistory: [],
+                            presetId: 'todo_list',
+                            tags: [],
+                            contentType: 'todo',
+                          );
+                          await appState.saveRecording(newItem);
 
-                      try {
-                        final XFile? imageFile = await picker.pickImage(source: source);
-                        if (imageFile == null) return;
-
-                        final appDir = await getApplicationDocumentsDirectory();
-                        final String fileName = '${const Uuid().v4()}.jpg';
-                        final String permanentPath = '${appDir.path}/images/$fileName';
-
-                        await Directory('${appDir.path}/images').create(recursive: true);
-                        await File(imageFile.path).copy(permanentPath);
-
-                        final appState = Provider.of<AppStateProvider>(context, listen: false);
-                        final newItem = RecordingItem(
-                          id: const Uuid().v4(),
-                          rawTranscript: permanentPath,
-                          finalText: '',
-                          presetUsed: 'Image',
-                          outcomes: [],
-                          projectId: null,
-                          createdAt: DateTime.now(),
-                          editHistory: [],
-                          presetId: 'image',
-                          tags: [],
-                          contentType: 'image',
-                        );
-
-                        await appState.saveRecording(newItem);
-
-                        if (mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+                          if (mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+                              ),
+                            );
+                          }
+                        },
+                        onImagePressed: () async {
+                          final ImagePicker picker = ImagePicker();
+                          final ImageSource? source = await showDialog<ImageSource>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: const Color(0xFF1A1A1A),
+                              title: const Text('Add Image', style: TextStyle(color: Colors.white)),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
+                                    title: const Text('Gallery', style: TextStyle(color: Colors.white)),
+                                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.camera_alt, color: Color(0xFF3B82F6)),
+                                    title: const Text('Camera', style: TextStyle(color: Colors.white)),
+                                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error picking image: $e')),
-                          );
-                        }
-                      }
-                    },
-                    onProjectPressed: () {
-                      _showCreateProjectDialog(context);
-                    },
-                  ),
-                ],
+
+                          if (source == null) return;
+
+                          try {
+                            final XFile? imageFile = await picker.pickImage(source: source);
+                            if (imageFile == null) return;
+
+                            final appDir = await getApplicationDocumentsDirectory();
+                            final String fileName = '${const Uuid().v4()}.jpg';
+                            final String permanentPath = '${appDir.path}/images/$fileName';
+
+                            await Directory('${appDir.path}/images').create(recursive: true);
+                            await File(imageFile.path).copy(permanentPath);
+
+                            final appState = Provider.of<AppStateProvider>(context, listen: false);
+                            final newItem = RecordingItem(
+                              id: const Uuid().v4(),
+                              rawTranscript: permanentPath,
+                              finalText: '',
+                              presetUsed: 'Image',
+                              outcomes: [],
+                              projectId: null,
+                              createdAt: DateTime.now(),
+                              editHistory: [],
+                              presetId: 'image',
+                              tags: [],
+                              contentType: 'image',
+                            );
+
+                            await appState.saveRecording(newItem);
+
+                            if (mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RecordingDetailScreen(recordingId: newItem.id),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error picking image: $e')),
+                              );
+                            }
+                          }
+                        },
+                        onProjectPressed: () {
+                          _showCreateProjectDialog(context);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: _viewMode == 1
+          ? FloatingActionButtonLocation.endFloat
+          : FloatingActionButtonLocation.centerFloat,
     );
   }
 
