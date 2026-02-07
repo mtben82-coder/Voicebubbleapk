@@ -3,84 +3,69 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// VOICEBUBBLE CINEMA - THE EXPERIENCE
-/// ═══════════════════════════════════════════════════════════════════════════
-///
-/// Slower. Cleaner. Each moment breathes.
-/// Text appears smoothly, centered, readable.
-/// No rushing. No clutter. Just impact.
-///
+/// VOICEBUBBLE CINEMA - THE SICK 7-SCENE FLOW
+/// 
+/// Frame 1: The Unified Library
+/// Frame 2: Capture Everything  
+/// Frame 3: Share & Process
+/// Frame 4: One-Tap Magic
+/// Frame 5: Refine & Perfect
+/// Frame 6: Highlight & Transform
+/// Frame 7: The Outcome (The Magic Pull)
+/// FINALE: Power at your fingertips.
 /// ═══════════════════════════════════════════════════════════════════════════
 
 class FeatureShowcaseScreen extends StatefulWidget {
   final VoidCallback onComplete;
-
   const FeatureShowcaseScreen({super.key, required this.onComplete});
-
   @override
   State<FeatureShowcaseScreen> createState() => _FeatureShowcaseScreenState();
 }
 
-class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
-    with TickerProviderStateMixin {
-  
+class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with TickerProviderStateMixin {
   late AnimationController _sceneController;
   late AnimationController _loopController;
+  late AnimationController _pulseController;
   
   int _currentScene = 0;
   bool _isFinale = false;
   
-  // 8 scenes + finale
-  static const int _totalScenes = 8;
-  // Each scene: 3.5 seconds (slower, more time to absorb)
-  static const Duration _sceneDuration = Duration(milliseconds: 3500);
-  // Pause between scenes
+  static const int _totalScenes = 7;
+  static const Duration _sceneDuration = Duration(milliseconds: 3800);
   static const Duration _scenePause = Duration(milliseconds: 400);
 
   @override
   void initState() {
     super.initState();
-    
-    _sceneController = AnimationController(
-      duration: _sceneDuration,
-      vsync: this,
-    );
-    
-    _loopController = AnimationController(
-      duration: const Duration(milliseconds: 2500),
-      vsync: this,
-    )..repeat();
-    
+    _sceneController = AnimationController(duration: _sceneDuration, vsync: this);
+    _loopController = AnimationController(duration: const Duration(milliseconds: 2500), vsync: this)..repeat();
+    _pulseController = AnimationController(duration: const Duration(milliseconds: 1800), vsync: this)..repeat(reverse: true);
     _startCinema();
   }
 
   Future<void> _startCinema() async {
+    await Future.delayed(const Duration(milliseconds: 300)); // Initial pause
     for (int i = 0; i < _totalScenes; i++) {
       if (!mounted) return;
-      
       setState(() => _currentScene = i);
       await _sceneController.forward(from: 0);
-      
       if (!mounted) return;
       await Future.delayed(_scenePause);
     }
-    
-    // Show finale
-    if (mounted) {
-      setState(() => _isFinale = true);
-    }
+    if (mounted) setState(() => _isFinale = true);
   }
 
-  void _skip() {
-    HapticFeedback.mediumImpact();
-    widget.onComplete();
+  void _skip() { 
+    HapticFeedback.mediumImpact(); 
+    widget.onComplete(); 
   }
 
   @override
-  void dispose() {
-    _sceneController.dispose();
-    _loopController.dispose();
-    super.dispose();
+  void dispose() { 
+    _sceneController.dispose(); 
+    _loopController.dispose(); 
+    _pulseController.dispose();
+    super.dispose(); 
   }
 
   @override
@@ -89,30 +74,52 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          // Main content
-          _isFinale
-              ? _Finale(
-                  loopController: _loopController,
-                  onComplete: widget.onComplete,
-                )
-              : _buildCurrentScene(),
+          // Ambient glow
+          AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, _) {
+              final glow = 0.04 + (_pulseController.value * 0.03);
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.3),
+                    radius: 1.2,
+                    colors: [
+                      const Color(0xFF8B5CF6).withOpacity(glow),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
           
-          // Skip button - top right, subtle
-          if (!_isFinale)
+          // Main content
+          _isFinale 
+            ? _Finale(loopController: _loopController, pulseController: _pulseController, onComplete: widget.onComplete) 
+            : AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                child: KeyedSubtree(
+                  key: ValueKey(_currentScene), 
+                  child: _getScene(_currentScene),
+                ),
+              ),
+          
+          // Skip button
+          if (!_isFinale) 
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
               right: 24,
               child: GestureDetector(
-                onTap: _skip,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    'Skip',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+                onTap: _skip, 
+                child: Text(
+                  'Skip', 
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.25), 
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -122,186 +129,44 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen>
     );
   }
 
-  Widget _buildCurrentScene() {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 500),
-      switchInCurve: Curves.easeOut,
-      switchOutCurve: Curves.easeIn,
-      child: KeyedSubtree(
-        key: ValueKey(_currentScene),
-        child: _getScene(_currentScene),
-      ),
-    );
-  }
-
   Widget _getScene(int index) {
     switch (index) {
-      case 0:
-        return _SceneVoice(controller: _sceneController, loopController: _loopController);
-      case 1:
-        return _ScenePresets(controller: _sceneController, loopController: _loopController);
-      case 2:
-        return _SceneHighlight(controller: _sceneController);
-      case 3:
-        return _SceneImport(controller: _sceneController, loopController: _loopController);
-      case 4:
-        return _SceneOCR(controller: _sceneController);
-      case 5:
-        return _SceneTasks(controller: _sceneController);
-      case 6:
-        return _SceneBatch(controller: _sceneController);
-      case 7:
-        return _SceneAnywhere(controller: _sceneController, loopController: _loopController);
-      default:
-        return const SizedBox.shrink();
+      case 0: return _Scene1Library(controller: _sceneController, pulseController: _pulseController);
+      case 1: return _Scene2Capture(controller: _sceneController, loopController: _loopController);
+      case 2: return _Scene3Share(controller: _sceneController);
+      case 3: return _Scene4Presets(controller: _sceneController, loopController: _loopController);
+      case 4: return _Scene5Refine(controller: _sceneController);
+      case 5: return _Scene6Highlight(controller: _sceneController);
+      case 6: return _Scene7Outcome(controller: _sceneController, loopController: _loopController);
+      default: return const SizedBox.shrink();
     }
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 1: VOICE - Waveform + "Speak. AI Writes. Done."
+// FRAME 1: THE UNIFIED LIBRARY
+// "A single home for your notes, imports, and batch projects."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _SceneVoice extends StatelessWidget {
+class _Scene1Library extends StatelessWidget {
   final AnimationController controller;
-  final AnimationController loopController;
-
-  const _SceneVoice({required this.controller, required this.loopController});
+  final AnimationController pulseController;
+  const _Scene1Library({required this.controller, required this.pulseController});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([controller, loopController]),
-      builder: (context, _) {
-        // Smooth fade in for first 20% of animation
-        final fadeIn = (controller.value * 5).clamp(0.0, 1.0);
-        // Fade out in last 15%
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
-        final opacity = fadeIn * (1 - fadeOut);
-
-        return Opacity(
-          opacity: opacity,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Waveform
-                  SizedBox(
-                    height: 70,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(7, (i) {
-                        final wave = math.sin((loopController.value * math.pi * 2) + (i * 0.7));
-                        final height = 20 + (wave.abs() * 45);
-                        
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 5),
-                          width: 6,
-                          height: height,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(3),
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(0.5),
-                                blurRadius: 12,
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 60),
-                  
-                  // Text - simple, centered, clean
-                  _AnimatedText(
-                    text: 'Speak.',
-                    controller: controller,
-                    delay: 0.1,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 48,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                      height: 1.2,
-                    ),
-                  ),
-                  _AnimatedText(
-                    text: 'AI Writes.',
-                    controller: controller,
-                    delay: 0.2,
-                    gradient: const [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 48,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                      height: 1.2,
-                    ),
-                  ),
-                  _AnimatedText(
-                    text: 'Done.',
-                    controller: controller,
-                    delay: 0.3,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 48,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SCENE 2: PRESETS - Chips + "20+ Presets. One Tap."
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _ScenePresets extends StatelessWidget {
-  final AnimationController controller;
-  final AnimationController loopController;
-
-  const _ScenePresets({required this.controller, required this.loopController});
-
-  @override
-  Widget build(BuildContext context) {
-    final presets = [
-      ('Magic', const Color(0xFF9333EA)),
-      ('Email', const Color(0xFFDC2626)),
-      ('Social', const Color(0xFFEC4899)),
-      ('Poem', const Color(0xFFF59E0B)),
-      ('Notes', const Color(0xFF10B981)),
+    final folders = [
+      (Icons.note_rounded, 'Notes', const Color(0xFF3B82F6)),
+      (Icons.file_download_rounded, 'Imports', const Color(0xFF8B5CF6)),
+      (Icons.folder_rounded, 'Projects', const Color(0xFF10B981)),
     ];
 
     return AnimatedBuilder(
-      animation: Listenable.merge([controller, loopController]),
+      animation: Listenable.merge([controller, pulseController]),
       builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
         final opacity = fadeIn * (1 - fadeOut);
-        
-        // Active preset cycles every 0.5 seconds
-        final activeIndex = ((loopController.value * presets.length * 2).floor()) % presets.length;
 
         return Opacity(
           opacity: opacity,
@@ -311,70 +176,70 @@ class _ScenePresets extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Preset chips
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: List.generate(presets.length, (i) {
-                      final isActive = i == activeIndex && controller.value > 0.3;
-                      final preset = presets[i];
+                  // Folder icons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(folders.length, (i) {
+                      final delay = i * 0.08;
+                      final itemAppear = Curves.easeOut.transform(((controller.value - delay) / 0.2).clamp(0.0, 1.0));
+                      final folder = folders[i];
+                      final float = math.sin((pulseController.value * math.pi) + (i * 0.8)) * 4;
                       
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
-                          color: isActive ? preset.$2 : preset.$2.withOpacity(0.2),
-                          border: Border.all(
-                            color: preset.$2.withOpacity(isActive ? 0.8 : 0.4),
-                            width: 2,
-                          ),
-                          boxShadow: isActive ? [
-                            BoxShadow(
-                              color: preset.$2.withOpacity(0.5),
-                              blurRadius: 20,
+                      return Opacity(
+                        opacity: itemAppear,
+                        child: Transform.translate(
+                          offset: Offset(0, (12 * (1 - itemAppear)) + float),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: folder.$3.withOpacity(0.15),
+                                    border: Border.all(color: folder.$3.withOpacity(0.3), width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: folder.$3.withOpacity(0.2),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(folder.$1, color: folder.$3, size: 32),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  folder.$2,
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.5),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ] : null,
-                        ),
-                        child: Text(
-                          preset.$1,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(isActive ? 1 : 0.7),
-                            fontSize: 16,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                       );
                     }),
                   ),
                   
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 60),
                   
                   // Text
-                  _AnimatedText(
-                    text: '20+ Presets.',
+                  _AnimatedHeadline(
                     controller: controller,
-                    delay: 0.15,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 42,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                    ),
+                    delay: 0.2,
+                    text: 'The Unified Library',
                   ),
-                  const SizedBox(height: 4),
-                  _AnimatedText(
-                    text: 'One Tap.',
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
                     controller: controller,
-                    delay: 0.25,
-                    gradient: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 42,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                    ),
+                    delay: 0.28,
+                    text: 'A single home for your notes,\nimports, and batch projects.',
                   ),
                 ],
               ),
@@ -387,78 +252,536 @@ class _ScenePresets extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 3: HIGHLIGHT - "Highlight. Transform."
+// FRAME 2: CAPTURE EVERYTHING
+// "See it. Speak it. Snap it. Capture ideas at the speed of thought."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _SceneHighlight extends StatelessWidget {
+class _Scene2Capture extends StatelessWidget {
   final AnimationController controller;
+  final AnimationController loopController;
+  const _Scene2Capture({required this.controller, required this.loopController});
 
-  const _SceneHighlight({required this.controller});
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([controller, loopController]),
+      builder: (context, _) {
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        final scanProgress = ((controller.value - 0.25) / 0.35).clamp(0.0, 1.0);
+        final extractAppear = Curves.easeOut.transform(((controller.value - 0.6) / 0.15).clamp(0.0, 1.0));
+
+        return Opacity(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Camera frame with scan
+                  Container(
+                    width: 180,
+                    height: 130,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF10B981).withOpacity(0.5), width: 2),
+                      color: Colors.white.withOpacity(0.03),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Document lines
+                        Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _DocLine(width: 0.9),
+                              _DocLine(width: 0.6),
+                              _DocLine(width: 0.75),
+                              _DocLine(width: 0.5),
+                            ],
+                          ),
+                        ),
+                        // Scan line
+                        if (scanProgress > 0 && scanProgress < 1)
+                          Positioned(
+                            top: scanProgress * 130,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 3,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.transparent, const Color(0xFF10B981), Colors.transparent],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(color: const Color(0xFF10B981).withOpacity(0.8), blurRadius: 12, spreadRadius: 2),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Extracted badge
+                  Opacity(
+                    opacity: extractAppear,
+                    child: Transform.translate(
+                      offset: Offset(0, 8 * (1 - extractAppear)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: const Color(0xFF10B981).withOpacity(0.15),
+                          border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 16),
+                            const SizedBox(width: 6),
+                            Text('Text extracted', style: TextStyle(color: const Color(0xFF10B981), fontSize: 13, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 50),
+                  
+                  _AnimatedHeadline(
+                    controller: controller,
+                    delay: 0.15,
+                    text: 'Capture Everything',
+                  ),
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
+                    controller: controller,
+                    delay: 0.22,
+                    text: 'See it. Speak it. Snap it.\nCapture ideas at the speed of thought.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAME 3: SHARE & PROCESS
+// "Share from any app and process with AI instantly."
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene3Share extends StatelessWidget {
+  final AnimationController controller;
+  const _Scene3Share({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
         final opacity = fadeIn * (1 - fadeOut);
         
-        // Highlight sweep from 20% to 50%
-        final highlightProgress = ((controller.value - 0.2) / 0.3).clamp(0.0, 1.0);
-        // Transform appears from 55% to 75%
-        final transformProgress = ((controller.value - 0.55) / 0.2).clamp(0.0, 1.0);
+        // PDF flies in
+        final flyIn = Curves.easeOutCubic.transform((controller.value / 0.35).clamp(0.0, 1.0));
+        // Processing
+        final processing = ((controller.value - 0.35) / 0.25).clamp(0.0, 1.0);
+        // Complete
+        final complete = Curves.easeOut.transform(((controller.value - 0.6) / 0.12).clamp(0.0, 1.0));
+
+        final pdfX = 160.0 * (1 - flyIn);
+        final pdfY = -220.0 * (1 - flyIn);
 
         return Opacity(
           opacity: opacity,
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Original text with highlight
-                  ClipRect(
+                  // Animation area
+                  SizedBox(
+                    width: 200,
+                    height: 150,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Target zone
+                        Container(
+                          width: 130,
+                          height: 95,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            color: Colors.white.withOpacity(0.04),
+                            border: Border.all(
+                              color: const Color(0xFF8B5CF6).withOpacity(flyIn * 0.5),
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: complete > 0
+                                ? Opacity(
+                                    opacity: complete,
+                                    child: Transform.scale(
+                                      scale: 0.8 + (complete * 0.2),
+                                      child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 44),
+                                    ),
+                                  )
+                                : processing > 0
+                                    ? SizedBox(
+                                        width: 32,
+                                        height: 32,
+                                        child: CircularProgressIndicator(
+                                          value: processing,
+                                          strokeWidth: 3,
+                                          color: const Color(0xFF8B5CF6),
+                                          backgroundColor: Colors.white.withOpacity(0.1),
+                                        ),
+                                      )
+                                    : Icon(Icons.add_rounded, color: Colors.white.withOpacity(0.15), size: 32),
+                          ),
+                        ),
+                        
+                        // Flying PDF
+                        if (flyIn < 1)
+                          Transform.translate(
+                            offset: Offset(pdfX, pdfY),
+                            child: Transform.rotate(
+                              angle: (1 - flyIn) * 0.35,
+                              child: Container(
+                                width: 58,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: const Color(0xFFEF4444),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFEF4444).withOpacity(0.5),
+                                      blurRadius: 18,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 28),
+                                    const SizedBox(height: 2),
+                                    Text('PDF', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 50),
+                  
+                  _AnimatedHeadline(
+                    controller: controller,
+                    delay: 0.25,
+                    text: 'Share & Process',
+                  ),
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
+                    controller: controller,
+                    delay: 0.32,
+                    text: 'Share PDFs or docs from any app\nand process with AI instantly.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAME 4: ONE-TAP MAGIC
+// "Apply 20+ AI presets to instantly draft emails, threads, or social posts."
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene4Presets extends StatelessWidget {
+  final AnimationController controller;
+  final AnimationController loopController;
+  const _Scene4Presets({required this.controller, required this.loopController});
+
+  @override
+  Widget build(BuildContext context) {
+    final presets = [
+      ('Email', const Color(0xFFDC2626)),
+      ('Thread', const Color(0xFF3B82F6)),
+      ('Social', const Color(0xFFEC4899)),
+      ('Notes', const Color(0xFF10B981)),
+      ('Poem', const Color(0xFFF59E0B)),
+    ];
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([controller, loopController]),
+      builder: (context, _) {
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        final activeIndex = controller.value > 0.25 
+            ? ((loopController.value * presets.length * 1.5).floor()) % presets.length
+            : -1;
+
+        return Opacity(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Preset chips
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: List.generate(presets.length, (i) {
+                      final delay = 0.1 + (i * 0.05);
+                      final chipAppear = Curves.easeOut.transform(((controller.value - delay) / 0.15).clamp(0.0, 1.0));
+                      final isActive = i == activeIndex;
+                      final preset = presets[i];
+                      
+                      return Opacity(
+                        opacity: chipAppear,
+                        child: Transform.translate(
+                          offset: Offset(0, 10 * (1 - chipAppear)),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: isActive ? preset.$2 : preset.$2.withOpacity(0.12),
+                              border: Border.all(
+                                color: preset.$2.withOpacity(isActive ? 0.8 : 0.3),
+                                width: 1.5,
+                              ),
+                              boxShadow: isActive ? [
+                                BoxShadow(color: preset.$2.withOpacity(0.4), blurRadius: 16),
+                              ] : null,
+                            ),
+                            child: Text(
+                              preset.$1,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(isActive ? 1 : 0.7),
+                                fontSize: 15,
+                                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  
+                  const SizedBox(height: 55),
+                  
+                  _AnimatedHeadline(
+                    controller: controller,
+                    delay: 0.3,
+                    text: 'One-Tap Magic',
+                  ),
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
+                    controller: controller,
+                    delay: 0.38,
+                    text: 'Apply 20+ AI presets to instantly\ndraft emails, threads, or social posts.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAME 5: REFINE & PERFECT
+// "Not quite right? Just tell the AI what to change until it's perfect."
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene5Refine extends StatelessWidget {
+  final AnimationController controller;
+  const _Scene5Refine({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        final boxAppear = Curves.easeOut.transform(((controller.value - 0.1) / 0.15).clamp(0.0, 1.0));
+        final typing = ((controller.value - 0.25) / 0.3).clamp(0.0, 1.0);
+        final sparkle = Curves.easeOut.transform(((controller.value - 0.55) / 0.12).clamp(0.0, 1.0));
+
+        const instruction = 'Make it more professional';
+        final visibleChars = (instruction.length * typing).floor();
+
+        return Opacity(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Input box
+                  Opacity(
+                    opacity: boxAppear,
+                    child: Transform.translate(
+                      offset: Offset(0, 10 * (1 - boxAppear)),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          color: Colors.white.withOpacity(0.04),
+                          border: Border.all(
+                            color: sparkle > 0 
+                                ? Color.lerp(Colors.white.withOpacity(0.1), const Color(0xFFF59E0B), sparkle)!
+                                : Colors.white.withOpacity(0.1),
+                            width: 1.5,
+                          ),
+                          boxShadow: sparkle > 0 ? [
+                            BoxShadow(
+                              color: const Color(0xFFF59E0B).withOpacity(sparkle * 0.25),
+                              blurRadius: 20,
+                            ),
+                          ] : null,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                instruction.substring(0, visibleChars) + (typing > 0 && typing < 1 ? '│' : ''),
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.75),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            if (sparkle > 0)
+                              Opacity(
+                                opacity: sparkle,
+                                child: const Icon(Icons.auto_awesome, color: Color(0xFFF59E0B), size: 22),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 55),
+                  
+                  _AnimatedHeadline(
+                    controller: controller,
+                    delay: 0.4,
+                    text: 'Refine & Perfect',
+                  ),
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
+                    controller: controller,
+                    delay: 0.48,
+                    text: 'Not quite right? Just tell the AI\nwhat to change until it\'s perfect.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAME 6: HIGHLIGHT & TRANSFORM
+// "Highlight any text to rewrite, summarize, or fix in seconds."
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _Scene6Highlight extends StatelessWidget {
+  final AnimationController controller;
+  const _Scene6Highlight({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
+        final opacity = fadeIn * (1 - fadeOut);
+        
+        final textAppear = Curves.easeOut.transform(((controller.value - 0.1) / 0.12).clamp(0.0, 1.0));
+        final highlightSweep = Curves.easeInOut.transform(((controller.value - 0.22) / 0.28).clamp(0.0, 1.0));
+        final transform = Curves.easeOut.transform(((controller.value - 0.52) / 0.15).clamp(0.0, 1.0));
+
+        return Opacity(
+          opacity: opacity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 36),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Original text
+                  Opacity(
+                    opacity: textAppear,
                     child: Stack(
                       children: [
-                        // Base text (faded)
                         Text(
-                          'make this better',
+                          'fix this paragraph',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withOpacity(0.2),
                             fontSize: 24,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        // Highlighted portion
                         ShaderMask(
-                          shaderCallback: (bounds) {
-                            return LinearGradient(
-                              colors: [
-                                Colors.white,
-                                Colors.white,
-                                Colors.transparent,
-                                Colors.transparent,
-                              ],
-                              stops: [0, highlightProgress, highlightProgress, 1],
-                            ).createShader(bounds);
-                          },
+                          shaderCallback: (bounds) => LinearGradient(
+                            colors: [
+                              const Color(0xFFF59E0B),
+                              const Color(0xFFF59E0B),
+                              Colors.transparent,
+                              Colors.transparent,
+                            ],
+                            stops: [0, (highlightSweep - 0.02).clamp(0.0, 1.0), highlightSweep, 1],
+                          ).createShader(bounds),
                           blendMode: BlendMode.srcIn,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B).withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'make this better',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          child: const Text(
+                            'fix this paragraph',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -470,11 +793,11 @@ class _SceneHighlight extends StatelessWidget {
                   
                   // Arrow
                   Opacity(
-                    opacity: transformProgress,
-                    child: const Icon(
+                    opacity: transform,
+                    child: Icon(
                       Icons.arrow_downward_rounded,
-                      color: Color(0xFFF59E0B),
-                      size: 28,
+                      color: const Color(0xFFF59E0B).withOpacity(0.5),
+                      size: 24,
                     ),
                   ),
                   
@@ -482,39 +805,35 @@ class _SceneHighlight extends StatelessWidget {
                   
                   // Transformed text
                   Opacity(
-                    opacity: transformProgress,
+                    opacity: transform,
                     child: Transform.translate(
-                      offset: Offset(0, 10 * (1 - transformProgress)),
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
-                        ).createShader(bounds),
-                        child: const Text(
-                          'elevated to perfection',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      offset: Offset(0, 8 * (1 - transform)),
+                      child: Text(
+                        'polished to perfection',
+                        style: TextStyle(
+                          color: const Color(0xFFF59E0B),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          shadows: [
+                            Shadow(color: const Color(0xFFF59E0B).withOpacity(0.35), blurRadius: 16),
+                          ],
                         ),
                       ),
                     ),
                   ),
                   
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 55),
                   
-                  // Label
-                  _AnimatedText(
-                    text: 'Highlight. Transform.',
+                  _AnimatedHeadline(
                     controller: controller,
-                    delay: 0.1,
-                    gradient: const [Color(0xFFF59E0B), Color(0xFFEF4444)],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 38,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                    ),
+                    delay: 0.45,
+                    text: 'Highlight & Transform',
+                  ),
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
+                    controller: controller,
+                    delay: 0.52,
+                    text: 'Highlight any text to rewrite,\nsummarize, or fix in seconds.',
                   ),
                 ],
               ),
@@ -527,352 +846,145 @@ class _SceneHighlight extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 4: IMPORT - File icons + "Import. Export. Anything."
+// FRAME 7: THE OUTCOME (THE MAGIC PULL)
+// "Speak your mind. Let AI pull the plans, to-dos, and alarms for you."
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _SceneImport extends StatelessWidget {
+class _Scene7Outcome extends StatelessWidget {
   final AnimationController controller;
   final AnimationController loopController;
-
-  const _SceneImport({required this.controller, required this.loopController});
+  const _Scene7Outcome({required this.controller, required this.loopController});
 
   @override
   Widget build(BuildContext context) {
-    final files = [
-      (Icons.picture_as_pdf_rounded, const Color(0xFFEF4444)),
-      (Icons.description_rounded, const Color(0xFF3B82F6)),
-      (Icons.image_rounded, const Color(0xFF10B981)),
-      (Icons.audiotrack_rounded, const Color(0xFF8B5CF6)),
+    final tasks = [
+      ('Call Sarah at 3pm', true),
+      ('Send the report', false),
+      ('Book flight to NYC', true),
     ];
 
     return AnimatedBuilder(
       animation: Listenable.merge([controller, loopController]),
       builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
+        final fadeIn = Curves.easeOut.transform((controller.value / 0.15).clamp(0.0, 1.0));
+        final fadeOut = controller.value > 0.85 ? Curves.easeIn.transform(((controller.value - 0.85) / 0.15).clamp(0.0, 1.0)) : 0.0;
         final opacity = fadeIn * (1 - fadeOut);
+
+        // Waveform
+        final waveAppear = Curves.easeOut.transform(((controller.value - 0.08) / 0.12).clamp(0.0, 1.0));
+        // Arrow
+        final arrowAppear = Curves.easeOut.transform(((controller.value - 0.25) / 0.1).clamp(0.0, 1.0));
 
         return Opacity(
           opacity: opacity,
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // File icons floating
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(files.length, (i) {
-                    final float = math.sin((loopController.value * math.pi * 2) + (i * 1.5)) * 8;
-                    final file = files[i];
-                    
-                    return Transform.translate(
-                      offset: Offset(0, float),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 12),
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: file.$2,
-                          boxShadow: [
-                            BoxShadow(
-                              color: file.$2.withOpacity(0.5),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Waveform
+                  Opacity(
+                    opacity: waveAppear,
+                    child: SizedBox(
+                      height: 45,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (i) {
+                          final wave = math.sin((loopController.value * math.pi * 2) + (i * 0.8));
+                          final height = 15 + (wave.abs() * 28);
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: 5,
+                            height: height,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(3),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(color: const Color(0xFF8B5CF6).withOpacity(0.4), blurRadius: 8),
+                              ],
                             ),
-                          ],
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Arrow
+                  Opacity(
+                    opacity: arrowAppear,
+                    child: Icon(Icons.arrow_downward_rounded, color: Colors.white.withOpacity(0.25), size: 22),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Task list
+                  ...List.generate(tasks.length, (i) {
+                    final delay = 0.32 + (i * 0.08);
+                    final taskAppear = Curves.easeOut.transform(((controller.value - delay) / 0.12).clamp(0.0, 1.0));
+                    final task = tasks[i];
+                    
+                    return Opacity(
+                      opacity: taskAppear,
+                      child: Transform.translate(
+                        offset: Offset(-20 * (1 - taskAppear), 0),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white.withOpacity(0.05),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(colors: [Color(0xFF10B981), Color(0xFF06B6D4)]),
+                                ),
+                                child: const Icon(Icons.check, color: Colors.white, size: 13),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                task.$1,
+                                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+                              ),
+                              if (task.$2) ...[
+                                const SizedBox(width: 10),
+                                const Icon(Icons.alarm_rounded, color: Color(0xFFF59E0B), size: 16),
+                              ],
+                            ],
+                          ),
                         ),
-                        child: Icon(file.$1, color: Colors.white, size: 28),
                       ),
                     );
                   }),
-                ),
-                
-                const SizedBox(height: 50),
-                
-                // Text
-                _AnimatedText(
-                  text: 'Import. Export.',
-                  controller: controller,
-                  delay: 0.15,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _AnimatedText(
-                  text: 'Anything.',
-                  controller: controller,
-                  delay: 0.25,
-                  gradient: const [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SCENE 5: OCR - Image scan + "Image to Text. Instant."
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _SceneOCR extends StatelessWidget {
-  final AnimationController controller;
-
-  const _SceneOCR({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
-        final opacity = fadeIn * (1 - fadeOut);
-        
-        // Scan line moves from 20% to 60%
-        final scanProgress = ((controller.value - 0.2) / 0.4).clamp(0.0, 1.0);
-        // Text appears from 55%
-        final textReveal = ((controller.value - 0.55) / 0.2).clamp(0.0, 1.0);
-
-        return Opacity(
-          opacity: opacity,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Image frame with scan
-                Container(
-                  width: 180,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF10B981).withOpacity(0.5),
-                      width: 2,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Document lines
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _docLine(0.8),
-                            const SizedBox(height: 8),
-                            _docLine(0.6),
-                            const SizedBox(height: 8),
-                            _docLine(0.7),
-                          ],
-                        ),
-                      ),
-                      // Scan line
-                      if (scanProgress > 0 && scanProgress < 1)
-                        Positioned(
-                          top: scanProgress * 120,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 3,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  const Color(0xFF10B981),
-                                  Colors.transparent,
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF10B981).withOpacity(0.8),
-                                  blurRadius: 12,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Extracted text
-                Opacity(
-                  opacity: textReveal,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: const Color(0xFF10B981).withOpacity(0.15),
-                    ),
-                    child: const Text(
-                      '"Meeting tomorrow at 3pm..."',
-                      style: TextStyle(
-                        color: Color(0xFF10B981),
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 50),
-                
-                // Label
-                _AnimatedText(
-                  text: 'Image to Text.',
-                  controller: controller,
-                  delay: 0.1,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _AnimatedText(
-                  text: 'Instant.',
-                  controller: controller,
-                  delay: 0.2,
-                  gradient: const [Color(0xFF10B981), Color(0xFF06B6D4)],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _docLine(double width) {
-    return FractionallySizedBox(
-      widthFactor: width,
-      child: Container(
-        height: 8,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(4),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SCENE 6: TASKS - "Voice to Tasks."
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _SceneTasks extends StatelessWidget {
-  final AnimationController controller;
-
-  const _SceneTasks({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final tasks = ['Call Sarah', 'Send report', 'Book flight'];
-
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
-        final opacity = fadeIn * (1 - fadeOut);
-
-        return Opacity(
-          opacity: opacity,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Tasks
-                ...List.generate(tasks.length, (i) {
-                  final taskProgress = ((controller.value - 0.15 - (i * 0.1)) / 0.2).clamp(0.0, 1.0);
                   
-                  return Opacity(
-                    opacity: taskProgress,
-                    child: Transform.translate(
-                      offset: Offset(-20 * (1 - taskProgress), 0),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.white.withOpacity(0.08),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
-                                ),
-                              ),
-                              child: const Icon(Icons.check, color: Colors.white, size: 16),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              tasks[i],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-                
-                const SizedBox(height: 40),
-                
-                // Label
-                _AnimatedText(
-                  text: 'Voice to Tasks.',
-                  controller: controller,
-                  delay: 0.1,
-                  gradient: const [Color(0xFF10B981), Color(0xFF06B6D4)],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 42,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
+                  const SizedBox(height: 45),
+                  
+                  _AnimatedHeadline(
+                    controller: controller,
+                    delay: 0.55,
+                    text: 'Speak your mind.',
                   ),
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  _AnimatedSubhead(
+                    controller: controller,
+                    delay: 0.62,
+                    text: 'Let AI pull the plans, to-dos,\nand alarms for you.',
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -882,330 +994,177 @@ class _SceneTasks extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCENE 7: BATCH - "Process in Batches."
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _SceneBatch extends StatelessWidget {
-  final AnimationController controller;
-
-  const _SceneBatch({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
-        final opacity = fadeIn * (1 - fadeOut);
-        
-        // Docs merge from 20% to 60%
-        final mergeProgress = ((controller.value - 0.2) / 0.4).clamp(0.0, 1.0);
-
-        return Opacity(
-          opacity: opacity,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Multiple docs merging
-                SizedBox(
-                  width: 200,
-                  height: 80,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: List.generate(5, (i) {
-                      final startOffset = (i - 2) * 30.0;
-                      final currentOffset = startOffset * (1 - mergeProgress);
-                      
-                      return Transform.translate(
-                        offset: Offset(currentOffset, 0),
-                        child: Container(
-                          width: 45,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF6366F1).withOpacity(0.9 - (i * 0.15)),
-                                const Color(0xFF8B5CF6).withOpacity(0.7 - (i * 0.1)),
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6366F1).withOpacity(0.3),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.description, color: Colors.white70, size: 22),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Counter
-                Text(
-                  '${(mergeProgress * 100).toInt()}%',
-                  style: const TextStyle(
-                    color: Color(0xFF8B5CF6),
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                
-                const SizedBox(height: 40),
-                
-                // Label
-                _AnimatedText(
-                  text: 'Process in Batches.',
-                  controller: controller,
-                  delay: 0.1,
-                  gradient: const [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 38,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SCENE 8: ANYWHERE - Floating bubble + "Anywhere."
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _SceneAnywhere extends StatelessWidget {
-  final AnimationController controller;
-  final AnimationController loopController;
-
-  const _SceneAnywhere({required this.controller, required this.loopController});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([controller, loopController]),
-      builder: (context, _) {
-        final fadeIn = (controller.value * 4).clamp(0.0, 1.0);
-        final fadeOut = controller.value > 0.85 
-            ? ((controller.value - 0.85) / 0.15).clamp(0.0, 1.0) 
-            : 0.0;
-        final opacity = fadeIn * (1 - fadeOut);
-        final float = math.sin(loopController.value * math.pi * 2) * 10;
-
-        return Opacity(
-          opacity: opacity,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Floating bubble
-                Transform.translate(
-                  offset: Offset(0, float),
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.5),
-                          blurRadius: 30,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 44),
-                  ),
-                ),
-                
-                const SizedBox(height: 50),
-                
-                // Label
-                _AnimatedText(
-                  text: 'Anywhere.',
-                  controller: controller,
-                  delay: 0.15,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 48,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FINALE - Logo + "100x Your Voice" + Get Started
+// FINALE: POWER AT YOUR FINGERTIPS
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _Finale extends StatefulWidget {
   final AnimationController loopController;
+  final AnimationController pulseController;
   final VoidCallback onComplete;
-
-  const _Finale({required this.loopController, required this.onComplete});
-
+  const _Finale({required this.loopController, required this.pulseController, required this.onComplete});
+  
   @override
   State<_Finale> createState() => _FinaleState();
 }
 
 class _FinaleState extends State<_Finale> with SingleTickerProviderStateMixin {
-  late AnimationController _fadeController;
+  late AnimationController _revealController;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+    _revealController = AnimationController(
+      duration: const Duration(milliseconds: 900),
       vsync: this,
     )..forward();
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
+    _revealController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_fadeController, widget.loopController]),
+      animation: Listenable.merge([_revealController, widget.pulseController]),
       builder: (context, _) {
-        final appear = Curves.easeOut.transform(_fadeController.value);
-        final glow = 0.4 + (math.sin(widget.loopController.value * math.pi * 2) * 0.2);
+        final logoAppear = Curves.easeOut.transform((_revealController.value / 0.35).clamp(0.0, 1.0));
+        final text1Appear = Curves.easeOut.transform(((_revealController.value - 0.2) / 0.25).clamp(0.0, 1.0));
+        final text2Appear = Curves.easeOut.transform(((_revealController.value - 0.35) / 0.25).clamp(0.0, 1.0));
+        final buttonAppear = Curves.easeOut.transform(((_revealController.value - 0.55) / 0.45).clamp(0.0, 1.0));
+        final glow = 0.35 + (widget.pulseController.value * 0.2);
 
-        return Opacity(
-          opacity: appear,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo
-                  Transform.scale(
-                    scale: 0.9 + (appear * 0.1),
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo
+                Opacity(
+                  opacity: logoAppear,
+                  child: Transform.scale(
+                    scale: 0.85 + (logoAppear * 0.15),
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFF3B82F6).withOpacity(glow),
                             blurRadius: 40,
-                            spreadRadius: 8,
+                            spreadRadius: 5,
                           ),
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(28),
                         child: Image.asset(
                           'assets/app_logo.png',
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(28),
                               gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                                 colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                               ),
                             ),
-                            child: const Icon(Icons.mic, color: Colors.white, size: 50),
+                            child: const Icon(Icons.mic_rounded, color: Colors.white, size: 48),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Tagline
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                    ).createShader(bounds),
+                ),
+                
+                const SizedBox(height: 50),
+                
+                // Headline
+                Opacity(
+                  opacity: text1Appear,
+                  child: Transform.translate(
+                    offset: Offset(0, 12 * (1 - text1Appear)),
                     child: const Text(
-                      '100x',
+                      'Power at your fingertips.',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 56,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -2,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1.2,
                       ),
                     ),
                   ),
-                  const Text(
-                    'Your Voice. Your Docs.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Subhead
+                Opacity(
+                  opacity: text2Appear,
+                  child: Transform.translate(
+                    offset: Offset(0, 10 * (1 - text2Appear)),
+                    child: Text(
+                      'Import. Process. Finish.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.45),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
+                      ),
                     ),
                   ),
-                  
-                  const SizedBox(height: 60),
-                  
-                  // Get Started button
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      widget.onComplete();
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF3B82F6).withOpacity(0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                ),
+                
+                const SizedBox(height: 60),
+                
+                // Button
+                Opacity(
+                  opacity: buttonAppear,
+                  child: Transform.translate(
+                    offset: Offset(0, 15 * (1 - buttonAppear)),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.heavyImpact();
+                        widget.onComplete();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 62,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                           ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Get Started',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withOpacity(0.4),
+                              blurRadius: 22,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Get Started',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -1215,46 +1174,90 @@ class _FinaleState extends State<_Finale> with SingleTickerProviderStateMixin {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HELPER: Animated Text with optional gradient
+// HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _AnimatedText extends StatelessWidget {
-  final String text;
+class _AnimatedHeadline extends StatelessWidget {
   final AnimationController controller;
   final double delay;
-  final TextStyle style;
-  final List<Color>? gradient;
-
-  const _AnimatedText({
-    required this.text,
-    required this.controller,
-    required this.delay,
-    required this.style,
-    this.gradient,
-  });
+  final String text;
+  const _AnimatedHeadline({required this.controller, required this.delay, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        final progress = ((controller.value - delay) / 0.2).clamp(0.0, 1.0);
-        final opacity = Curves.easeOut.transform(progress);
-        final offset = 15 * (1 - progress);
-
+        final progress = Curves.easeOut.transform(((controller.value - delay) / 0.15).clamp(0.0, 1.0));
         return Opacity(
-          opacity: opacity,
+          opacity: progress,
           child: Transform.translate(
-            offset: Offset(0, offset),
-            child: gradient != null
-                ? ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(colors: gradient!).createShader(bounds),
-                    child: Text(text, style: style, textAlign: TextAlign.center),
-                  )
-                : Text(text, style: style, textAlign: TextAlign.center),
+            offset: Offset(0, 12 * (1 - progress)),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1,
+              ),
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class _AnimatedSubhead extends StatelessWidget {
+  final AnimationController controller;
+  final double delay;
+  final String text;
+  const _AnimatedSubhead({required this.controller, required this.delay, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final progress = Curves.easeOut.transform(((controller.value - delay) / 0.15).clamp(0.0, 1.0));
+        return Opacity(
+          opacity: progress,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - progress)),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                height: 1.45,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DocLine extends StatelessWidget {
+  final double width;
+  const _DocLine({required this.width});
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: width,
+      child: Container(
+        height: 7,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
     );
   }
 }
