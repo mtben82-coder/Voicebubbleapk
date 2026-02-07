@@ -263,7 +263,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   int _currentStep = 0;
 
   void _nextStep() {
-    if (_currentStep < 6) {
+    if (_currentStep < 3) {
       setState(() {
         _currentStep++;
       });
@@ -285,18 +285,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget build(BuildContext context) {
     switch (_currentStep) {
       case 0:
-        return OnboardingOne(onNext: _nextStep);
-      case 1:
-        return OnboardingTwo(onNext: _nextStep);
-      case 2:
-        return OnboardingThreeNew(onNext: _nextStep);
-      case 3:
         return FeatureShowcaseScreen(onComplete: _nextStep);
-      case 4:
+      case 1:
         return SignInScreen(onSignIn: _handleSignIn);
-      case 5:
+      case 2:
         return PermissionsScreen(onComplete: _nextStep);
-      case 6:
+      case 3:
         return PaywallScreen(
           onSubscribe: () {
             widget.onComplete(context);

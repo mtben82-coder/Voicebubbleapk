@@ -21,7 +21,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
   late Animation<double> _fadeAnimation;
   
   int _currentPage = 0;
-  static const int _totalPages = 10;
+  static const int _totalPages = 9;
 
   @override
   void initState() {
@@ -63,11 +63,6 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
     }
   }
 
-  void _skip() {
-    HapticFeedback.mediumImpact();
-    widget.onComplete();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,16 +80,6 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
             builder: (context, child) => Opacity(opacity: _fadeAnimation.value, child: child),
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, right: 20),
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: TextButton(
-                      onPressed: _skip,
-                      child: Text('Skip', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 16, fontWeight: FontWeight.w500)),
-                    ),
-                  ),
-                ),
                 Expanded(
                   child: PageView(
                     controller: _pageController,
@@ -106,7 +91,6 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
                       _Page3Languages(loopController: _loopController),
                       _Page4Anywhere(loopController: _loopController),
                       _Page5Library(loopController: _loopController),
-                      _Page6Capture(loopController: _loopController),
                       _Page7Share(loopController: _loopController),
                       _Page8Refine(loopController: _loopController),
                       _Page9Outcome(loopController: _loopController),
@@ -118,26 +102,6 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
                   padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
                   child: Column(
                     children: [
-                      if (_currentPage < _totalPages - 1)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(_totalPages - 1, (i) {
-                              final isActive = i == _currentPage;
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
-                                width: isActive ? 24 : 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(4),
-                                  color: isActive ? const Color(0xFF3B82F6) : Colors.white.withOpacity(0.2),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
                       SizedBox(
                         width: double.infinity,
                         height: 60,
@@ -249,7 +213,7 @@ class _Page2Presets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final presets = [('Email', const Color(0xFFDC2626)), ('Thread', const Color(0xFF3B82F6)), ('Social', const Color(0xFFEC4899)), ('Notes', const Color(0xFF10B981)), ('Summary', const Color(0xFFF59E0B))];
+    final presets = [('Email', const Color(0xFF3B82F6)), ('Thread', const Color(0xFF3B82F6)), ('Social', const Color(0xFF3B82F6)), ('Notes', const Color(0xFF3B82F6)), ('Summary', const Color(0xFF3B82F6))];
     return AnimatedBuilder(
       animation: loopController,
       builder: (context, _) {
@@ -378,7 +342,7 @@ class _Page4Anywhere extends StatelessWidget {
               const Text('Access', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
               const Text('Anywhere', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
               const SizedBox(height: 16),
-              Text('Floating bubble for rapid voice access.\nIdea pops in? Tap and speak instantly.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 18, fontWeight: FontWeight.w400, height: 1.5)),
+              Text('Floating bubble for rapid voice access.\nIdea to instant action.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 18, fontWeight: FontWeight.w400, height: 1.5)),
               const SizedBox(height: 50),
               Transform.translate(
                 offset: Offset(0, float),
@@ -479,83 +443,6 @@ class _Page5Library extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PAGE 6: CAPTURE ANYTHING
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _Page6Capture extends StatelessWidget {
-  final AnimationController loopController;
-  const _Page6Capture({required this.loopController});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: loopController,
-      builder: (context, _) {
-        final scanY = (math.sin(loopController.value * math.pi * 2) + 1) / 2;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Capture', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
-              const Text('Anything', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
-              const SizedBox(height: 16),
-              Text('See it. Speak it. Snap it.\nCapture ideas at the speed of thought.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 18, fontWeight: FontWeight.w400, height: 1.5)),
-              const SizedBox(height: 40),
-              Container(
-                width: 220, height: 150,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.4), width: 2),
-                ),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [_line(0.85), _line(0.6), _line(0.75), _line(0.5)],
-                      ),
-                    ),
-                    Positioned(
-                      top: scanY * 130, left: 0, right: 0,
-                      child: Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [Colors.transparent, const Color(0xFF3B82F6), const Color(0xFF3B82F6), Colors.transparent]),
-                          boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.8), blurRadius: 10, spreadRadius: 2)],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.check_circle_rounded, color: Color(0xFF3B82F6), size: 18),
-                    const SizedBox(width: 8),
-                    Text('Text extracted instantly', style: TextStyle(color: const Color(0xFF3B82F6), fontSize: 14, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _line(double w) => FractionallySizedBox(widthFactor: w, child: Container(height: 10, decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(5))));
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // PAGE 7: SHARE FROM ANYWHERE
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -578,7 +465,7 @@ class _Page7Share extends StatelessWidget {
               const Text('Share from', style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
               const Text('Anywhere', style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
               const SizedBox(height: 16),
-              Text('Share PDFs, docs, or images from any app.\nInstant text extraction. AI processes everything.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 17, fontWeight: FontWeight.w400, height: 1.5)),
+              Text('Share PDFs, docs, or images from any app.\nAI processes everything.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 17, fontWeight: FontWeight.w400, height: 1.5)),
               const SizedBox(height: 40),
               SizedBox(
                 height: 160,
@@ -708,7 +595,7 @@ class _Page9Outcome extends StatelessWidget {
               const Text('From Thought', style: TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
               const Text('to Action', style: TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
               const SizedBox(height: 16),
-              Text('Speak your mind. Ramble for 20 minutes.\nAI extracts every task, to-do, and alarm.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 17, fontWeight: FontWeight.w400, height: 1.5)),
+              Text('Speak your mind.\nAI extracts every task, to-do with alarms.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 17, fontWeight: FontWeight.w400, height: 1.5)),
               const SizedBox(height: 36),
               ...List.generate(tasks.length, (i) {
                 final task = tasks[i];
