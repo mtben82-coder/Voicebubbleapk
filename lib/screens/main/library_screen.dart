@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:math' as math;
-import '../../widgets/curved_text_painter.dart';
 import '../../providers/app_state_provider.dart';
 import '../../models/recording_item.dart';
 import '../../models/tag.dart';
@@ -839,7 +838,7 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                         child: const Icon(Icons.insert_drive_file, color: Colors.white, size: 24),
                       ),
                     ),
-                    // CENTER FAB: Big round mic with curved text — dead center
+                    // CENTER FAB: Clean round mic + label
                     Positioned(
                       bottom: 0,
                       child: Column(
@@ -855,54 +854,34 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                                 ),
                               );
                             },
-                            child: SizedBox(
+                            child: Container(
                               width: 72,
                               height: 72,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Background circle
-                                  Container(
-                                    width: 72,
-                                    height: 72,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF3B82F6).withOpacity(0.4),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 6),
-                                        ),
-                                      ],
-                                    ),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF3B82F6).withOpacity(0.4),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
                                   ),
-                                  // Curved text overlay
-                                  CustomPaint(
-                                    size: const Size(72, 72),
-                                    painter: CurvedTextPainter(
-                                      text: 'Speak, AI Writes, Done.',
-                                      textColor: Colors.white.withOpacity(0.9),
-                                      fontSize: 7.5,
-                                    ),
-                                  ),
-                                  // Mic icon on top
-                                  const Icon(Icons.mic, size: 28, color: Colors.white),
                                 ],
                               ),
+                              child: const Icon(Icons.mic, size: 32, color: Colors.white),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           const Text(
-                            'Speak to AI',
+                            'Speak, AI Writes, Done.',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF3B82F6),
+                              color: Colors.white,
                             ),
                           ),
                         ],
