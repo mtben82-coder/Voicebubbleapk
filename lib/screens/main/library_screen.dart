@@ -68,6 +68,7 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView(screenName: 'Library');
     WidgetsBinding.instance.addObserver(this);
     _checkOverlayStatus();
     _initializeOverlay();
@@ -683,7 +684,15 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: TextField(
-                                onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+                                onChanged: (value) {
+                                  setState(() => _searchQuery = value.toLowerCase());
+                                  if (value.isNotEmpty && value.length >= 3) {
+                                    AnalyticsService().logCustomEvent(
+                                      eventName: 'library_search_used',
+                                      parameters: {'query_length': value.length},
+                                    );
+                                  }
+                                },
                                 style: TextStyle(color: textColor, fontSize: 16),
                                 decoration: InputDecoration(
                                   hintText: 'Search library...',
@@ -763,7 +772,15 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                       if (_viewMode == 0)
                         TagFilterChips(
                           selectedTagId: _selectedTagId,
-                          onTagSelected: (tagId) => setState(() => _selectedTagId = tagId),
+                          onTagSelected: (tagId) {
+                            setState(() => _selectedTagId = tagId);
+                            if (tagId != null) {
+                              AnalyticsService().logCustomEvent(
+                                eventName: 'library_filtered_by_tag',
+                                parameters: {'tag_id': tagId},
+                              );
+                            }
+                          },
                         ),
                       if (_viewMode == 0) const SizedBox(height: 16),
                       if (_viewMode == 1) const SizedBox(height: 8),
@@ -904,6 +921,14 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                         showProjectOption: false,
                         onVoicePressed: null,
                         onTextPressed: () async {
+                          AnalyticsService().logCustomEvent(
+                            eventName: 'document_created',
+                            parameters: {
+                              'document_type': 'text',
+                              'source': 'library',
+                              'creation_method': 'manual',
+                            },
+                          );
                           final appState = Provider.of<AppStateProvider>(context, listen: false);
                           final newItem = RecordingItem(
                             id: const Uuid().v4(),
@@ -930,6 +955,14 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                           }
                         },
                         onNotePressed: () async {
+                          AnalyticsService().logCustomEvent(
+                            eventName: 'document_created',
+                            parameters: {
+                              'document_type': 'note',
+                              'source': 'library',
+                              'creation_method': 'manual',
+                            },
+                          );
                           final appState = Provider.of<AppStateProvider>(context, listen: false);
                           final newItem = RecordingItem(
                             id: const Uuid().v4(),
@@ -1036,6 +1069,15 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                             );
 
                             await appState.saveRecording(newItem);
+
+                            AnalyticsService().logCustomEvent(
+                              eventName: 'document_created',
+                              parameters: {
+                                'document_type': 'image',
+                                'source': 'library',
+                                'creation_method': 'image',
+                              },
+                            );
 
                             if (mounted) {
                               Navigator.push(

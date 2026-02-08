@@ -37,6 +37,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView(screenName: 'ProjectDetail');
     _loadProject();
   }
 
@@ -543,11 +544,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
   Future<void> _continueProject() async {
     try {
+      AnalyticsService().logContinueFromProject();
       final context = await _continueService.buildContextFromProject(widget.projectId);
       if (mounted) {
         final appState = Provider.of<AppStateProvider>(this.context, listen: false);
         appState.setContinueContext(context);
-        
+
         // Navigate to recording screen
         Navigator.push(
           this.context,

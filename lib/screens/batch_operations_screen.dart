@@ -8,6 +8,7 @@ import '../services/export_service.dart';
 import '../services/project_service.dart';
 import '../widgets/create_project_dialog.dart';
 import '../widgets/create_tag_dialog.dart';
+import '../services/analytics_service.dart';
 
 class BatchOperationsScreen extends StatefulWidget {
   final List<RecordingItem> allNotes;
@@ -670,6 +671,14 @@ class _BatchOperationsScreenState extends State<BatchOperationsScreen> {
   }
 
   Future<void> _exportMultipleNotes(String format) async {
+    AnalyticsService().logCustomEvent(
+      eventName: 'batch_export_started',
+      parameters: {
+        'format': format,
+        'item_count': _selectedNotes.length,
+      },
+    );
+
     // Show loading
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
