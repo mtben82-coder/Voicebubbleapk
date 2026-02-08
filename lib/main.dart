@@ -19,6 +19,7 @@ import 'screens/onboarding/feature_showcase_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/paywall/paywall_screen.dart';
 import 'screens/import/import_content_screen.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -176,7 +177,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final hasCompletedOnboarding = prefs.getBool('hasCompletedOnboarding') ?? false;
     
     if (mounted) {
-      if (hasCompletedOnboarding) {
+      if (hasCompletedOnboarding && AuthService().currentUser != null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigation()),
@@ -184,6 +185,21 @@ class _SplashScreenState extends State<SplashScreen> {
         // After MainNavigation is loaded, handle any pending share intent
         final myAppState = context.findAncestorStateOfType<_MyAppState>();
         myAppState?._navigateToImportIfPending();
+      } else if (hasCompletedOnboarding && AuthService().currentUser == null) {
+        // Onboarding done but user signed out — go to sign in
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SignInScreen(
+              onSignIn: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MainNavigation()),
+                );
+              },
+            ),
+          ),
+        );
       } else {
         Navigator.pushReplacement(
           context,

@@ -118,6 +118,21 @@ class ContinueBanner extends StatelessWidget {
               ),
             ),
           ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: secondaryTextColor, size: 14),
+              const SizedBox(width: 6),
+              Text(
+                'Tap \u2715 to save & exit when done',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: secondaryTextColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
