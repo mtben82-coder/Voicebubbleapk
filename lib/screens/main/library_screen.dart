@@ -905,8 +905,8 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                           const Text(
                             'Speak, AI Writes, Done.',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
                           ),
