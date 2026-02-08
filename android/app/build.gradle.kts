@@ -30,8 +30,12 @@ android {
         applicationId = "com.voicebubble.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 22
-        versionName = "2.2.0"
+        versionCode = 23
+        versionName = "2.3.0"
+
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
 
     // Signing configuration
@@ -78,7 +82,7 @@ android {
     // Fix for 16 KB memory page size requirement (Android 15+)
     packaging {
         jniLibs {
-            useLegacyPackaging = true
+            useLegacyPackaging = false
         }
     }
 }
