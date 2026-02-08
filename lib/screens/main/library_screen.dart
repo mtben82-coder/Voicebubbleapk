@@ -450,9 +450,18 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
                   ),
                   onTap: () async {
                     Navigator.pop(context);
-                    await _toggleOverlay();
-                    await Future.delayed(const Duration(milliseconds: 500));
-                    await _checkOverlayStatus();
+                    if (_overlayEnabled) {
+                      // Deactivating — send to settings so they can turn it off properly
+                      await NativeOverlayService.requestPermission();
+                      // Re-check status when they come back
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      await _checkOverlayStatus();
+                    } else {
+                      // Activating — same flow as before
+                      await _toggleOverlay();
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      await _checkOverlayStatus();
+                    }
                   },
                 ),
 

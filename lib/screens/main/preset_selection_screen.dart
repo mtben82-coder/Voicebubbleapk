@@ -146,25 +146,7 @@ class _PresetSelectionScreenState extends State<PresetSelectionScreen>
                       color: textColor,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      // TODO: Custom preset creation
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, size: 16, color: primaryColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Custom',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(width: 40),
                 ],
               ),
             ),
