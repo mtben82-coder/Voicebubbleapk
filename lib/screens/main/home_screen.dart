@@ -74,22 +74,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   Future<void> _checkOverlayStatus() async {
     if (Platform.isAndroid) {
-      // Check whether overlay permission itself is granted
-      final hasPermission = await NativeOverlayService.checkPermission();
-      debugPrint('📊 Overlay permission granted: $hasPermission');
+      // Check whether the overlay SERVICE is actually running, not just permission
+      final isRunning = await NativeOverlayService.isActive();
+      debugPrint('📊 Overlay service running: $isRunning');
       setState(() {
-        _overlayEnabled = hasPermission;
+        _overlayEnabled = isRunning;
       });
     }
   }
   
   Future<void> _initializeOverlay() async {
     if (Platform.isAndroid) {
-      // Initial check uses permission state, not service state
-      final hasPermission = await NativeOverlayService.checkPermission();
-      debugPrint('📊 Initial overlay check - permission granted: $hasPermission');
+      // Check if overlay service is actually running
+      final isRunning = await NativeOverlayService.isActive();
+      debugPrint('📊 Initial overlay check - service running: $isRunning');
       setState(() {
-        _overlayEnabled = hasPermission;
+        _overlayEnabled = isRunning;
       });
     }
   }
