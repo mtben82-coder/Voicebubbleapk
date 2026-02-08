@@ -691,39 +691,56 @@ class _ResultScreenState extends State<ResultScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            final appState = context.read<AppStateProvider>();
-                            final continueContext = appState.continueContext;
-                            final originalItemId = continueContext?.singleItemId;
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: surfaceColor,
+                              borderRadius: BorderRadius.circular(40),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                final appState = context.read<AppStateProvider>();
+                                final continueContext = appState.continueContext;
+                                final originalItemId = continueContext?.singleItemId;
 
-                            // Clear context
-                            appState.clearContinueContext();
+                                // Clear context
+                                appState.clearContinueContext();
 
-                            // If continued from a document, go back to that document
-                            if (originalItemId != null) {
-                              Navigator.of(context).popUntil((route) => route.isFirst);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RecordingDetailScreen(recordingId: originalItemId),
+                                // If continued from a document, go back to that document
+                                if (originalItemId != null) {
+                                  Navigator.of(context).popUntil((route) => route.isFirst);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RecordingDetailScreen(recordingId: originalItemId),
+                                    ),
+                                  );
+                                } else {
+                                  // Regular flow - go to main screen
+                                  Navigator.of(context).popUntil((route) => route.isFirst);
+                                }
+                              },
+                              icon: Icon(Icons.close, color: textColor, size: 20),
+                            ),
+                          ),
+                          if (appState.continueContext?.singleItemId != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Text(
+                                'Tap \u2715 to save & return',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: primaryColor,
                                 ),
-                              );
-                            } else {
-                              // Regular flow - go to main screen
-                              Navigator.of(context).popUntil((route) => route.isFirst);
-                            }
-                          },
-                          icon: Icon(Icons.close, color: textColor, size: 20),
-                        ),
+                              ),
+                            ),
+                        ],
                       ),
                       Row(
                         children: [
