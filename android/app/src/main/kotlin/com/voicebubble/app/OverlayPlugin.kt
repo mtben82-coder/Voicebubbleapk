@@ -78,23 +78,21 @@ class OverlayPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     
     private fun requestOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(context)) {
-                try {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:${context?.packageName}")
-                    )
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    
-                    // Try activity first, fallback to context
-                    if (activity != null) {
-                        activity?.startActivity(intent)
-                    } else {
-                        context?.startActivity(intent)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            try {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${context?.packageName}")
+                )
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+                // Try activity first, fallback to context
+                if (activity != null) {
+                    activity?.startActivity(intent)
+                } else {
+                    context?.startActivity(intent)
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

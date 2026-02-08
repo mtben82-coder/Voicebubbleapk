@@ -90,7 +90,7 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
 
       debugPrint('Service active: $isActive, Permission granted: $hasPermission');
 
-      if (hasPermission && !isActive) {
+      if (hasPermission && !isActive && _overlayEnabled) {
         debugPrint('🚀 Auto-starting service after permission grant...');
         final started = await NativeOverlayService.showOverlay();
         if (started && mounted) {
@@ -110,20 +110,20 @@ class _LibraryScreenState extends State<LibraryScreen> with WidgetsBindingObserv
 
   Future<void> _checkOverlayStatus() async {
     if (Platform.isAndroid) {
-      final hasPermission = await NativeOverlayService.checkPermission();
-      debugPrint('📊 Overlay permission granted: $hasPermission');
+      final isRunning = await NativeOverlayService.isActive();
+      debugPrint('📊 Overlay service running: $isRunning');
       setState(() {
-        _overlayEnabled = hasPermission;
+        _overlayEnabled = isRunning;
       });
     }
   }
 
   Future<void> _initializeOverlay() async {
     if (Platform.isAndroid) {
-      final hasPermission = await NativeOverlayService.checkPermission();
-      debugPrint('📊 Initial overlay check - permission granted: $hasPermission');
+      final isRunning = await NativeOverlayService.isActive();
+      debugPrint('📊 Initial overlay check - service running: $isRunning');
       setState(() {
-        _overlayEnabled = hasPermission;
+        _overlayEnabled = isRunning;
       });
     }
   }
