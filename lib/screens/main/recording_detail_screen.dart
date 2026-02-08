@@ -27,6 +27,8 @@ import '../../widgets/export_dialogs.dart';
 import '../../widgets/background_picker.dart';
 import '../../services/version_history_service.dart';
 import '../../constants/visual_constants.dart';
+import '../../services/analytics_service.dart';
+import '../../services/review_service.dart';
 // ✨ END NEW IMPORTS ✨
 
 class RecordingDetailScreen extends StatefulWidget {
@@ -49,6 +51,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView(screenName: 'RecordingDetail');
     _titleController = TextEditingController();
   }
   
@@ -513,10 +516,18 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
       // Schedule or cancel reminder
       if (dateTime != null) {
         await ReminderManager().scheduleReminder(updatedItem);
+
+        final hoursFromNow = dateTime.difference(DateTime.now()).inHours;
+        AnalyticsService().logReminderSet(
+          outcomeType: item.outcomes.isNotEmpty
+            ? item.outcomes.first.toString()
+            : 'generic',
+          hoursFromNow: hoursFromNow,
+        );
       } else {
         await ReminderManager().cancelReminder(updatedItem);
       }
-      
+
       debugPrint('✅ Updated reminder for item: ${item.id}');
     } catch (e) {
       debugPrint('❌ Error updating reminder: $e');
@@ -529,6 +540,16 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         isCompleted: completed,
       );
       await appState.updateRecording(updatedItem);
+
+      if (completed) {
+        AnalyticsService().logOutcomeCompleted(
+          outcomeType: item.outcomes.isNotEmpty
+            ? item.outcomes.first.toString()
+            : 'generic',
+        );
+        await ReviewService().trackOutcomeCompletion();
+      }
+
       debugPrint('✅ Updated completion for item: ${item.id}');
     } catch (e) {
       debugPrint('❌ Error updating completion: $e');
@@ -559,6 +580,10 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         _handleContinue(context, appState, item);
         break;
       case 'share':
+        AnalyticsService().logOutputShared(
+          presetId: item.presetId,
+          shareMethod: 'native_share',
+        );
         Share.share(item.finalText);
         break;
       case 'add_to_project':
@@ -588,6 +613,14 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
         break;
       // ✨ EXPORT HANDLER ✨
       case 'export':
+        AnalyticsService().logCustomEvent(
+          eventName: 'document_exported',
+          parameters: {
+            'format': 'dialog_opened',
+            'source': 'recording_detail',
+            'content_type': item.contentType,
+          },
+        );
         // Wait for any pending auto-saves and get fresh item
         await Future.delayed(const Duration(milliseconds: 100));
         final freshExportItem = appState.allRecordingItems.firstWhere(
@@ -610,6 +643,7 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
 
   void _handleContinue(BuildContext context, AppStateProvider appState, RecordingItem item) async {
     try {
+      AnalyticsService().logContinueFromItem();
       // Small delay to ensure any pending auto-saves complete
       await Future.delayed(const Duration(milliseconds: 100));
 
@@ -835,6 +869,10 @@ class _RecordingDetailScreenState extends State<RecordingDetailScreen> {
                   subtitle: const Text('Extract text from image', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
                   onTap: () {
                     Navigator.pop(dialogContext);
+                    AnalyticsService().logCustomEvent(
+                      eventName: 'ocr_feature_opened',
+                      parameters: {'from_screen': 'recording_detail'},
+                    );
                     _pickAndImportFile(
                       nav, appState, item,
                       extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],

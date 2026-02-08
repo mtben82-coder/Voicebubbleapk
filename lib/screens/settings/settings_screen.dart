@@ -8,6 +8,7 @@ import '../../widgets/usage_display_widget.dart';
 import 'account_management_screen.dart';
 import 'terms_screen.dart';
 import 'privacy_screen.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'help_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -166,6 +167,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           context,
                           MaterialPageRoute(builder: (_) => const TermsScreen()),
                         ),
+                      ),
+                      _SettingsTile(
+                        icon: Icons.star,
+                        title: 'Rate VoiceBubble',
+                        onTap: () async {
+                          final review = InAppReview.instance;
+                          if (await review.isAvailable()) {
+                            await review.requestReview();
+                          } else {
+                            await review.openStoreListing();
+                          }
+                        },
                         isLast: true,
                       ),
                     ],

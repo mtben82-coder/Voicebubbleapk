@@ -324,13 +324,19 @@ class _RecordingScreenState extends State<RecordingScreen>
       }
     } catch (e) {
       print('Error stopping/transcribing: $e');
-      
+
+      AnalyticsService().logError(
+        errorType: 'recording_failed',
+        errorMessage: e.toString(),
+        context: 'recording_screen_stop',
+      );
+
       if (!mounted) return;
-      
+
       setState(() {
         _isProcessing = false;
       });
-      
+
       // Show user-friendly error dialog
       showDialog(
         context: context,

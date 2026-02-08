@@ -156,6 +156,11 @@ class _ResultScreenState extends State<ResultScreen> {
         await _saveRecording();
       }
     } catch (e) {
+      AnalyticsService().logError(
+        errorType: 'ai_generation_failed',
+        errorMessage: e.toString(),
+        context: 'result_screen_generate',
+      );
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -359,7 +364,19 @@ class _ResultScreenState extends State<ResultScreen> {
         debugPrint('💾 Item outcomes: ${item.outcomes}');
         
         await appState.saveRecording(item);
-        
+
+        // Track voice document creation
+        AnalyticsService().logCustomEvent(
+          eventName: 'document_created',
+          parameters: {
+            'document_type': 'voice',
+            'source': item.projectId != null ? 'project' : 'recording',
+            'creation_method': 'voice',
+            'preset_used': appState.selectedPreset?.id ?? 'unknown',
+            'has_outcomes': _selectedOutcomes.isNotEmpty,
+          },
+        );
+
         // Link the continuation chain for project continuations
         if (continueContext?.projectId != null && continueContext?.singleItemId != null) {
           final continueService = ContinueService();

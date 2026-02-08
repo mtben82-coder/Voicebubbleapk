@@ -14,6 +14,7 @@ import '../../providers/app_state_provider.dart';
 import '../../services/share_handler_service.dart';
 import '../../services/ai_service.dart';
 import '../../services/feature_gate.dart';
+import '../../services/analytics_service.dart';
 import '../main/recording_detail_screen.dart';
 import '../main/preset_selection_screen.dart';
 import '../paywall/paywall_screen.dart';
@@ -204,6 +205,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
     } catch (e) {
       debugPrint('PDF extraction error: $e');
       _error = 'Failed to process PDF: ${e.toString()}';
+      AnalyticsService().logError(
+        errorType: 'pdf_import_failed',
+        errorMessage: e.toString(),
+        context: 'import_content_screen_pdf',
+      );
     }
   }
 
@@ -289,6 +295,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
     } catch (e) {
       debugPrint('DOCX extraction error: $e');
       _error = 'Failed to extract text from document: ${e.toString()}';
+      AnalyticsService().logError(
+        errorType: 'docx_import_failed',
+        errorMessage: e.toString(),
+        context: 'import_content_screen_docx',
+      );
     }
   }
 
@@ -331,6 +342,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
   Future<void> _processImageOCR() async {
     if (widget.content.filePath == null) {
       _error = 'No image file path';
+      AnalyticsService().logImageToTextUsed(
+        characterCount: 0,
+        success: false,
+        source: 'no_file_path',
+      );
       return;
     }
 
@@ -338,6 +354,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
       final file = File(widget.content.filePath!);
       if (!await file.exists()) {
         _error = 'Image file not found';
+        AnalyticsService().logImageToTextUsed(
+          characterCount: 0,
+          success: false,
+          source: 'file_not_found',
+        );
         return;
       }
 
@@ -349,6 +370,11 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
 
         if (recognizedText.text.trim().isEmpty) {
           _error = 'No text detected in this image. Try a clearer photo with visible text.';
+          AnalyticsService().logImageToTextUsed(
+            characterCount: 0,
+            success: false,
+            source: 'no_text_detected',
+          );
           return;
         }
 
@@ -363,12 +389,23 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
 
         _extractedText = textBuffer.toString().trim();
         debugPrint('OCR complete: ${_extractedText!.length} chars from ${recognizedText.blocks.length} blocks');
+
+        AnalyticsService().logImageToTextUsed(
+          characterCount: _extractedText!.length,
+          success: true,
+          source: widget.content.type.name,
+        );
       } finally {
         textRecognizer.close();
       }
     } catch (e) {
       debugPrint('OCR error: $e');
       _error = 'Text extraction failed: ${e.toString()}';
+      AnalyticsService().logImageToTextUsed(
+        characterCount: 0,
+        success: false,
+        source: 'ocr_error',
+      );
     }
   }
 
