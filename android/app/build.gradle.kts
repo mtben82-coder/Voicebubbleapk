@@ -30,8 +30,8 @@ android {
         applicationId = "com.voicebubble.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 21
-        versionName = "2.1.0"
+        versionCode = 22
+        versionName = "2.2.0"
     }
 
     // Signing configuration
