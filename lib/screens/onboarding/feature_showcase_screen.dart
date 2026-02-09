@@ -21,7 +21,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
   late Animation<double> _fadeAnimation;
   
   int _currentPage = 0;
-  static const int _totalPages = 9;
+  static const int _totalPages = 7;
 
   @override
   void initState() {
@@ -91,8 +91,6 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> with Tick
                       _Page3Languages(loopController: _loopController),
                       _Page4Anywhere(loopController: _loopController),
                       _Page5Library(loopController: _loopController),
-                      _Page7Share(loopController: _loopController),
-                      _PageRefine(loopController: _loopController),
                       _PageOutcomes(),
                       _PageFinale(loopController: _loopController),
                     ],
@@ -437,124 +435,6 @@ class _Page5Library extends StatelessWidget {
             Text(label, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w600)),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// PAGE 7: SHARE FROM ANYWHERE
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _Page7Share extends StatelessWidget {
-  final AnimationController loopController;
-  const _Page7Share({required this.loopController});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: loopController,
-      builder: (context, _) {
-        final float1 = math.sin(loopController.value * math.pi * 2) * 8;
-        final float2 = math.sin((loopController.value * math.pi * 2) + 1.5) * 8;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Share from', style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
-              const Text('Anywhere', style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
-              const SizedBox(height: 16),
-              Text('Share PDFs, docs, or images from any app.\nAI processes everything.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 17, fontWeight: FontWeight.w400, height: 1.5)),
-              const SizedBox(height: 40),
-              SizedBox(
-                height: 160,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 100, height: 100,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.5), width: 2),
-                        boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.2), blurRadius: 24)],
-                      ),
-                      child: const Icon(Icons.auto_awesome, color: Color(0xFF3B82F6), size: 36),
-                    ),
-                    Transform.translate(
-                      offset: Offset(-100, float1),
-                      child: Container(
-                        width: 55, height: 70,
-                        decoration: BoxDecoration(color: const Color(0xFFDC2626), borderRadius: BorderRadius.circular(10), boxShadow: [BoxShadow(color: const Color(0xFFDC2626).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))]),
-                        child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 26), Text('PDF', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700))]),
-                      ),
-                    ),
-                    Transform.translate(
-                      offset: Offset(100, float2),
-                      child: Container(
-                        width: 55, height: 70,
-                        decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(10), boxShadow: [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))]),
-                        child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.image_rounded, color: Colors.white, size: 26), Text('IMG', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700))]),
-                      ),
-                    ),
-                    Transform.translate(offset: const Offset(-50, 0), child: Icon(Icons.arrow_forward, color: Colors.white.withOpacity(0.3), size: 20)),
-                    Transform.translate(offset: const Offset(50, 0), child: Icon(Icons.arrow_back, color: Colors.white.withOpacity(0.3), size: 20)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// REFINE & PERFECT
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _PageRefine extends StatelessWidget {
-  final AnimationController loopController;
-  const _PageRefine({required this.loopController});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('Refine &', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
-          const Text('Perfect', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1)),
-          const SizedBox(height: 16),
-          Text('Highlight to rewrite.\nVoice to refine.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 18, fontWeight: FontWeight.w400, height: 1.5)),
-          const SizedBox(height: 50),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFF3B82F6),
-              boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.4), blurRadius: 24, offset: const Offset(0, 8))],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.mic_rounded, color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Text('"Make it more professional"', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                ),
-                Icon(Icons.auto_awesome, color: Colors.white.withOpacity(0.8), size: 22),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
