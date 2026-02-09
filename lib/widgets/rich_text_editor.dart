@@ -72,7 +72,6 @@ class _ResizableImage extends StatefulWidget {
 }
 
 class _ResizableImageState extends State<_ResizableImage> {
-  double _height = 200;
   bool _isExpanded = false;
 
   @override
@@ -86,39 +85,30 @@ class _ResizableImageState extends State<_ResizableImage> {
             onTap: () {
               setState(() {
                 _isExpanded = !_isExpanded;
-                _height = _isExpanded ? 400 : 200;
               });
             },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                File(widget.imageUrl),
-                height: _height,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: _height,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
+              child: _isExpanded
+                  // EXPANDED: Full image, natural aspect ratio, no cropping
+                  ? Image.file(
+                      File(widget.imageUrl),
+                      width: double.infinity,
+                      fit: BoxFit.fitWidth,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildErrorWidget();
+                      },
+                    )
+                  // COLLAPSED: Fixed height preview with cover crop
+                  : Image.file(
+                      File(widget.imageUrl),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildErrorWidget();
+                      },
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.broken_image, color: Colors.red),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Image not found: ${widget.imageUrl.split('/').last}',
-                            style: const TextStyle(color: Colors.red, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -135,6 +125,29 @@ class _ResizableImageState extends State<_ResizableImage> {
                 style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.broken_image, color: Colors.red),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Image not found: ${widget.imageUrl.split('/').last}',
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
           ),
         ],
       ),
@@ -435,6 +448,7 @@ class RichTextEditorState extends State<RichTextEditor> with TickerProviderState
   bool _isPinned = false;
   bool _isRecordingVoiceNote = false;
   String? _currentRecordingPath;
+  bool _isImageExpanded = false;
   final AudioRecorder _audioRecorder = AudioRecorder();
 
   @override
@@ -1435,14 +1449,42 @@ class RichTextEditorState extends State<RichTextEditor> with TickerProviderState
                                       ),
                                       if (_imagePath != null && File(_imagePath!).existsSync()) ...[
                                         const SizedBox(height: 8),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.file(
-                                            File(_imagePath!),
-                                            width: double.infinity,
-                                            height: 200,
-                                            fit: BoxFit.cover,
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _isImageExpanded = !_isImageExpanded;
+                                            });
+                                          },
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: _isImageExpanded
+                                                ? Image.file(
+                                                    File(_imagePath!),
+                                                    width: double.infinity,
+                                                    fit: BoxFit.fitWidth,
+                                                  )
+                                                : Image.file(
+                                                    File(_imagePath!),
+                                                    width: double.infinity,
+                                                    height: 200,
+                                                    fit: BoxFit.cover,
+                                                  ),
                                           ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              _isImageExpanded ? Icons.unfold_less : Icons.unfold_more,
+                                              color: Colors.white54,
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _isImageExpanded ? 'Tap to minimize' : 'Tap to expand',
+                                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ],
