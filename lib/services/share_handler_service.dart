@@ -66,7 +66,7 @@ class ShareHandlerService {
       debugPrint('  MIME: ${file.mimeType}');
       debugPrint('  Type: ${file.type}');
 
-      final contentType = _getContentType(file.mimeType, file.type);
+      final contentType = _getContentType(file.mimeType, file.type, file.path);
       final content = SharedContent(
         type: contentType,
         filePath: file.path,
@@ -81,25 +81,51 @@ class ShareHandlerService {
     ReceiveSharingIntent.instance.reset();
   }
 
-  SharedContentType _getContentType(String? mimeType, SharedMediaType? mediaType) {
-    // Check media type first
+  SharedContentType _getContentType(String? mimeType, SharedMediaType? mediaType, [String? filePath]) {
+    // Check media type first (but NOT text — it misclassifies files like PDFs)
     if (mediaType == SharedMediaType.image) return SharedContentType.image;
     if (mediaType == SharedMediaType.video) return SharedContentType.video;
-    if (mediaType == SharedMediaType.text) return SharedContentType.text;
 
-    // Fall back to MIME type
-    if (mimeType == null) return SharedContentType.unknown;
-
-    final mime = mimeType.toLowerCase();
-
-    if (mime.startsWith('text/')) return SharedContentType.text;
-    if (mime.startsWith('image/')) return SharedContentType.image;
-    if (mime.startsWith('audio/')) return SharedContentType.audio;
-    if (mime.startsWith('video/')) return SharedContentType.video;
-    if (mime.contains('pdf')) return SharedContentType.pdf;
-    if (mime.contains('word') || mime.contains('document') || mime.contains('msword')) {
-      return SharedContentType.document;
+    // Check MIME type — check PDF/document before generic text/image
+    if (mimeType != null) {
+      final mime = mimeType.toLowerCase();
+      if (mime.contains('pdf')) return SharedContentType.pdf;
+      if (mime.contains('word') || mime.contains('document') || mime.contains('msword')) {
+        return SharedContentType.document;
+      }
+      if (mime.startsWith('image/')) return SharedContentType.image;
+      if (mime.startsWith('audio/')) return SharedContentType.audio;
+      if (mime.startsWith('video/')) return SharedContentType.video;
+      if (mime.startsWith('text/')) return SharedContentType.text;
     }
+
+    // Fallback: check file extension (critical for external shares where MIME may be null/wrong)
+    if (filePath != null) {
+      final ext = filePath.toLowerCase().split('.').last;
+      switch (ext) {
+        case 'pdf': return SharedContentType.pdf;
+        case 'doc':
+        case 'docx': return SharedContentType.document;
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+        case 'webp': return SharedContentType.image;
+        case 'mp3':
+        case 'wav':
+        case 'm4a':
+        case 'ogg':
+        case 'flac': return SharedContentType.audio;
+        case 'mp4':
+        case 'mov':
+        case 'avi': return SharedContentType.video;
+        case 'txt':
+        case 'md': return SharedContentType.text;
+      }
+    }
+
+    // If media type is text and nothing else matched, treat as text
+    if (mediaType == SharedMediaType.text) return SharedContentType.text;
 
     return SharedContentType.unknown;
   }
