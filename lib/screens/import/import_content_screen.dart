@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -66,12 +67,12 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
         case SharedContentType.text:
           // Direct text - just use it
           if (widget.content.text != null) {
-            _extractedText = widget.content.text;
+            _extractedText = _cleanImportedText(widget.content.text!);
           } else if (widget.content.filePath != null) {
             // Text file - read contents
             final file = File(widget.content.filePath!);
             if (await file.exists()) {
-              _extractedText = await file.readAsString();
+              _extractedText = _cleanImportedText(await file.readAsString());
             } else {
               _error = 'File not found';
             }
@@ -132,6 +133,24 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
            '$message';
   }
 
+  /// Clean up excessive whitespace from any imported text.
+  /// Preserves single paragraph breaks but removes excessive spacing.
+  String _cleanImportedText(String text) {
+    // Normalize line endings
+    var cleaned = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+    // Remove trailing whitespace from each line
+    cleaned = cleaned.split('\n').map((line) => line.trimRight()).join('\n');
+
+    // Collapse 3+ consecutive newlines down to 2 (one blank line = paragraph break)
+    cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+
+    // Remove lines that contain ONLY whitespace (spaces/tabs but no text)
+    cleaned = cleaned.replaceAll(RegExp(r'\n[ \t]+\n'), '\n\n');
+
+    return cleaned.trim();
+  }
+
   /// Extract text from PDF using Syncfusion PDF library
   Future<void> _extractPdfText() async {
     if (widget.content.filePath == null) {
@@ -140,13 +159,32 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
     }
 
     try {
-      final file = File(widget.content.filePath!);
-      if (!await file.exists()) {
-        _error = 'PDF file not found';
-        return;
-      }
+      Uint8List bytes;
+      final path = widget.content.filePath!;
 
-      final bytes = await file.readAsBytes();
+      if (path.startsWith('content://')) {
+        // Handle Android content:// URI — may not be readable as a regular file
+        try {
+          final sourceFile = File(path);
+          if (await sourceFile.exists()) {
+            bytes = await sourceFile.readAsBytes();
+          } else {
+            _error = 'Cannot access this PDF. Try opening it first, then sharing to VoiceBubble.';
+            return;
+          }
+        } catch (e) {
+          debugPrint('Content URI read error: $e');
+          _error = 'Cannot access this PDF. Try using "Open with" instead of "Share".';
+          return;
+        }
+      } else {
+        final file = File(path);
+        if (!await file.exists()) {
+          _error = 'PDF file not found';
+          return;
+        }
+        bytes = await file.readAsBytes();
+      }
 
       // Validate PDF magic bytes (%PDF)
       if (bytes.length < 4 ||
@@ -197,7 +235,7 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
         return;
       }
 
-      _extractedText = extractedText;
+      _extractedText = _cleanImportedText(extractedText);
       if (failedPages > 0 && successPages > 0) {
         _extractedText = '⚠️ Note: $failedPages page(s) could not be read.\n\n$_extractedText';
       }
@@ -290,7 +328,7 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
         return;
       }
 
-      _extractedText = extractedText;
+      _extractedText = _cleanImportedText(extractedText);
       debugPrint('DOCX extraction complete: ${_extractedText!.length} chars');
     } catch (e) {
       debugPrint('DOCX extraction error: $e');
@@ -387,7 +425,7 @@ class _ImportContentScreenState extends State<ImportContentScreen> {
           textBuffer.writeln(); // Paragraph break between blocks
         }
 
-        _extractedText = textBuffer.toString().trim();
+        _extractedText = _cleanImportedText(textBuffer.toString());
         debugPrint('OCR complete: ${_extractedText!.length} chars from ${recognizedText.blocks.length} blocks');
 
         AnalyticsService().logImageToTextUsed(
