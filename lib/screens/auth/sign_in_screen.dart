@@ -100,6 +100,36 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     );
   }
 
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showError('Please enter your email address first');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.resetPassword(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Password reset link sent! Check your email.'),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      _showError(e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,6 +184,24 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                                 icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.white54),
                               ),
                             ),
+                            // Forgot Password link - only show on Sign In mode
+                            if (!_isSignUp) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: GestureDetector(
+                                  onTap: _handleForgotPassword,
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: TextStyle(
+                                      color: const Color(0xFF3B82F6),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 24),
                             _buildButton(_handleEmailAuth, _isSignUp ? 'Sign Up' : 'Sign In'),
                             const SizedBox(height: 20),
