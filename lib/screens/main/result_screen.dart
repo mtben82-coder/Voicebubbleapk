@@ -820,21 +820,56 @@ class _ResultScreenState extends State<ResultScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: surfaceColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '"${appState.transcription}"',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: secondaryTextColor,
-                              fontStyle: FontStyle.italic,
+                        Stack(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+                              decoration: BoxDecoration(
+                                color: surfaceColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '"${appState.transcription}"',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: secondaryTextColor,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
                             ),
-                          ),
+                            // Copy icon — same style as the AI output box
+                            Positioned(
+                              right: 12,
+                              bottom: 12,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () async {
+                                    await Clipboard.setData(ClipboardData(text: appState.transcription));
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Original text copied'),
+                                          backgroundColor: Color(0xFF10B981),
+                                          duration: Duration(seconds: 1),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    child: const Icon(
+                                      Icons.content_copy,
+                                      size: 18,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 24),
 
