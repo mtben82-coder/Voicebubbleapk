@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'analytics_service.dart';
 
 class AuthService {
@@ -18,6 +19,68 @@ class AuthService {
 
   // Stream of auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  Future<UserCredential?> signInWithApple() async {
+    try {
+      debugPrint('Starting Apple Sign-In flow...');
+
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      debugPrint('Apple credentials obtained');
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final userCredential = await _auth.signInWithCredential(oauthCredential);
+      debugPrint('Firebase sign-in successful: ${userCredential.user?.email}');
+
+      AnalyticsService().setUserId(userCredential.user?.uid);
+      AnalyticsService().setUserProperty(name: 'sign_in_method', value: 'apple');
+
+      final user = userCredential.user;
+      if (user != null) {
+        if (appleCredential.givenName != null || appleCredential.familyName != null) {
+          final fullName = [
+            appleCredential.givenName,
+            appleCredential.familyName,
+          ].where((name) => name != null && name.isNotEmpty).join(' ');
+          if (fullName.isNotEmpty) {
+            await user.updateDisplayName(fullName);
+          }
+        }
+        _createUserDocument(
+          uid: user.uid,
+          email: user.email ?? appleCredential.email ?? '',
+          fullName: user.displayName ?? 'Apple User',
+        ).catchError((e) {
+          debugPrint('User document creation failed: $e');
+        });
+      }
+      return userCredential;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      debugPrint('Apple Auth Exception: ${e.code} - ${e.message}');
+      if (e.code == AuthorizationErrorCode.canceled) {
+        return null;
+      }
+      throw Exception('Apple Sign-In failed: ${e.message}');
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Firebase Auth Exception: ${e.code} - ${e.message}');
+      throw Exception('Firebase Error: ${e.message}');
+    } catch (e) {
+      debugPrint('Unexpected error: $e');
+      throw Exception('Apple Sign-In failed: $e');
+    }
+  }
+
+  Future<bool> isAppleSignInAvailable() async {
+    return await SignInWithApple.isAvailable();
+  }
 
   // Get user creation date (for trial tracking)
   Future<DateTime?> getUserCreationDate() async {

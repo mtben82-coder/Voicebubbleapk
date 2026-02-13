@@ -94,6 +94,39 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
     }
   }
 
+  Future<void> _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      debugPrint('UI: Starting Apple Sign-In...');
+
+      final isAvailable = await _authService.isAppleSignInAvailable();
+      if (!isAvailable) {
+        debugPrint('UI: Apple Sign-In not available on this device');
+        _showError('Apple Sign-In is not available on this device');
+        return;
+      }
+
+      final user = await _authService.signInWithApple();
+      debugPrint('UI: Sign-In result: ${user != null ? "Success" : "Cancelled"}');
+
+      if (user != null) {
+        debugPrint('UI: Calling onSignIn callback');
+        widget.onSignIn();
+      } else {
+        debugPrint('UI: User cancelled sign-in');
+      }
+    } catch (e) {
+      debugPrint('UI: Apple Sign-In error: $e');
+      _showError(e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) {
+        debugPrint('UI: Setting loading to false');
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: Colors.red),
@@ -209,6 +242,8 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
                             const SizedBox(height: 20),
                             _buildGoogleButton(),
                             const SizedBox(height: 24),
+                            _buildAppleButton(),
+                            const SizedBox(height: 24),
                             _buildToggleText(),
                             const SizedBox(height: 32),
                             _buildTerms(),
@@ -308,6 +343,54 @@ class _SignInScreenState extends State<SignInScreen> with SingleTickerProviderSt
         ),
         Expanded(child: Divider(color: Colors.white12)),
       ],
+    );
+  }
+
+  Widget _buildAppleButton() {
+    return FutureBuilder<bool>(
+      future: _authService.isAppleSignInAvailable(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data == false) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _isLoading ? null : _handleAppleSignIn,
+              borderRadius: BorderRadius.circular(12),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.apple,
+                      size: 24,
+                      color: _isLoading ? Colors.black38 : Colors.black,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Continue with Apple',
+                      style: TextStyle(
+                        color: _isLoading ? Colors.black38 : Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
