@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>VoiceBubble</string>
+	<string>Voicebubble</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>VoiceBubble</string>
+	<string>voicebubble</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -24,10 +24,133 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- MICROPHONE PERMISSION -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Voicebubble needs microphone access to record your voice for real-time transcription and voice notes.</string>
+
+	<!-- SPEECH RECOGNITION PERMISSION -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Voicebubble needs speech recognition to convert your spoken words into text accurately for transcription and note-taking.</string>
+
+	<!-- PHOTO LIBRARY READ PERMISSION -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Voicebubble needs access to your photo library to save transcribed audio files and share your transcriptions as images or PDFs.</string>
+
+	<!-- CAMERA PERMISSION -->
+	<key>NSCameraUsageDescription</key>
+	<string>Voicebubble needs camera access to take photos for your notes and scan documents for text recognition.</string>
+
+	<!-- PHOTO LIBRARY ADD/SAVE PERMISSION -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Voicebubble needs permission to save images to your photo library.</string>
+
+	<!-- BACKGROUND MODES -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- URL SCHEMES - For Share Extension communication -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<!-- Google Sign-In URL Scheme -->
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.343007612090-b0f1qpgtu738j92cp1g7i329c5kc77rk</string>
+			</array>
+		</dict>
+		<!-- Custom URL Scheme for Share Extension -->
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.voicebubble.voicebubble</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>voicebubble</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- DOCUMENT TYPES - For receiving shared files -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Text Files</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.text</string>
+				<string>public.plain-text</string>
+				<string>public.utf8-plain-text</string>
+				<string>net.daringfireball.markdown</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>PDF</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.adobe.pdf</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Word Documents</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.openxmlformats.wordprocessingml.document</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Audio Files</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.audio</string>
+				<string>public.mp3</string>
+				<string>com.apple.m4a-audio</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Images</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.image</string>
+				<string>public.jpeg</string>
+				<string>public.png</string>
+			</array>
+		</dict>
+	</array>
+
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UISupportsDocumentBrowser</key>
+	<false/>
+
+	<!-- LAUNCH SCREEN -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+
+	<!-- SUPPORTED ORIENTATIONS -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -41,38 +164,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- OTHER SETTINGS -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	
-	<!-- Microphone Permission -->
-	<key>NSMicrophoneUsageDescription</key>
-	<string>VoiceBubble needs access to your microphone to record your voice and convert it to text.</string>
-	
-	<!-- Speech Recognition Permission -->
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>VoiceBubble uses speech recognition to transcribe your voice accurately.</string>
-	
-	<!-- Network Usage -->
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<false/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>api.openai.com</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<true/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-			</dict>
-		</dict>
-	</dict>
 </dict>
 </plist>
